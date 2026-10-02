@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-ENFORCEMENT-REMEDIATION-005",
+  "repository": "martaxi-boss/Project-leader",
+  "updated_at": "2026-10-02T22:12:00Z",
+  "last_durable_step": "Task Authorization 005 persisted and control contract implementation files written on builder/enforcement-remediation-005.",
+  "action_fingerprint": "PROJECT-LEADER-ENFORCEMENT-REMEDIATION-005|martaxi-boss/Project-leader|implement|control-plane-hardening",
+  "attempt_count": 1,
+  "identical_failure_count": 0,
+  "no_progress_iterations": 0,
+  "strategy": "Use verified GitHub contents writes after the Git-data atomic-write path was rejected by connector URL validation.",
+  "strategy_generation": 2,
+  "last_error": "Initial atomic Git-data strategy could not resolve the slash-containing branch through the connector fetch URL; no ambiguous project write was repeated.",
+  "next_step": "Finish documentation/workflow hardening, open PR, audit diff and CI.",
+  "status": "RECOVERED"
+}
