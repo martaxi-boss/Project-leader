@@ -13,29 +13,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Build installable ZIPs
+      - name: Build deterministic installable ZIPs twice
         run: |
           set -eu
-          mkdir -p dist
-          (
-            cd plugins/project-leader
-            zip -r ../../dist/project-leader.zip .
-          )
-          (
-            cd plugins/recovery-guardian
-            zip -r ../../dist/recovery-guardian.zip .
-          )
+          python scripts/package_plugins.py --output-dir dist-a
+          python scripts/package_plugins.py --output-dir dist-b
+          cmp dist-a/project-leader.zip dist-b/project-leader.zip
+          cmp dist-a/recovery-guardian.zip dist-b/recovery-guardian.zip
+          cmp dist-a/plugin-manifest.json dist-b/plugin-manifest.json
+          cmp dist-a/SHA256SUMS dist-b/SHA256SUMS
+          mv dist-a dist
           test -s dist/project-leader.zip
           test -s dist/recovery-guardian.zip
           unzip -l dist/project-leader.zip | grep -q 'plugin.json'
           unzip -l dist/recovery-guardian.zip | grep -q 'plugin.json'
+          cat dist/SHA256SUMS
       - name: Upload Project Leader
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: project-leader-plugin
           path: dist/project-leader.zip
+          retention-days: 90
       - name: Upload Recovery Guardian
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: recovery-guardian-plugin
           path: dist/recovery-guardian.zip
+          retention-days: 90
+      - name: Upload supply-chain manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: plugin-supply-chain-manifest
+          path: |
+            dist/plugin-manifest.json
+            dist/SHA256SUMS
+          retention-days: 90
