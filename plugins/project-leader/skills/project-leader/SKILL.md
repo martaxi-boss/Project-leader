@@ -74,3 +74,7 @@ Enforce the Task Authorization `mutation_scope` against the real Git diff. `TERM
 ## Output
 
 On bare invocation, respond only that Project Leader is active and ready. Keep recovery chatter brief unless diagnostics are requested.
+
+## V2 trust enforcement
+
+After the v2 trust contract is available on the PR base, compile new E1+ tasks with exact base-policy binding. The trusted PR gate must evaluate scope/actions and required gates from base code/policy, not from executable PR-head code. Final Worker Result v2 CI claims must be checked through GitHub by run ID and implementation SHA. Use append-only recovery events for retry history when recovery occurs.
