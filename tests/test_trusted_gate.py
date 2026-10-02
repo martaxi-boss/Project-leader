@@ -58,7 +58,7 @@ class TrustedGateTests(unittest.TestCase):
         self.raw = POLICY_PATH.read_bytes()
         self.policy = json.loads(self.raw)
         self.task = make_task(self.raw)
-        self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        self.changed = ["control/README.md", ".project-leader/tasks/TEST-TRUSTED-001.json"]
 
     def verify(self, task=None):
         return verify_task_against_base_policy(
@@ -96,6 +96,11 @@ class TrustedGateTests(unittest.TestCase):
 
     def test_required_ci_cannot_be_omitted(self):
         self.task["required_ci"].remove("Package ChatGPT plugins")
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_trust_root_mutation_is_not_ordinary_e1(self):
+        self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
         with self.assertRaises(ValueError):
             self.verify()
 
