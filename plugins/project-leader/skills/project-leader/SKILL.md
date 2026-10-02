@@ -23,13 +23,15 @@ Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Be
 
 Prefer live GitHub state over stale chat summaries.
 
+For mutation-capable tasks, use the durable record schemas in `control/`. A durable Task Authorization Record preserves a normalized bounded grant for recovery, but is not self-authorizing and can never widen or override the Owner's current instruction. Do not place secrets or private conversation text in durable records.
+
 ## Internal cycle
 
 Consultant handles product/architecture/requirements/reuse/risk read-only.
 
-Supervisor reconstructs live state, binds the task to repository/base/scope/prohibitions/evidence, records stable task identity, and independently audits Builder results.
+Supervisor reconstructs live state, binds the task to repository/base/scope/prohibitions/evidence, records stable task identity, compiles a Task Authorization Record for E1+ work, and independently audits Builder results.
 
-Builder mutates only when authorized, uses one target repository per task, works on a dedicated branch unless otherwise authorized, tests, commits, and opens/updates a PR when appropriate.
+Builder mutates only when authorized, uses one target repository per task, works on a dedicated branch unless otherwise authorized, persists the Task Authorization Record at `.project-leader/tasks/<task-id>.json` before substantive implementation, tests, commits, and opens/updates a PR when appropriate. At completion it emits a machine-readable Worker Result using the canonical schema and persists it under `.project-leader/results/<task-id>.json` when repository policy permits.
 
 Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`.
 

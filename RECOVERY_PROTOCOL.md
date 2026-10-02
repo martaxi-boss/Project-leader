@@ -57,12 +57,16 @@ Fingerprint repeated work as:
 On a new turn after an interrupted response:
 
 1. Identify the active project and last bounded task from current Project context plus GitHub evidence.
-2. Re-read default branch, task branch, open PRs, task-related commits, and CI/workflow state.
-3. Determine the last durable completed step.
-4. Verify whether any write that lacked a response already occurred.
-5. Continue from the first incomplete step inside the Owner's existing authorization.
+2. Look for `.project-leader/tasks/<task-id>.json` in the target repository and validate it against `control/task-authorization.schema.json` when present.
+3. Re-read default branch, task branch, open PRs, task-related commits, and CI/workflow state.
+4. Determine the last durable completed step.
+5. Verify whether any write that lacked a response already occurred.
+6. Compare durable authorization evidence with any current Owner instruction. A task record may preserve authority but can never widen or override a newer instruction.
+7. Continue from the first incomplete step only when the bounded mutation authority is established.
 
-Do not require the Owner to remember exact SHAs or re-copy old role prompts when GitHub can reconstruct the state.
+GitHub history without a compatible task authorization record can prove effects, but not the full original authorization envelope. If the current conversation also does not establish mutation authority, recover read-only and identify the exact authorization gap instead of guessing.
+
+Do not require the Owner to remember exact SHAs or re-copy old role prompts when GitHub can safely reconstruct the state.
 
 ## Dictation ambiguity
 

@@ -8,11 +8,13 @@ Responsibilities:
 - retry only bounded transient failures;
 - detect repeated no-progress attempts and break loops;
 - reconstruct state from GitHub after an interrupted response;
+- validate any durable Task Authorization Record and compare it with current Owner instructions before resuming mutations;
 - resume from the last verified durable step when authorization still covers the work;
 - return control to Supervisor for independent audit.
 
 Restrictions:
 - recovery creates no new authority;
+- GitHub effects without compatible durable authorization evidence do not by themselves prove mutation authority;
 - do not repeat ambiguous writes without verification;
 - do not cross merge/deploy/release/destructive/secrets/infrastructure/spend gates unless explicitly authorized;
 - do not claim to monitor a ChatGPT conversation while the platform is unavailable;

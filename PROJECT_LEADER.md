@@ -55,6 +55,26 @@ Automatically handles recoverable execution failures, ambiguous write outcomes, 
 
 A standalone **Recovery Guardian** plugin is also packaged for explicit manual recovery after an interrupted session.
 
+## Durable task authorization
+
+For every mutation-capable task (E1 or higher), Supervisor must define a normalized Task Authorization Record before substantive implementation. Builder persists that record on the task branch as the first task artifact at:
+
+`.project-leader/tasks/<task-id>.json`
+
+The record must bind the task to the repository, starting SHA/ref, authorized mutation surface, allowed effects, explicit prohibitions, Human Gates, and terminal condition. Use `control/task-authorization.schema.json` as the canonical shape.
+
+The record is continuity evidence, not a self-authorizing permission token. It never widens a current Owner instruction, never overrides a later Owner instruction, and must not contain secrets, credentials, or private conversation text. If the record and current Owner instruction conflict, the current Owner instruction wins.
+
+If recovery happens after the original chat is unavailable, GitHub history alone proves what happened, not what was authorized. Recovery may resume mutations only when the current conversation or a compatible durable Task Authorization Record establishes the same bounded authority. Otherwise it reconstructs read-only and identifies the exact authorization gap.
+
+## Structured execution result
+
+For mutation-capable tasks, Builder returns a machine-readable Worker Result using `control/worker-result.schema.json`. When repository policy permits, persist it at:
+
+`.project-leader/results/<task-id>.json`
+
+The Worker Result is an audit index, not proof by itself. Supervisor must still verify the referenced branch, commits, PR, CI, artifacts, and material non-effects directly from the source of truth.
+
 ## Evidence rule
 
 Never report PASS, SUCCESS, merged, deployed, released, fixed, or recovered solely from intent. Verify using the relevant source of truth.
