@@ -22,12 +22,14 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 1. Identify the active project and likely interrupted task.
 2. Reconstruct default branch, task branch, PRs, relevant commits, CI/workflow state, and artifacts as applicable.
 3. Look for and validate a durable Task Authorization Record at `.project-leader/tasks/<task-id>.json` when present, then compare it with current Owner instructions.
-4. Classify the failure.
-5. Follow `references/recovery-protocol.md`.
-6. Verify every possibly-completed write before retrying it.
-7. Retry only bounded transient failures.
-8. Replan after repeated no-progress instead of looping.
-9. Return recovered state to Supervisor logic for independent audit.
+4. Look for and validate `.project-leader/checkpoints/<task-id>.json` when present; restore attempt/no-progress counters and strategy generation.
+5. Classify the failure.
+6. Follow `references/recovery-protocol.md`.
+7. Verify every possibly-completed write before retrying it.
+8. Retry only bounded transient failures.
+9. Persist checkpoint changes when a retry/replan decision must survive interruption.
+10. Replan after repeated no-progress instead of looping.
+11. Return recovered state to Supervisor logic for independent audit.
 
 ## Authorization
 
