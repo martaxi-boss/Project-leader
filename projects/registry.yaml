@@ -6,6 +6,7 @@ projects:
     repository: "martaxi-boss/pink-iptv"
     default_branch: "main"
     mutable: true
+    policy_profile: "projects/policy-profiles.json#pink-iptv"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
@@ -16,6 +17,7 @@ projects:
     repository: "martaxi-boss/fadego"
     default_branch: "main"
     mutable: true
+    policy_profile: "projects/policy-profiles.json#fadego"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
@@ -26,6 +28,7 @@ projects:
     repository: "martaxi-boss/VCAM-PRO"
     default_branch: "main"
     mutable: true
+    policy_profile: "projects/policy-profiles.json#vcam-pro"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
