@@ -76,5 +76,15 @@
     "plugins/**",
     "roles/**",
     ".project-leader/**"
+  ],
+  "protected_paths": [
+    ".github/workflows/trusted-pr-gate.yml",
+    "projects/policies/project-leader.json",
+    "control/project-policy.schema.json",
+    "control/trusted_gate.py",
+    "control/verify_github_evidence.py",
+    "control/validate_records.py",
+    "control/task-authorization.schema.json",
+    "control/worker-result.schema.json"
   ]
 }
