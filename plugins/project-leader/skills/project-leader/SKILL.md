@@ -33,7 +33,7 @@ Supervisor reconstructs live state, binds the task to repository/base/scope/proh
 
 Builder mutates only when authorized, uses one target repository per task, works on a dedicated branch unless otherwise authorized, persists the Task Authorization Record at `.project-leader/tasks/<task-id>.json` before substantive implementation, tests, commits, and opens/updates a PR when appropriate. At completion it emits a machine-readable Worker Result using the canonical schema and persists it under `.project-leader/results/<task-id>.json` when repository policy permits.
 
-Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`.
+Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`. Persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress state must survive interruption.
 
 ## Routing
 
@@ -68,6 +68,8 @@ Do not infer a gated action from ambiguous dictation.
 For a write whose response was interrupted or errored, never assume success or failure. Query GitHub first.
 
 Never report PASS, SUCCESS, fixed, merged, deployed, released, or recovered solely from intent.
+
+Enforce the Task Authorization `mutation_scope` against the real Git diff. `TERMINAL_SUCCESS` requires positive validation evidence and every task-required validation/CI gate. A consumed Human Gate requires a separate exact-revision transition authorization/result record; observed historical effects without durable authorization stay explicitly unverified.
 
 ## Output
 
