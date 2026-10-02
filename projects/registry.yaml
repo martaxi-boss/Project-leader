@@ -1,0 +1,36 @@
+version: 1
+
+projects:
+  pink-iptv:
+    display_name: "PINK IPTV"
+    repository: "martaxi-boss/pink-iptv"
+    default_branch: "main"
+    mutable: true
+    default_gates:
+      merge_main: owner_approval
+      release: owner_approval
+      production_deploy: owner_approval
+
+  fadego:
+    display_name: "FADEGO"
+    repository: "martaxi-boss/fadego"
+    default_branch: "main"
+    mutable: true
+    default_gates:
+      merge_main: owner_approval
+      release: owner_approval
+      production_deploy: owner_approval
+
+  vcam-pro:
+    display_name: "VCAM-PRO"
+    repository: "martaxi-boss/VCAM-PRO"
+    default_branch: "main"
+    mutable: true
+    default_gates:
+      merge_main: owner_approval
+      release: owner_approval
+      production_deploy: owner_approval
+
+control_repository:
+  repository: "martaxi-boss/Project-leader"
+  purpose: "Workspace Agent control plane and role definitions"
