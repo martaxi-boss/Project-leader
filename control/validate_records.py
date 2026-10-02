@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import hashlib
 import json
 import re
 from datetime import datetime
@@ -8,8 +9,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 TASK_SCHEMA = ROOT / "task-authorization.schema.json"
+TASK_SCHEMA_V1 = ROOT / "task-authorization.v1.schema.json"
 RESULT_SCHEMA = ROOT / "worker-result.schema.json"
+RESULT_SCHEMA_V1 = ROOT / "worker-result.v1.schema.json"
 CHECKPOINT_SCHEMA = ROOT / "recovery-checkpoint.schema.json"
+RECOVERY_EVENT_SCHEMA = ROOT / "recovery-event.schema.json"
+PROJECT_POLICY_SCHEMA = ROOT / "project-policy.schema.json"
 TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
@@ -110,12 +115,33 @@ def _reject_duplicate_names(items, label):
     if duplicates:
         raise ValueError(f"duplicate {label} names are not allowed: {', '.join(duplicates)}")
 
+def validate_project_policy(record):
+    _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
+    return True
+
 def validate_task(record):
-    _validate(record, _load_schema(TASK_SCHEMA))
+    version = record.get("schema_version")
+    if version == "1.0":
+        schema = TASK_SCHEMA_V1
+    elif version == "2.0":
+        schema = TASK_SCHEMA
+    else:
+        raise ValueError(f"unsupported task schema_version: {version!r}")
+    _validate(record, _load_schema(schema))
+    if version == "2.0":
+        if record["policy"]["base_sha"] != record["starting_state"]["base_sha"]:
+            raise ValueError("v2 task policy.base_sha must equal starting_state.base_sha")
     return True
 
 def validate_result(record):
-    _validate(record, _load_schema(RESULT_SCHEMA))
+    version = record.get("schema_version")
+    if version == "1.0":
+        schema = RESULT_SCHEMA_V1
+    elif version == "2.0":
+        schema = RESULT_SCHEMA
+    else:
+        raise ValueError(f"unsupported result schema_version: {version!r}")
+    _validate(record, _load_schema(schema))
     _reject_duplicate_names(record["validation"], "validation")
     _reject_duplicate_names(record.get("ci", []), "CI")
     if record["terminal_status"] == "TERMINAL_SUCCESS":
@@ -148,6 +174,8 @@ def _require_named_status(items, required_names, expected_status, label):
 def validate_pair(task, result):
     validate_task(task)
     validate_result(result)
+    if task["schema_version"] == "2.0" and result["schema_version"] != "2.0":
+        raise ValueError("v2 task requires a v2 Worker Result")
     checks = {
         "task_id": (task["task_id"], result["task_id"]),
         "repository": (task["repository"], result["repository"]),
@@ -193,6 +221,60 @@ def validate_checkpoint(record):
         raise ValueError("recovery checkpoint no_progress_iterations cannot exceed 3")
     return True
 
+def canonical_sha256(record):
+    payload = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+def validate_recovery_event(record):
+    _validate(record, _load_schema(RECOVERY_EVENT_SCHEMA))
+    if record["attempt_count"] > 3:
+        raise ValueError("recovery event attempt_count cannot exceed 3")
+    if record["identical_failure_count"] > 2:
+        raise ValueError("recovery event identical_failure_count cannot exceed 2")
+    if record["no_progress_iterations"] > 3:
+        raise ValueError("recovery event no_progress_iterations cannot exceed 3")
+    return True
+
+def validate_recovery_journal(records):
+    if not records:
+        raise ValueError("recovery journal requires at least one event")
+    ordered = sorted(records, key=lambda item: item["sequence"])
+    task_id = ordered[0].get("task_id")
+    repository = ordered[0].get("repository")
+    terminal_seen = False
+    for index, event in enumerate(ordered, start=1):
+        validate_recovery_event(event)
+        if event["sequence"] != index:
+            raise ValueError(f"recovery journal sequence must be contiguous from 1; got {event['sequence']} at position {index}")
+        if event["task_id"] != task_id or event["repository"] != repository:
+            raise ValueError("recovery journal cannot mix task_id or repository")
+        if terminal_seen:
+            raise ValueError("recovery journal cannot append after terminal event")
+        if index == 1:
+            if event["previous_event_sha256"] is not None:
+                raise ValueError("first recovery event must have previous_event_sha256=null")
+        else:
+            previous = ordered[index - 2]
+            expected = canonical_sha256(previous)
+            if event["previous_event_sha256"] != expected:
+                raise ValueError("recovery journal hash chain mismatch")
+            if event["strategy_generation"] < previous["strategy_generation"]:
+                raise ValueError("recovery strategy_generation cannot decrease")
+            if event["strategy_generation"] > previous["strategy_generation"]:
+                if event["strategy_generation"] != previous["strategy_generation"] + 1 or event["event"] != "REPLAN":
+                    raise ValueError("strategy_generation may increase only by one on a REPLAN event")
+            else:
+                if event["no_progress_iterations"] < previous["no_progress_iterations"]:
+                    raise ValueError("no_progress_iterations cannot decrease inside one strategy generation")
+                if event["action_fingerprint"] == previous["action_fingerprint"]:
+                    if event["attempt_count"] < previous["attempt_count"]:
+                        raise ValueError("attempt_count cannot decrease for the same action fingerprint")
+                    if event["identical_failure_count"] < previous["identical_failure_count"]:
+                        raise ValueError("identical_failure_count cannot decrease for the same action fingerprint")
+        if event["event"] in {"BLOCKED", "HUMAN_GATE", "COMPLETE"}:
+            terminal_seen = True
+    return True
+
 def validate_transition_authorization(record):
     _validate(record, _load_schema(TRANSITION_AUTH_SCHEMA))
     return True
@@ -236,7 +318,7 @@ def _read_json(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["task","result","pair","scope","checkpoint","transition-auth","transition-result","transition-pair"])
+    parser.add_argument("kind", choices=["policy","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-pair"])
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args()
     if args.kind == "pair":
@@ -247,6 +329,8 @@ def main():
         if len(args.paths) < 2:
             parser.error("scope requires TASK_PATH CHANGED_FILE [CHANGED_FILE ...]")
         validate_scope(_read_json(args.paths[0]), args.paths[1:])
+    elif args.kind == "recovery-journal":
+        validate_recovery_journal([_read_json(path) for path in args.paths])
     elif args.kind == "transition-pair":
         if len(args.paths) != 2:
             parser.error("transition-pair requires AUTHORIZATION_PATH RESULT_PATH")
@@ -256,9 +340,11 @@ def main():
             parser.error(f"{args.kind} requires exactly one path")
         data = _read_json(args.paths[0])
         validators = {
+            "policy": validate_project_policy,
             "task": validate_task,
             "result": validate_result,
             "checkpoint": validate_checkpoint,
+            "recovery-event": validate_recovery_event,
             "transition-auth": validate_transition_authorization,
             "transition-result": validate_transition_result,
         }

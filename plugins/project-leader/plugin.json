@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-leader",
-  "version": "0.3.0",
-  "description": "Single project-control entry point coordinating Consultant, Supervisor, Builder, and automatic Recovery Guardian phases using live GitHub evidence.",
+  "version": "0.4.0",
+  "description": "Single project-control entry point with base-anchored authorization, external GitHub evidence verification, and bounded recovery.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"

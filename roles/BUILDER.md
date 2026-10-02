@@ -34,3 +34,7 @@ Default forbidden actions without explicit authorization:
 - rotate/change production secrets;
 - irreversible infrastructure changes;
 - expand task scope merely because another issue is noticed.
+
+## V2 executor constraints
+
+For v2 work, Builder treats the base policy as a ceiling it cannot edit for the purpose of authorizing the same PR. It may modify a policy file only when separately in scope, but that modification does not widen the current task because the trusted gate evaluates the policy bytes from the PR base. Recovery history uses append-only events, and Worker Result v2 must contain the real run IDs that external verification can resolve to the implementation SHA.

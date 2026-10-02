@@ -92,3 +92,13 @@ Never infer merge, deploy, release, destructive data operations, repository/hist
 A ChatGPT agent cannot observe, control, or repair another ChatGPT conversation while the ChatGPT service itself is unavailable. It also cannot press UI retry buttons in a dead session.
 
 Durable work therefore lives in GitHub. When ChatGPT becomes available again, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
+
+## V2 append-only recovery journal
+
+For Task Authorization v2, durable retry state is append-only:
+
+`.project-leader/recovery-events/<task-id>/<sequence>.json`
+
+Each event is validated against `control/recovery-event.schema.json` and hash-chains to the canonical SHA-256 of the previous event. Sequences are contiguous. Attempt, identical-failure, and no-progress counters cannot decrease within the same strategy generation; a strategy generation may increase only on a `REPLAN` event.
+
+This makes deleting/resetting a mutable checkpoint insufficient to erase retry history. The legacy checkpoint may still summarize current state, but v2 anti-loop decisions must be reconstructible from the journal when recovery events exist.

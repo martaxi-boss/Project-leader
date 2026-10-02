@@ -25,3 +25,7 @@ Outcomes:
 - RECOVERED -> return to Supervisor audit;
 - BLOCKED -> identify the exact permanent failure or missing access;
 - HUMAN_GATE -> ask Owner for the specific gated action.
+
+## V2 recovery integrity
+
+For v2 tasks, Recovery Guardian reconstructs retry state from the append-only recovery journal when present and validates its hash chain before another retry. A mutable checkpoint cannot reset attempts or no-progress history. New journal events may only append within the existing task authority and must preserve sequence, hash linkage, and bounded counters.

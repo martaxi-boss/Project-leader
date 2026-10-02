@@ -94,3 +94,21 @@ Never report PASS, SUCCESS, merged, deployed, released, fixed, or recovered sole
 ## Multi-project rule
 
 Never mix mutable work across projects in one Builder task. One task -> one target repository. Cross-project dependencies may be read for context only unless separately authorized.
+
+## Trust hardening v2
+
+New mutation-capable tasks should use Task Authorization schema v2 after the bootstrap hardening is integrated.
+
+V2 binds each task to an exact base policy:
+- the Task Authorization carries the exact PR base SHA, policy path, policy profile, and SHA-256 of the policy bytes;
+- the trusted gate reads the policy and verifier code from the PR base, while reading the task/result from the PR head only as untrusted data;
+- task mutation patterns and allowed actions must be subsets of the base policy ceiling;
+- policy-required prohibitions, Human Gates, validation names, and CI names cannot be removed by the executor branch.
+
+The trusted workflow uses `pull_request_target` and never checks out or executes PR-head code. This prevents a PR from weakening the verifier that judges that same PR once the trusted workflow exists on the base branch.
+
+Worker Result v2 requires concrete CI run IDs. `control/verify_github_evidence.py` queries GitHub to prove each run name, repository, implementation SHA, completion state, and successful conclusion, and proves the implementation SHA is an ancestor of the final PR head.
+
+For v2 tasks, append-only recovery events under `.project-leader/recovery-events/<task-id>/` are the authoritative retry/anti-loop history. Mutable checkpoints remain a convenience summary for legacy/v1 continuity, not the source of truth for v2 retry counters.
+
+Registered managed projects also have central policy profiles in `projects/policy-profiles.json`; live repository state must still be refreshed before execution.

@@ -88,3 +88,22 @@ Examples:
 `python control/validate_records.py transition-pair <authorization-path> <result-path>`
 
 GitHub Actions run positive and negative contract tests on pull requests and pushes to `main`.
+
+## V2 trust model
+
+Historical Task Authorization and Worker Result records remain schema v1 and validate against archived v1 schemas. New hardened tasks use schema v2.
+
+Task Authorization v2 requires:
+- non-empty required validation and CI lists;
+- an exact base-policy binding: profile, policy path, base SHA, and SHA-256 of the exact policy bytes;
+- append-only recovery mode.
+
+Worker Result v2 requires a non-empty CI list and concrete run IDs. `control/verify_github_evidence.py` resolves those run IDs through GitHub and checks workflow name, repository, implementation SHA, completion, success, and ancestry to the current PR head.
+
+`control/trusted_gate.py` evaluates untrusted task data against a policy loaded from the PR base. The trusted `pull_request_target` workflow checks out only that base, fetches task/result records from the PR head as data, and never executes head code.
+
+For v2 recovery, use `control/recovery-event.schema.json` and validate the whole journal with:
+
+`python control/validate_records.py recovery-journal <event-1> <event-2> ...`
+
+The journal is contiguous and SHA-256 hash chained, so retry counters cannot be erased by rewriting a later checkpoint.

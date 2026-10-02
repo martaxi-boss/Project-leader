@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "project-leader-v1",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "default_branch": "main",
+  "effect_policies": {
+    "E1_RECOVERABLE_PROJECT_LOCAL": {
+      "allowed_scope_patterns": [
+        "control/**",
+        "tests/**",
+        ".github/workflows/**",
+        ".project-leader/tasks/**",
+        ".project-leader/results/**",
+        ".project-leader/checkpoints/**",
+        ".project-leader/recovery-events/**",
+        ".project-leader/transitions/**",
+        "projects/**",
+        "scripts/**",
+        "PROJECT_LEADER.md",
+        "RUNBOOK.md",
+        "RECOVERY_PROTOCOL.md",
+        "AGENT_BUILDER_PROMPT.md",
+        "SMOKE_TESTS.md",
+        "roles/**",
+        "plugins/**"
+      ],
+      "allowed_actions": [
+        "create_branch",
+        "edit_project_files",
+        "create_commits",
+        "run_ci",
+        "open_or_update_pull_request",
+        "add_durable_control_schemas",
+        "add_contract_tests",
+        "add_recovery_checkpoints",
+        "record_historical_transition_gap_without_claiming_authorization",
+        "add_trusted_gate_design",
+        "add_base_anchored_policy_profiles",
+        "add_github_evidence_verifier",
+        "add_v2_task_contract",
+        "add_append_only_recovery_journal",
+        "harden_reproducible_packaging"
+      ],
+      "required_prohibited_actions": [
+        "merge_to_main",
+        "branch_protection_or_ruleset_change",
+        "release_or_publish",
+        "license_selection",
+        "managed_project_mutation",
+        "production_deploy",
+        "production_secret_change",
+        "paid_service_activation"
+      ],
+      "required_human_gates": [
+        "merge_to_main",
+        "branch_protection_or_ruleset_change",
+        "release_or_publish",
+        "license_selection",
+        "managed_project_mutation"
+      ],
+      "required_ci": [
+        "Control contract tests",
+        "Validate control plane",
+        "Package ChatGPT plugins"
+      ],
+      "required_validation": [
+        "Mutation scope audit",
+        "GitHub evidence verification"
+      ]
+    }
+  },
+  "sensitive_paths": [
+    ".github/workflows/**",
+    "control/**",
+    "plugins/**",
+    "roles/**",
+    ".project-leader/**"
+  ],
+  "protected_paths": [
+    ".github/workflows/trusted-pr-gate.yml",
+    "projects/policies/project-leader.json",
+    "control/project-policy.schema.json",
+    "control/trusted_gate.py",
+    "control/verify_github_evidence.py",
+    "control/validate_records.py",
+    "control/task-authorization.schema.json",
+    "control/worker-result.schema.json"
+  ]
+}
