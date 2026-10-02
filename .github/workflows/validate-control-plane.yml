@@ -29,14 +29,24 @@ jobs:
           test -f plugins/project-leader/plugin.json
           test -f plugins/project-leader/.app.json
           test -f plugins/project-leader/skills/project-leader/SKILL.md
+          test -f plugins/project-leader/skills/project-leader/agents/openai.yaml
+          test -f plugins/project-leader/skills/project-leader/references/recovery-protocol.md
           test -f plugins/recovery-guardian/plugin.json
           test -f plugins/recovery-guardian/.app.json
           test -f plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
+          test -f plugins/recovery-guardian/skills/recovery-guardian/agents/openai.yaml
+          test -f plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md
           grep -q "martaxi-boss/pink-iptv" projects/registry.yaml
           grep -q "martaxi-boss/fadego" projects/registry.yaml
           grep -q "martaxi-boss/VCAM-PRO" projects/registry.yaml
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
+          grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml
+          grep -q 'display_name: "Recovery Guardian"' plugins/recovery-guardian/skills/recovery-guardian/agents/openai.yaml
+          grep -q '^name: project-leader$' plugins/project-leader/skills/project-leader/SKILL.md
+          grep -q '^name: recovery-guardian$' plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
+          grep -q 'Recovery Guardian' PROJECT_LEADER.md
+          grep -q 'RECOVERY_PROTOCOL.md' RUNBOOK.md
           python -m json.tool .agents/plugins/marketplace.json >/dev/null
           python -m json.tool plugins/project-leader/plugin.json >/dev/null
           python -m json.tool plugins/project-leader/.app.json >/dev/null

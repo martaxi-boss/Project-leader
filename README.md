@@ -28,6 +28,16 @@ GitHub is the durable source of truth for branches, commits, PRs, CI, and artifa
 
 A ChatGPT-wide outage cannot be repaired by another ChatGPT agent while the service itself is unavailable. When service returns, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
 
+## Installation
+
+The direct plugin-upload path has been verified in the current workspace:
+
+`Plugins -> + -> Upload plugin -> select ZIP -> View plugin -> Install plugin`
+
+Use `.github/workflows/package-plugins.yml` to build fresh installable artifacts from repository source.
+
+See `PLUGIN_SETUP.md` for the full installation and verification procedure.
+
 ## Control-plane source of truth
 
 - `PROJECT_LEADER.md`
@@ -50,8 +60,6 @@ Plugins:
 - `plugins/recovery-guardian/`
 
 Both require the OpenAI GitHub connector.
-
-See `PLUGIN_SETUP.md` for the one-time workspace import/install.
 
 ## Registered test projects
 
