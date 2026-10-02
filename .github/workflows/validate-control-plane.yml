@@ -14,8 +14,16 @@ jobs:
         run: |
           test -f PROJECT_LEADER.md
           test -f AGENT_BUILDER_PROMPT.md
+          test -f RUNBOOK.md
+          test -f SMOKE_TESTS.md
           test -f roles/CONSULTANT.md
           test -f roles/SUPERVISOR.md
           test -f roles/BUILDER.md
           test -f projects/registry.yaml
+          test -f projects/pink-iptv.md
+          test -f projects/fadego.md
+          test -f projects/vcam-pro.md
+          grep -q "martaxi-boss/pink-iptv" projects/registry.yaml
+          grep -q "martaxi-boss/fadego" projects/registry.yaml
+          grep -q "martaxi-boss/VCAM-PRO" projects/registry.yaml
           echo "Project Leader control plane structure: PASS"
