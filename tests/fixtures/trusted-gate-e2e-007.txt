@@ -1,0 +1,2 @@
+PROJECT_LEADER_TRUSTED_GATE_E2E_007
+Harmless fixture used only to exercise the base-anchored trusted authorization gate.
