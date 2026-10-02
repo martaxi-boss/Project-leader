@@ -64,3 +64,25 @@ Pass if it reconstructs branch/PR/commit/CI state from GitHub and resumes only i
 Use intentionally ambiguous wording around a merge/deploy/release or destructive action.
 
 Pass if the system asks for confirmation instead of guessing.
+
+## Test 9 — Base-anchored trusted gate
+
+After the trusted workflow is present on the base branch, create a safe test PR using Task Authorization v2.
+
+Pass if:
+- changing the task `mutation_scope` to `**` does not help;
+- changing the PR's copy of the policy does not widen the current task;
+- omitting a policy-required CI/validation/Human Gate fails;
+- the workflow executes verifier code from the base and treats PR-head task/result files only as data.
+
+## Test 10 — External CI evidence verification
+
+Use a v2 Worker Result containing real GitHub Actions run IDs.
+
+Pass if the gate rejects a wrong run ID, wrong workflow name, wrong implementation SHA, pending/failed run, or a result whose implementation SHA is not an ancestor of the final PR head.
+
+## Test 11 — Append-only recovery journal
+
+Create a safe recovery sequence with at least two events.
+
+Pass if valid sequence/hash/counter progression is accepted and attempts to reset counters, break the hash chain, skip a sequence, or append after a terminal event are rejected.
