@@ -1,14 +1,20 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "recovery-guardian",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Independent recovery controller for interrupted or failing Project Leader workflows using live GitHub evidence and bounded anti-loop rules.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
   },
   "repository": "https://github.com/martaxi-boss/Project-leader",
-  "keywords": ["recovery", "github", "project-management", "anti-loop", "resumption"],
+  "keywords": [
+    "recovery",
+    "github",
+    "project-management",
+    "anti-loop",
+    "resumption"
+  ],
   "skills": "./skills/",
   "extensions": {
     "com.openai": {
@@ -19,7 +25,12 @@
         "longDescription": "Use Recovery Guardian after a failed, interrupted, looping, or ambiguous Project Leader execution. It reconstructs durable state from GitHub, verifies whether writes already happened before retrying, breaks no-progress loops, resumes only inside existing authorization, and preserves all human gates.",
         "developerName": "martaxi-boss",
         "category": "Productivity",
-        "capabilities": ["Recover interrupted execution", "Verify ambiguous GitHub writes", "Break no-progress loops", "Reconstruct project state"]
+        "capabilities": [
+          "Recover interrupted execution",
+          "Verify ambiguous GitHub writes",
+          "Break no-progress loops",
+          "Reconstruct project state"
+        ]
       }
     }
   }

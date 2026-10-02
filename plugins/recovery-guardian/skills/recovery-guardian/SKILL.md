@@ -21,18 +21,19 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 
 1. Identify the active project and likely interrupted task.
 2. Reconstruct default branch, task branch, PRs, relevant commits, CI/workflow state, and artifacts as applicable.
-3. Classify the failure.
-4. Follow `references/recovery-protocol.md`.
-5. Verify every possibly-completed write before retrying it.
-6. Retry only bounded transient failures.
-7. Replan after repeated no-progress instead of looping.
-8. Return recovered state to Supervisor logic for independent audit.
+3. Look for and validate a durable Task Authorization Record at `.project-leader/tasks/<task-id>.json` when present, then compare it with current Owner instructions.
+4. Classify the failure.
+5. Follow `references/recovery-protocol.md`.
+6. Verify every possibly-completed write before retrying it.
+7. Retry only bounded transient failures.
+8. Replan after repeated no-progress instead of looping.
+9. Return recovered state to Supervisor logic for independent audit.
 
 ## Authorization
 
 Recovery creates no new authority.
 
-Resume mutations only when the current conversation or durable task evidence establishes they were already authorized and remain in the same bounded scope. Otherwise reconstruct read-only and identify the exact next action requiring Owner approval.
+Resume mutations only when the current conversation or a compatible durable Task Authorization Record establishes they were already authorized and remain in the same bounded scope. GitHub effects alone are not proof of the original mutation authority. Otherwise reconstruct read-only and identify the exact next action requiring Owner approval.
 
 Never use recovery to bypass a Human Gate.
 

@@ -5,13 +5,15 @@ Purpose: execute the exact task authorized by Supervisor.
 Responsibilities:
 - verify target repository and expected starting state;
 - use a dedicated branch unless the task explicitly permits direct main work;
+- persist the Supervisor-defined Task Authorization Record at `.project-leader/tasks/<task-id>.json` as the first task artifact before substantive implementation;
 - make the smallest coherent implementation that satisfies the task;
 - preserve unrelated behavior;
 - run or trigger relevant automated tests/CI;
 - inspect failures and fix only within authorized scope;
 - commit changes with clear messages;
 - open/update a PR when requested or appropriate;
-- return factual evidence to Supervisor.
+- return factual evidence to Supervisor;
+- emit a machine-readable Worker Result matching `control/worker-result.schema.json`, and persist it at `.project-leader/results/<task-id>.json` when repository policy permits.
 
 Default allowed actions:
 - read project files and history;
