@@ -20,6 +20,9 @@ jobs:
           test -f RUNBOOK.md
           test -f RECOVERY_PROTOCOL.md
           test -f SMOKE_TESTS.md
+          test -f control/recovery-checkpoint.schema.json
+          test -f control/transition-authorization.schema.json
+          test -f control/transition-result.schema.json
           test -f roles/CONSULTANT.md
           test -f roles/SUPERVISOR.md
           test -f roles/BUILDER.md
@@ -50,6 +53,8 @@ jobs:
           grep -q '^name: recovery-guardian$' plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
           grep -q 'Recovery Guardian' PROJECT_LEADER.md
           grep -q 'RECOVERY_PROTOCOL.md' RUNBOOK.md
+          grep -q '.project-leader/checkpoints/<task-id>.json' RECOVERY_PROTOCOL.md
+          grep -q 'four internal operating phases' AGENT_BUILDER_PROMPT.md
           python -m json.tool .agents/plugins/marketplace.json >/dev/null
           python -m json.tool plugins/project-leader/plugin.json >/dev/null
           python -m json.tool plugins/project-leader/.app.json >/dev/null

@@ -3,7 +3,16 @@ import json
 import unittest
 from pathlib import Path
 
-from control.validate_records import validate_pair, validate_result, validate_task
+from control.validate_records import (
+    validate_checkpoint,
+    validate_pair,
+    validate_result,
+    validate_scope,
+    validate_task,
+    validate_transition_authorization,
+    validate_transition_pair,
+    validate_transition_result,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,11 +40,10 @@ def valid_task():
         "allowed_actions": ["create_branch", "create_commit"],
         "prohibited_actions": ["merge_to_main"],
         "human_gates": [{"action": "merge_to_main", "requires_owner_approval": True}],
+        "required_validation": ["unit"],
+        "required_ci": ["CI"],
         "terminal_condition": "PR green; no merge.",
-        "privacy": {
-            "contains_secrets": False,
-            "contains_private_conversation_text": False,
-        },
+        "privacy": {"contains_secrets": False, "contains_private_conversation_text": False},
     }
 
 def valid_result():
@@ -61,6 +69,69 @@ def valid_result():
         "residual_blockers": [],
     }
 
+def valid_checkpoint():
+    return {
+        "schema_version": "1.0",
+        "task_id": "TEST-CONTROL-001",
+        "repository": "owner/repo",
+        "updated_at": "2026-10-02T21:41:00Z",
+        "last_durable_step": "task authorization persisted",
+        "action_fingerprint": "TEST-CONTROL-001|owner/repo|ci|run",
+        "attempt_count": 1,
+        "identical_failure_count": 0,
+        "no_progress_iterations": 0,
+        "strategy": "run required checks",
+        "strategy_generation": 1,
+        "last_error": None,
+        "next_step": "audit CI",
+        "status": "ACTIVE",
+    }
+
+def valid_transition_authorization():
+    return {
+        "schema_version": "1.0",
+        "transition_id": "TEST-CONTROL-001-MERGE",
+        "task_id": "TEST-CONTROL-001",
+        "repository": "owner/repo",
+        "created_at": "2026-10-02T21:50:00Z",
+        "action": "merge_to_main",
+        "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+        "authority": {
+            "source": "CURRENT_OWNER_INSTRUCTION",
+            "summary": "Owner authorizes merge of the exact reviewed PR head.",
+            "binding_mode": "EXACT_REVISION_BOUND",
+        },
+        "target": {
+            "kind": "pull_request",
+            "identifier": "#1",
+            "revision": "b" * 40,
+            "base_revision": "a" * 40,
+            "environment": None,
+        },
+    }
+
+def valid_transition_result():
+    return {
+        "schema_version": "1.0",
+        "transition_id": "TEST-CONTROL-001-MERGE",
+        "task_id": "TEST-CONTROL-001",
+        "repository": "owner/repo",
+        "terminal_status": "SUCCESS",
+        "authorization_record": ".project-leader/transitions/TEST-CONTROL-001-MERGE.authorization.json",
+        "action": "merge_to_main",
+        "target": {
+            "kind": "pull_request",
+            "identifier": "#1",
+            "revision": "b" * 40,
+            "base_revision": "a" * 40,
+            "environment": None,
+        },
+        "observed_at": "2026-10-02T21:55:00Z",
+        "final_state": {"status": "MERGED", "revision": "c" * 40},
+        "evidence": ["PR #1 merged", "main=c"],
+        "residual_blockers": [],
+    }
+
 class ControlContractTests(unittest.TestCase):
     def assertInvalidTask(self, mutate):
         record = valid_task()
@@ -77,10 +148,16 @@ class ControlContractTests(unittest.TestCase):
     def test_schemas_are_valid_json_and_require_core_fields(self):
         task = json.loads((ROOT / "control/task-authorization.schema.json").read_text())
         result = json.loads((ROOT / "control/worker-result.schema.json").read_text())
+        checkpoint = json.loads((ROOT / "control/recovery-checkpoint.schema.json").read_text())
+        transition_auth = json.loads((ROOT / "control/transition-authorization.schema.json").read_text())
+        transition_result = json.loads((ROOT / "control/transition-result.schema.json").read_text())
         self.assertIn("task_id", task["required"])
         self.assertIn("human_gates", task["required"])
         self.assertIn("implementation_head_sha", result["required"])
         self.assertIn("material_non_effects", result["required"])
+        self.assertIn("attempt_count", checkpoint["required"])
+        self.assertIn("authority", transition_auth["required"])
+        self.assertIn("authorization_record", transition_result["required"])
 
     def test_plugins_use_same_required_github_connector(self):
         pl = json.loads((ROOT / "plugins/project-leader/.app.json").read_text())
@@ -130,6 +207,24 @@ class ControlContractTests(unittest.TestCase):
     def test_terminal_success_with_pending_ci_fails(self):
         self.assertInvalidResult(lambda r: r["ci"][0].__setitem__("status", "PENDING"))
 
+    def test_terminal_success_requires_nonempty_validation(self):
+        self.assertInvalidResult(lambda r: r.__setitem__("validation", []))
+
+    def test_terminal_success_requires_positive_pass(self):
+        self.assertInvalidResult(lambda r: r["validation"][0].__setitem__("status", "SKIPPED"))
+
+    def test_skipped_validation_requires_justification(self):
+        record = valid_result()
+        record["validation"].append({"name": "optional", "status": "SKIPPED"})
+        with self.assertRaises(ValueError):
+            validate_result(record)
+
+    def test_duplicate_validation_name_fails(self):
+        record = valid_result()
+        record["validation"].append(copy.deepcopy(record["validation"][0]))
+        with self.assertRaises(ValueError):
+            validate_result(record)
+
     def test_pair_task_id_mismatch_fails(self):
         result = valid_result()
         result["task_id"] = "OTHER-TASK-001"
@@ -161,13 +256,70 @@ class ControlContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_pair(task, valid_result())
 
+    def test_required_validation_cannot_be_skipped(self):
+        result = valid_result()
+        result["validation"][0]["status"] = "SKIPPED"
+        result["validation"].append({"name": "other", "status": "PASS", "evidence": "ok"})
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_required_ci_must_exist(self):
+        result = valid_result()
+        del result["ci"]
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_required_ci_must_be_success(self):
+        result = valid_result()
+        result["ci"][0]["status"] = "NOT_APPLICABLE"
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_scope_validation_accepts_authorized_paths(self):
+        self.assertTrue(validate_scope(valid_task(), ["control/validate_records.py", "control/x/y.json"]))
+
+    def test_scope_validation_rejects_outside_paths(self):
+        with self.assertRaises(ValueError):
+            validate_scope(valid_task(), ["control/validate_records.py", "README.md"])
+
+    def test_checkpoint_limits_are_enforced(self):
+        checkpoint = valid_checkpoint()
+        self.assertTrue(validate_checkpoint(checkpoint))
+        checkpoint["attempt_count"] = 4
+        with self.assertRaises(ValueError):
+            validate_checkpoint(checkpoint)
+
+    def test_transition_pair_is_exact_revision_bound(self):
+        self.assertTrue(validate_transition_pair(valid_transition_authorization(), valid_transition_result()))
+
+    def test_successful_transition_requires_authorization_record(self):
+        result = valid_transition_result()
+        result["authorization_record"] = None
+        with self.assertRaises(ValueError):
+            validate_transition_result(result)
+
+    def test_historical_transition_gap_is_recordable_without_fake_authorization(self):
+        result = valid_transition_result()
+        result["terminal_status"] = "HISTORICAL_OBSERVED"
+        result["authorization_record"] = None
+        result["residual_blockers"] = ["No durable Owner authorization record exists in the repository."]
+        self.assertTrue(validate_transition_result(result))
+
+    def test_transition_authorization_binding_mode_is_exact(self):
+        auth = valid_transition_authorization()
+        auth["authority"]["binding_mode"] = "OBJECTIVE_SCOPE_BOUND"
+        with self.assertRaises(ValueError):
+            validate_transition_authorization(auth)
+
     def test_contracts_reference_durable_authorization(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text()
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text()
         recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text()
+        control = (ROOT / "control/README.md").read_text()
         self.assertIn(".project-leader/tasks/<task-id>.json", project)
         self.assertIn("Task Authorization Record", skill)
-        self.assertIn("GitHub history without a compatible task authorization record", recovery)
+        self.assertIn(".project-leader/checkpoints/<task-id>.json", recovery)
+        self.assertIn("Human-Gate Transition", control)
 
 if __name__ == "__main__":
     unittest.main()
