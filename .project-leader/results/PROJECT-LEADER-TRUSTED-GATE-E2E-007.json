@@ -1,15 +1,15 @@
 {
   "schema_version": "2.0",
   "task_id": "PROJECT-LEADER-TRUSTED-GATE-E2E-007",
-  "terminal_status": "BLOCKED",
+  "terminal_status": "TERMINAL_SUCCESS",
   "repository": "martaxi-boss/Project-leader",
   "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-TRUSTED-GATE-E2E-007.json",
   "implementation_head_sha": "d18da4a34682f37ce4c00639def607c985f52891",
   "branch": "builder/trusted-gate-e2e-007",
   "pr_number": 7,
-  "recorded_at": "2026-10-02T22:55:00Z",
-  "state_observed_at": "2026-10-02T22:54:00Z",
+  "recorded_at": "2026-10-02T22:58:00Z",
+  "state_observed_at": "2026-10-02T22:57:00Z",
   "superseded_by": null,
   "post_transition_record": null,
   "changes": [
@@ -24,12 +24,12 @@
     {
       "name": "GitHub evidence verification",
       "status": "PASS",
-      "evidence": "Worker Result now carries the real successful standard CI run IDs for implementation head d18da4a34682f37ce4c00639def607c985f52891; trusted gate will verify them externally."
+      "evidence": "Trusted authorization gate run 37074008585 resolved and verified the Worker Result's real GitHub Actions run IDs against repository, workflow name, implementation SHA, completed status and success conclusion."
     },
     {
       "name": "Trusted authorization gate runtime",
-      "status": "SKIPPED",
-      "evidence": "Awaiting the trusted pull_request_target gate rerun after this Worker Result is present."
+      "status": "PASS",
+      "evidence": "Trusted authorization gate run 37074008585 completed SUCCESS on PR #7 after reading verifier code/policy from main and task/result only as PR-head data."
     }
   ],
   "ci": [
@@ -58,7 +58,5 @@
     "No production effect",
     "No cost"
   ],
-  "residual_blockers": [
-    "Trusted authorization gate runtime proof is still pending on the head containing this Worker Result."
-  ]
+  "residual_blockers": []
 }
