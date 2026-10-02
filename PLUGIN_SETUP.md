@@ -1,4 +1,4 @@
-# Project Leader marketplace setup
+# Project Leader plugin setup
 
 This repository contains two ChatGPT plugins:
 
@@ -7,19 +7,38 @@ This repository contains two ChatGPT plugins:
 
 Project Leader also uses the Recovery Guardian protocol internally, so normal work does not require manual role switching.
 
-## One-time workspace import
+## Proven direct install path
 
-After this repository is on `main`:
+The installation path verified in the current ChatGPT workspace is:
 
-1. Open **Workspace settings -> Plugins**.
-2. Select **Add -> Import marketplace**.
-3. Source: `https://github.com/martaxi-boss/Project-leader`
-4. Leave **Path** empty.
-5. Leave **Branch** empty to follow `main`.
-6. Import the marketplace and authorize GitHub when prompted.
-7. Open **Project Leader** and set installation policy to **Installed** for the intended role/users.
-8. Open **Recovery Guardian** and set it to **Installed** if you want direct `@Recovery Guardian` access.
-9. Confirm the required GitHub app is enabled and connected.
+1. Open **Plugins**.
+2. Press the **+** button beside plugin search.
+3. Choose **Carregar plugin / Upload plugin**.
+4. Select the installable ZIP:
+   - `project-leader.zip`
+   - `recovery-guardian.zip`
+5. Wait for **Importação bem-sucedida / Import successful**.
+6. Press **Ver plugin / View plugin**.
+7. Press **Instalar plugin / Install plugin**.
+8. Approve the GitHub dependency if prompted.
+
+After installation, verify availability in a project chat by typing `@pro`. **Project Leader** should appear. **Recovery Guardian** should also be available when explicitly searched or selected.
+
+## GitHub-built ZIP artifacts
+
+The workflow `.github/workflows/package-plugins.yml` produces installable ZIP artifacts for both plugins on pull requests and pushes to `main`.
+
+Each ZIP is built with the plugin manifest at the ZIP root, matching the direct upload format.
+
+## Marketplace import alternative
+
+Some workspace admin surfaces may expose marketplace import/sync. Where that UI is available, the repository marketplace is:
+
+`https://github.com/martaxi-boss/Project-leader`
+
+The marketplace manifest is `.agents/plugins/marketplace.json`.
+
+If the current workspace UI does not expose marketplace import, use the proven direct ZIP upload path above instead.
 
 ## Normal use
 
@@ -54,7 +73,3 @@ Neither plugin can keep running inside ChatGPT while the ChatGPT service itself 
 ## GitHub dependency
 
 Both plugins reference the installed OpenAI GitHub connector. Access remains limited to the repositories and actions authorized for the signed-in account.
-
-## Updates
-
-The GitHub marketplace can sync future changes from this repository. Use **Sync now** in Workspace settings -> Plugins -> Marketplaces when you want an immediate refresh after a merged update.

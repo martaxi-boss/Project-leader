@@ -1,0 +1,38 @@
+name: Package ChatGPT plugins
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installable ZIPs
+        run: |
+          set -eu
+          mkdir -p dist
+          (
+            cd plugins/project-leader
+            zip -r ../../dist/project-leader.zip .
+          )
+          (
+            cd plugins/recovery-guardian
+            zip -r ../../dist/recovery-guardian.zip .
+          )
+          test -s dist/project-leader.zip
+          test -s dist/recovery-guardian.zip
+          unzip -l dist/project-leader.zip | grep -q 'plugin.json'
+          unzip -l dist/recovery-guardian.zip | grep -q 'plugin.json'
+      - name: Upload Project Leader
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-leader-plugin
+          path: dist/project-leader.zip
+      - name: Upload Recovery Guardian
+        uses: actions/upload-artifact@v4
+        with:
+          name: recovery-guardian-plugin
+          path: dist/recovery-guardian.zip

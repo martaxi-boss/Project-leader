@@ -1,6 +1,16 @@
 # Project Leader smoke tests
 
-Run these after the GitHub marketplace is imported and the plugins are installed.
+Run these after the plugins are installed.
+
+## Test 0 — Plugin discovery
+
+Inside a ChatGPT Project, type:
+
+`@pro`
+
+Pass if **Project Leader** is available for selection.
+
+Also verify **Recovery Guardian** is installed and selectable when explicitly searched.
 
 ## Test 1 — Bare activation
 
@@ -44,6 +54,7 @@ Pass if the same action is not retried forever: after repeated identical failure
 ## Test 7 — Interrupted-session recovery
 
 Stop a low-risk Builder flow after at least one durable GitHub change. Open a new chat, invoke `@Recovery Guardian`, and say:
+
 `Recupera e continua a partir do último estado verificável.`
 
 Pass if it reconstructs branch/PR/commit/CI state from GitHub and resumes only inside the previously bounded scope.
