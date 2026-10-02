@@ -38,7 +38,9 @@ Key requirements:
 - maximum 3 attempts for the same transient action fingerprint;
 - after 2 identical failures, reconstruct/replan;
 - after 3 no-progress iterations, stop that strategy;
-- on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response.
+- on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response;
+- persist/re-read `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters matter across interruptions;
+- never certify a consumed Human Gate without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
 
 ## Platform outage
 
