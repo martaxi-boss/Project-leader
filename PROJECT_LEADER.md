@@ -61,7 +61,7 @@ For every mutation-capable task (E1 or higher), Supervisor must define a normali
 
 `.project-leader/tasks/<task-id>.json`
 
-The record must bind the task to the repository, starting SHA/ref, authorized mutation surface, allowed effects, explicit prohibitions, Human Gates, and terminal condition. Use `control/task-authorization.schema.json` as the canonical shape.
+The record must bind the task to the repository, starting SHA/ref, authorized mutation surface, allowed effects, explicit prohibitions, Human Gates, and terminal condition. Use `control/task-authorization.schema.json` as the canonical shape. When acceptance depends on named validations or CI, populate `required_validation` and `required_ci` so `TERMINAL_SUCCESS` can be enforced mechanically.
 
 The record is continuity evidence, not a self-authorizing permission token. It never widens a current Owner instruction, never overrides a later Owner instruction, and must not contain secrets, credentials, or private conversation text. If the record and current Owner instruction conflict, the current Owner instruction wins.
 
@@ -73,7 +73,19 @@ For mutation-capable tasks, Builder returns a machine-readable Worker Result usi
 
 `.project-leader/results/<task-id>.json`
 
-The Worker Result is an audit index, not proof by itself. Supervisor must still verify the referenced branch, commits, PR, CI, artifacts, and material non-effects directly from the source of truth.
+The Worker Result is an audit index, not proof by itself. Supervisor must still verify the referenced branch, commits, PR, CI, artifacts, and material non-effects directly from the source of truth. `TERMINAL_SUCCESS` requires positive validation evidence; required validations must be `PASS`, required CI must be present and `SUCCESS`, and `SKIPPED` never satisfies a required gate.
+
+## Executable mutation scope
+
+For E1+ work, Supervisor/CI must compare the real Git diff against the Task Authorization Record `mutation_scope`. A changed file outside the authorized patterns is a closed failure, not a documentation warning.
+
+## Durable recovery checkpoints
+
+When recovery state matters, persist `.project-leader/checkpoints/<task-id>.json` using `control/recovery-checkpoint.schema.json`. Record only durable operational state: last completed step, action fingerprint, bounded attempt counters, no-progress count, current strategy, last error, and next step. The checkpoint never creates or expands authority.
+
+## Human-Gate transition records
+
+A consumed Human Gate must have separate durable transition evidence. Before the effect, persist an exact-revision authorization at `.project-leader/transitions/<transition-id>.authorization.json`; after the effect, persist `.project-leader/transitions/<transition-id>.result.json`. A successful transition result without matching authorization is invalid. Historical effects whose authorization was not durably recorded must be marked `HISTORICAL_OBSERVED` with the gap explicit; never fabricate retroactive approval.
 
 ## Evidence rule
 
