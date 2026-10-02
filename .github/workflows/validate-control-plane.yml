@@ -1,0 +1,21 @@
+name: Validate control plane
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required control files
+        run: |
+          test -f PROJECT_LEADER.md
+          test -f AGENT_BUILDER_PROMPT.md
+          test -f roles/CONSULTANT.md
+          test -f roles/SUPERVISOR.md
+          test -f roles/BUILDER.md
+          test -f projects/registry.yaml
+          echo "Project Leader control plane structure: PASS"
