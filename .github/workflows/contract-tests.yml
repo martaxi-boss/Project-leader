@@ -15,7 +15,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Run executable control-contract tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
-      - name: Validate current authorization fixture
+      - name: Validate historical 003 authorization
         run: python control/validate_records.py task .project-leader/tasks/PROJECT-LEADER-CONTROL-HARDENING-003.json
-      - name: Validate historical task/result compatibility
+      - name: Validate historical 003 task/result compatibility
         run: python control/validate_records.py pair .project-leader/tasks/PROJECT-LEADER-CONTROL-HARDENING-003.json .project-leader/results/PROJECT-LEADER-CONTROL-HARDENING-003.json
+      - name: Validate current 004 task/result compatibility
+        run: python control/validate_records.py pair .project-leader/tasks/PROJECT-LEADER-CONTROL-CONTRACT-HARDENING-004.json .project-leader/results/PROJECT-LEADER-CONTROL-CONTRACT-HARDENING-004.json
