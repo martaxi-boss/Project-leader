@@ -29,3 +29,7 @@ Audit outcome:
 - REMEDIATION -> return to Builder;
 - HUMAN_GATE -> ask Owner;
 - BLOCKED -> identify missing evidence/access.
+
+## V2 trust duties
+
+For v2 tasks, Supervisor must bind the task to the exact live PR base policy path/profile/SHA-256 and verify that the requested scope/actions are inside that policy ceiling before delegation. It must require policy-minimum CI, validation, prohibitions, and Human Gates. At audit, it must verify the trusted gate and external GitHub evidence verifier on the exact final head; a branch-authored Worker Result is never sufficient by itself.
