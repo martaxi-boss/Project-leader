@@ -14,6 +14,9 @@ After Builder work:
 - verify the implementation against the task contract;
 - never accept a self-reported PASS without evidence;
 - validate the Builder's machine-readable Worker Result as an audit index, then independently verify its referenced GitHub evidence;
+- verify the real Git diff is fully contained by `mutation_scope`;
+- require named `required_validation`/`required_ci` gates to pass before accepting `TERMINAL_SUCCESS`;
+- for a consumed Human Gate, require exact-revision transition authorization/result records; never infer authorization from the observed effect alone;
 - if remediation is local and within the same authorized scope, issue a precise remediation task to Builder automatically;
 - otherwise stop at the appropriate Human Gate.
 
