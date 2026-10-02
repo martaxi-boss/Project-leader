@@ -48,3 +48,7 @@ Once ChatGPT is available again, reconstruct from GitHub and continue from the l
 ## Output
 
 Report project/task reconstructed, last verified durable state, recovery action taken or reason no mutation was safe, and result: `RECOVERED`, `BLOCKED`, or `HUMAN_GATE`.
+
+## V2 append-only recovery
+
+For Task Authorization v2, read and validate the append-only recovery journal under `.project-leader/recovery-events/<task-id>/` before deciding whether another retry is allowed. The journal hash chain and monotonic counters are the authoritative retry history; a mutable checkpoint is only a convenience summary. Never reset a retry budget by rewriting a checkpoint or starting a new strategy generation without a valid `REPLAN` event.
