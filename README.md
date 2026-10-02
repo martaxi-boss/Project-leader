@@ -1,24 +1,57 @@
 # Project Leader
 
-Control plane for multiple software projects managed from a ChatGPT Business Workspace Agent.
+GitHub-backed control plane packaged as two ChatGPT plugins:
 
-## Goal
+- **Project Leader** — the primary single entry point for software-project work.
+- **Recovery Guardian** — an independent recovery controller for interrupted or failing execution.
 
-Use one Workspace Agent named **Project Leader** as the single entry point for project work. The agent follows three internal roles:
+## Intended use
 
-- **Consultant** — product, architecture, requirements, options, and risk analysis.
-- **Supervisor** — reconstructs repository state, defines bounded work, audits diffs/CI, and enforces gates.
-- **Builder** — implements approved work on branches, runs or triggers tests, and prepares pull requests.
+`Open a ChatGPT Project -> New chat -> @Project Leader`
 
-The intended user experience is simple:
+A bare invocation activates Project Leader and waits for the Owner's next instruction.
 
-```text
-Continue PINK IPTV.
-Continue FADEGO.
-Audit and continue VCAM-PRO.
-```
+Project Leader internally routes work through four phases:
 
-The Project Leader selects the registered repository, reconstructs its live GitHub state, runs the Consultant -> Supervisor -> Builder -> Supervisor workflow, and continues until completion or a human gate.
+1. Consultant
+2. Supervisor
+3. Builder
+4. Recovery Guardian
+
+After Builder work, Supervisor independently audits evidence. If execution fails transiently, a write outcome is ambiguous, the response is interrupted, or progress loops, Recovery Guardian automatically enters, verifies durable GitHub state, retries/replans safely, and returns to Supervisor.
+
+The standalone `@Recovery Guardian` plugin is available for explicit recovery after an interrupted session.
+
+## Durable recovery
+
+GitHub is the durable source of truth for branches, commits, PRs, CI, and artifacts. A possibly-completed write is always verified before retrying. Repeated no-progress attempts are bounded by `RECOVERY_PROTOCOL.md`.
+
+A ChatGPT-wide outage cannot be repaired by another ChatGPT agent while the service itself is unavailable. When service returns, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
+
+## Control-plane source of truth
+
+- `PROJECT_LEADER.md`
+- `RUNBOOK.md`
+- `RECOVERY_PROTOCOL.md`
+- `roles/CONSULTANT.md`
+- `roles/SUPERVISOR.md`
+- `roles/BUILDER.md`
+- `roles/RECOVERY_GUARDIAN.md`
+- `projects/registry.yaml`
+- project-specific files under `projects/`
+
+## Plugin packaging
+
+Marketplace:
+`.agents/plugins/marketplace.json`
+
+Plugins:
+- `plugins/project-leader/`
+- `plugins/recovery-guardian/`
+
+Both require the OpenAI GitHub connector.
+
+See `PLUGIN_SETUP.md` for the one-time workspace import/install.
 
 ## Registered test projects
 
@@ -26,49 +59,8 @@ The Project Leader selects the registered repository, reconstructs its live GitH
 - `martaxi-boss/fadego`
 - `martaxi-boss/VCAM-PRO`
 
-See `projects/registry.yaml`.
+## Safety
 
-## Safety model
+Automatic inside an authorized bounded task: repository reads, analysis, branch/commit/PR work, CI inspection, in-scope remediation, and bounded recovery.
 
-Automatic within an authorized task:
-
-- read repository state
-- analyze requirements and architecture
-- create a working branch
-- edit project files
-- run/trigger CI
-- inspect test and workflow results
-- commit changes
-- open/update a pull request
-- request Builder remediation after failed audit
-
-Human gate by default:
-
-- merge to `main`
-- release
-- production deploy
-- destructive data operations
-- repository deletion
-- secrets/credential changes
-- irreversible infrastructure changes
-
-## Important implementation note
-
-Consultant, Supervisor, and Builder are **internal phases of one Workspace Agent**. This avoids manual prompt-copying between separate chats. Because they share the same connected GitHub app, role separation is enforced by instructions: Consultant and Supervisor behave read-only; Builder performs allowed writes.
-
-## Source patterns
-
-This repository adapts two official OpenAI Cookbook patterns:
-
-1. ChatGPT Workspace Agents for repeatable end-to-end work.
-2. Project-manager orchestration with specialist roles and gatekeeping between stages.
-
-See `SOURCES.md` for the exact references.
-
-## Setup
-
-1. Create a ChatGPT Business Workspace Agent named **Project Leader**.
-2. Give it GitHub access to the repositories you want it to manage.
-3. Paste the contents of `AGENT_BUILDER_PROMPT.md` into the conversational Agent Builder.
-4. Keep `PROJECT_LEADER.md`, `roles/`, and `projects/registry.yaml` as the control-plane source of truth.
-5. Test with a low-risk request such as: `Audit PINK IPTV and tell me the next safe task. Do not write yet.`
+Human-gated by default unless explicitly authorized: merge to main, release/publication, production deployment, destructive data operations, repository/history deletion, production secret changes, irreversible infrastructure changes, and paid-service activation.
