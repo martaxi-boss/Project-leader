@@ -1,13 +1,79 @@
+import copy
 import json
-import tempfile
 import unittest
 from pathlib import Path
 
-from control.validate_records import validate_result, validate_task
+from control.validate_records import validate_pair, validate_result, validate_task
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def valid_task():
+    return {
+        "schema_version": "1.0",
+        "task_id": "TEST-CONTROL-001",
+        "project": "TEST",
+        "repository": "owner/repo",
+        "created_at": "2026-10-02T21:30:00Z",
+        "authority": {
+            "kind": "STANDING_DELEGATION",
+            "summary": "Test bounded control task",
+            "source": "CURRENT_OWNER_INSTRUCTION",
+            "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+        },
+        "starting_state": {
+            "default_branch": "main",
+            "base_sha": "a" * 40,
+            "task_branch": "builder/test-control-001",
+            "pr_number": None,
+        },
+        "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+        "mutation_scope": ["control/**"],
+        "allowed_actions": ["create_branch", "create_commit"],
+        "prohibited_actions": ["merge_to_main"],
+        "human_gates": [{"action": "merge_to_main", "requires_owner_approval": True}],
+        "terminal_condition": "PR green; no merge.",
+        "privacy": {
+            "contains_secrets": False,
+            "contains_private_conversation_text": False,
+        },
+    }
+
+def valid_result():
+    return {
+        "schema_version": "1.0",
+        "task_id": "TEST-CONTROL-001",
+        "terminal_status": "TERMINAL_SUCCESS",
+        "repository": "owner/repo",
+        "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+        "authorization_record": ".project-leader/tasks/TEST-CONTROL-001.json",
+        "implementation_head_sha": "b" * 40,
+        "branch": "builder/test-control-001",
+        "pr_number": 1,
+        "recorded_at": "2026-10-02T21:40:00Z",
+        "state_observed_at": "2026-10-02T21:39:00Z",
+        "superseded_by": None,
+        "post_transition_record": None,
+        "changes": ["example"],
+        "validation": [{"name": "unit", "status": "PASS", "evidence": "local"}],
+        "ci": [{"name": "CI", "status": "SUCCESS", "run_id": 1}],
+        "artifacts": [],
+        "material_non_effects": ["no merge"],
+        "residual_blockers": [],
+    }
+
 class ControlContractTests(unittest.TestCase):
+    def assertInvalidTask(self, mutate):
+        record = valid_task()
+        mutate(record)
+        with self.assertRaises(ValueError):
+            validate_task(record)
+
+    def assertInvalidResult(self, mutate):
+        record = valid_result()
+        mutate(record)
+        with self.assertRaises(ValueError):
+            validate_result(record)
+
     def test_schemas_are_valid_json_and_require_core_fields(self):
         task = json.loads((ROOT / "control/task-authorization.schema.json").read_text())
         result = json.loads((ROOT / "control/worker-result.schema.json").read_text())
@@ -22,31 +88,78 @@ class ControlContractTests(unittest.TestCase):
         self.assertTrue(pl["apps"]["github"]["required"])
         self.assertEqual(pl["apps"]["github"]["id"], rg["apps"]["github"]["id"])
 
-    def test_current_task_authorization_record_validates(self):
-        record = json.loads((ROOT / ".project-leader/tasks/PROJECT-LEADER-CONTROL-HARDENING-003.json").read_text())
-        self.assertTrue(validate_task(record))
-        self.assertFalse(record["privacy"]["contains_secrets"])
-        self.assertFalse(record["privacy"]["contains_private_conversation_text"])
+    def test_historical_records_remain_valid(self):
+        task = json.loads((ROOT / ".project-leader/tasks/PROJECT-LEADER-CONTROL-HARDENING-003.json").read_text())
+        result = json.loads((ROOT / ".project-leader/results/PROJECT-LEADER-CONTROL-HARDENING-003.json").read_text())
+        self.assertTrue(validate_task(task))
+        self.assertTrue(validate_result(result))
 
-    def test_worker_result_validator_accepts_minimal_success(self):
-        sample = {
-            "schema_version": "1.0",
-            "task_id": "TEST-WORKER-001",
-            "terminal_status": "TERMINAL_SUCCESS",
-            "repository": "owner/repo",
-            "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
-            "authorization_record": ".project-leader/tasks/TEST-WORKER-001.json",
-            "implementation_head_sha": "a" * 40,
-            "branch": "builder/test-worker-001",
-            "pr_number": 1,
-            "changes": ["example"],
-            "validation": [{"name": "unit", "status": "PASS", "evidence": "local"}],
-            "ci": [],
-            "artifacts": [],
-            "material_non_effects": ["no merge"],
-            "residual_blockers": [],
-        }
-        self.assertTrue(validate_result(sample))
+    def test_valid_pair(self):
+        self.assertTrue(validate_pair(valid_task(), valid_result()))
+
+    def test_unknown_field_fails(self):
+        self.assertInvalidTask(lambda r: r.__setitem__("unexpected", True))
+
+    def test_invalid_authority_kind_fails(self):
+        self.assertInvalidTask(lambda r: r["authority"].__setitem__("kind", "MAGIC"))
+
+    def test_invalid_date_time_fails(self):
+        self.assertInvalidTask(lambda r: r.__setitem__("created_at", "yesterday"))
+
+    def test_duplicate_array_item_fails(self):
+        self.assertInvalidTask(lambda r: r.__setitem__("mutation_scope", ["control/**", "control/**"]))
+
+    def test_malformed_repository_fails(self):
+        self.assertInvalidTask(lambda r: r.__setitem__("repository", "owner/repo/extra"))
+
+    def test_nested_unknown_field_fails(self):
+        self.assertInvalidTask(lambda r: r["authority"].__setitem__("extra", "nope"))
+
+    def test_human_gate_false_fails(self):
+        self.assertInvalidTask(lambda r: r["human_gates"][0].__setitem__("requires_owner_approval", False))
+
+    def test_result_invalid_sha_fails(self):
+        self.assertInvalidResult(lambda r: r.__setitem__("implementation_head_sha", "abc"))
+
+    def test_result_unknown_validation_field_fails(self):
+        self.assertInvalidResult(lambda r: r["validation"][0].__setitem__("extra", "nope"))
+
+    def test_terminal_success_with_failed_validation_fails(self):
+        self.assertInvalidResult(lambda r: r["validation"][0].__setitem__("status", "FAIL"))
+
+    def test_terminal_success_with_pending_ci_fails(self):
+        self.assertInvalidResult(lambda r: r["ci"][0].__setitem__("status", "PENDING"))
+
+    def test_pair_task_id_mismatch_fails(self):
+        result = valid_result()
+        result["task_id"] = "OTHER-TASK-001"
+        result["authorization_record"] = ".project-leader/tasks/OTHER-TASK-001.json"
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_pair_repository_mismatch_fails(self):
+        result = valid_result()
+        result["repository"] = "owner/other"
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_pair_branch_mismatch_fails(self):
+        result = valid_result()
+        result["branch"] = "builder/other"
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_pair_authorization_path_mismatch_fails(self):
+        result = valid_result()
+        result["authorization_record"] = ".project-leader/tasks/wrong.json"
+        with self.assertRaises(ValueError):
+            validate_pair(valid_task(), result)
+
+    def test_pair_pr_mismatch_fails_when_task_binds_pr(self):
+        task = valid_task()
+        task["starting_state"]["pr_number"] = 99
+        with self.assertRaises(ValueError):
+            validate_pair(task, valid_result())
 
     def test_contracts_reference_durable_authorization(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text()
