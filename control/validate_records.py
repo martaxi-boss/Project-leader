@@ -14,6 +14,7 @@ RESULT_SCHEMA = ROOT / "worker-result.schema.json"
 RESULT_SCHEMA_V1 = ROOT / "worker-result.v1.schema.json"
 CHECKPOINT_SCHEMA = ROOT / "recovery-checkpoint.schema.json"
 RECOVERY_EVENT_SCHEMA = ROOT / "recovery-event.schema.json"
+PROJECT_POLICY_SCHEMA = ROOT / "project-policy.schema.json"
 TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
@@ -113,6 +114,10 @@ def _reject_duplicate_names(items, label):
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         raise ValueError(f"duplicate {label} names are not allowed: {', '.join(duplicates)}")
+
+def validate_project_policy(record):
+    _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
+    return True
 
 def validate_task(record):
     version = record.get("schema_version")
@@ -313,7 +318,7 @@ def _read_json(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-pair"])
+    parser.add_argument("kind", choices=["policy","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-pair"])
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args()
     if args.kind == "pair":
@@ -335,6 +340,7 @@ def main():
             parser.error(f"{args.kind} requires exactly one path")
         data = _read_json(args.paths[0])
         validators = {
+            "policy": validate_project_policy,
             "task": validate_task,
             "result": validate_result,
             "checkpoint": validate_checkpoint,
