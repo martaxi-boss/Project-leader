@@ -1,0 +1,66 @@
+name: Trusted authorization gate
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  trusted-authorization:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted base only
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+
+      - name: Fetch untrusted control records as data
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" --jq '.[].filename' > /tmp/project-leader-changed.txt
+          mapfile -t task_files < <(grep -E '^\.project-leader/tasks/[^/]+\.json$' /tmp/project-leader-changed.txt || true)
+          if [ "${#task_files[@]}" -ne 1 ]; then
+            echo "Trusted gate requires exactly one changed Task Authorization Record." >&2
+            cat /tmp/project-leader-changed.txt >&2
+            exit 1
+          fi
+          task_path="${task_files[0]}"
+          gh api -H "Accept: application/vnd.github.raw+json" "/repos/$GITHUB_REPOSITORY/contents/$task_path?ref=$HEAD_SHA" > /tmp/task.json
+          task_id="$(python -c 'import json; print(json.load(open("/tmp/task.json"))["task_id"])')"
+          result_path=".project-leader/results/$task_id.json"
+          if ! gh api -H "Accept: application/vnd.github.raw+json" "/repos/$GITHUB_REPOSITORY/contents/$result_path?ref=$HEAD_SHA" > /tmp/result.json; then
+            echo "Trusted gate requires the final Worker Result on the PR head: $result_path" >&2
+            exit 1
+          fi
+
+      - name: Verify base-anchored authorization ceiling
+        run: |
+          python control/trusted_gate.py \
+            --task /tmp/task.json \
+            --policy projects/policies/project-leader.json \
+            --base-sha "${{ github.event.pull_request.base.sha }}" \
+            --changed-files /tmp/project-leader-changed.txt \
+            --expected-policy-path projects/policies/project-leader.json
+
+      - name: Verify task/result contract
+        run: python control/validate_records.py pair /tmp/task.json /tmp/result.json
+
+      - name: Verify GitHub CI evidence externally
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python control/verify_github_evidence.py \
+            --result /tmp/result.json \
+            --repository "$GITHUB_REPOSITORY" \
+            --current-head-sha "${{ github.event.pull_request.head.sha }}"
