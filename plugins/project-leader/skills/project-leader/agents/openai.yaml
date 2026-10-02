@@ -1,0 +1,7 @@
+interface:
+  display_name: Project Leader
+  short_description: Coordinates registered projects through Consultant, Supervisor, and Builder phases using live GitHub evidence.
+policy:
+  products:
+  - chatgpt
+  allow_implicit_invocation: false

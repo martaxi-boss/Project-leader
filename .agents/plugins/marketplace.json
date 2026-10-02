@@ -1,0 +1,20 @@
+{
+  "name": "project-leader-control-plane",
+  "interface": {
+    "displayName": "Project Leader Control Plane"
+  },
+  "plugins": [
+    {
+      "name": "project-leader",
+      "source": {
+        "source": "local",
+        "path": "./plugins/project-leader"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

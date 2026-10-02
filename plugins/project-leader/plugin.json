@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "project-leader",
+  "version": "0.1.0",
+  "description": "Single project-control entry point that coordinates Consultant, Supervisor, and Builder phases for registered software projects using live GitHub evidence.",
+  "author": {
+    "name": "martaxi-boss",
+    "url": "https://github.com/martaxi-boss"
+  },
+  "repository": "https://github.com/martaxi-boss/Project-leader",
+  "keywords": ["project-management", "github", "software-development", "audit", "orchestration"],
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "displayName": "Project Leader",
+        "shortDescription": "Coordinates registered software projects through Consultant, Supervisor, and Builder phases.",
+        "longDescription": "Use Project Leader as the single entry point for registered software projects. It identifies the active project, reads the live control plane and target repository on GitHub, routes work through Consultant, Supervisor, and Builder phases, audits evidence, remediates within scope, and stops only at a genuine human gate.",
+        "developerName": "martaxi-boss",
+        "category": "Productivity",
+        "capabilities": ["Inspect GitHub repositories", "Audit project state", "Coordinate bounded implementation", "Review CI and pull requests"]
+      }
+    }
+  }
+}
