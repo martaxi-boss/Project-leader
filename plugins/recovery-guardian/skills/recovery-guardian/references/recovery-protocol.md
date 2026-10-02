@@ -10,6 +10,8 @@ Permanent/configuration: do not blind-retry. Inspect arguments, permissions, rep
 
 Loop/no-progress: fingerprint `task + target + intended action + observed result`. After 2 identical failures, reconstruct/replan. After 3 no-progress iterations overall, stop the strategy.
 
-Resume: reconstruct default branch, task branch, PRs, task-related commits, and CI/workflow state; determine the last durable completed step; verify ambiguous writes; continue from the first incomplete step.
+Checkpoint: persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress state must survive interruption. Restore it before any further retry decision.
+
+Resume: reconstruct default branch, task branch, PRs, task-related commits, checkpoint state, and CI/workflow state; determine the last durable completed step; verify ambiguous writes; continue from the first incomplete step.
 
 Never automatically cross merge-to-main, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates without explicit authorization.
