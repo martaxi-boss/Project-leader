@@ -52,17 +52,30 @@ Fingerprint repeated work as:
 - Never recurse indefinitely between Builder and Recovery Guardian.
 - Return to Supervisor with a changed plan, `BLOCKED`, or `HUMAN_GATE`.
 
+## Durable recovery checkpoint
+
+When retry state, loop counters, or strategy changes must survive a chat/session interruption, persist:
+
+`.project-leader/checkpoints/<task-id>.json`
+
+using `control/recovery-checkpoint.schema.json`.
+
+The checkpoint records the last durable step, current action fingerprint, attempt count, identical-failure count, no-progress iterations, strategy generation, last error, and next step. It must not contain secrets or private conversation text and never grants authority.
+
+Update the checkpoint after a material failure/replan and before relying on a retry counter that must survive interruption. On resume, read and validate it before deciding whether another attempt is allowed.
+
 ## Resume after interruption
 
 On a new turn after an interrupted response:
 
 1. Identify the active project and last bounded task from current Project context plus GitHub evidence.
 2. Look for `.project-leader/tasks/<task-id>.json` in the target repository and validate it against `control/task-authorization.schema.json` when present.
-3. Re-read default branch, task branch, open PRs, task-related commits, and CI/workflow state.
-4. Determine the last durable completed step.
-5. Verify whether any write that lacked a response already occurred.
-6. Compare durable authorization evidence with any current Owner instruction. A task record may preserve authority but can never widen or override a newer instruction.
-7. Continue from the first incomplete step only when the bounded mutation authority is established.
+3. Look for `.project-leader/checkpoints/<task-id>.json`; when present, validate it and restore bounded retry/no-progress state.
+4. Re-read default branch, task branch, open PRs, task-related commits, and CI/workflow state.
+5. Determine the last durable completed step.
+6. Verify whether any write that lacked a response already occurred.
+7. Compare durable authorization evidence with any current Owner instruction. A task record may preserve authority but can never widen or override a newer instruction.
+8. Continue from the first incomplete step only when the bounded mutation authority is established.
 
 GitHub history without a compatible task authorization record can prove effects, but not the full original authorization envelope. If the current conversation also does not establish mutation authority, recover read-only and identify the exact authorization gap instead of guessing.
 
