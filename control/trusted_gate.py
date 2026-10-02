@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import sys
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +45,16 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     actual_digest = policy_sha256(policy_raw)
     if binding["sha256"] != actual_digest:
         raise ValueError("task policy.sha256 does not match the exact base policy bytes")
+
+    protected = [
+        path for path in changed_files
+        if any(fnmatchcase(path, pattern) for pattern in policy["protected_paths"])
+    ]
+    if protected:
+        raise ValueError(
+            "E1 trusted gate forbids trust-root mutation; requires a separate governance/Human-Gate path: "
+            + ", ".join(sorted(protected))
+        )
 
     effect = task["effect_class"]
     effect_policy = policy["effect_policies"].get(effect)
