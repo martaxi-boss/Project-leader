@@ -1,0 +1,88 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-TRUSTED-GATE-E2E-007",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-02T22:50:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "summary": "Run a harmless Project Leader-local E2E proof of the newly integrated trusted authorization gate and external GitHub evidence verification, with no merge, governance mutation, release, cross-project mutation, production effect or cost.",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND"
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "1e364f5a5063d7ceb2bb32522795b16b0b809fa8",
+    "task_branch": "builder/trusted-gate-e2e-007",
+    "pr_number": null
+  },
+  "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+  "mutation_scope": [
+    "tests/**",
+    ".project-leader/tasks/**",
+    ".project-leader/results/**"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation"
+  ],
+  "human_gates": [
+    {
+      "action": "merge_to_main",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "license_selection",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_owner_approval": true
+    }
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trusted authorization gate runtime"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "1e364f5a5063d7ceb2bb32522795b16b0b809fa8",
+    "sha256": "15c6673f2f028c8b85e95e8529d7e29a4e2d44971faf2a11aaa52f8f6acb1bfa"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Open PR to main; standard CI green on implementation head; emit Worker Result v2 with real run IDs; Trusted authorization gate succeeds on the final PR head using base code/policy; no merge or other Human Gate crossed.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  }
+}
