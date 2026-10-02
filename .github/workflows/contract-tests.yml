@@ -51,7 +51,15 @@ jobs:
         run: |
           set -euo pipefail
           git diff --name-only "$BASE_SHA"...HEAD > /tmp/project-leader-changed.txt
-          mapfile -t task_files < <(grep -E '^\.project-leader/tasks/[^/]+\.json /tmp/project-leader-changed.txt || true)
+          mapfile -t task_files < <(grep -E '^\.project-leader/tasks/[^/]+\.json
+          if [ "${#task_files[@]}" -ne 1 ]; then
+            echo "Expected exactly one changed Task Authorization Record, found ${#task_files[@]}" >&2
+            cat /tmp/project-leader-changed.txt >&2
+            exit 1
+          fi
+          mapfile -t changed_files < /tmp/project-leader-changed.txt
+          python control/validate_records.py scope "${task_files[0]}" "${changed_files[@]}"
+ /tmp/project-leader-changed.txt || true)
           if [ "${#task_files[@]}" -ne 1 ]; then
             echo "Expected exactly one changed Task Authorization Record, found ${#task_files[@]}" >&2
             cat /tmp/project-leader-changed.txt >&2
