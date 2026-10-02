@@ -53,3 +53,18 @@ Owner approval is required by default for merge to main, release, production dep
 ## Trust boundary
 
 The roles are logical operating modes, not independent security principals. Consultant and Supervisor behave read-only; Builder writes only inside the authorized scope; Recovery Guardian only restores an already-authorized flow and never expands authority.
+
+## V2 trusted execution path
+
+For a v2 Project Leader task:
+
+1. Reconstruct the live PR base and target repository.
+2. Read the applicable policy profile from the base state.
+3. Compile the task with exact base SHA + policy path/profile/digest.
+4. Require the task's mutation scope and allowed actions to remain inside the base policy ceiling.
+5. Require policy-minimum Human Gates, validation, and CI.
+6. Use append-only recovery events when retry/replan history exists.
+7. Emit Worker Result v2 with real GitHub Actions run IDs.
+8. Let the trusted base workflow verify authorization, task/result compatibility, and GitHub CI evidence without executing PR-head code.
+
+Repository branch protection/rulesets remain an external GitHub governance layer. The trusted workflow strengthens PR enforcement but does not make an unprotected `main` equivalent to a protected branch.
