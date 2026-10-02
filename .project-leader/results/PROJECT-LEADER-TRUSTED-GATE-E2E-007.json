@@ -1,0 +1,64 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-TRUSTED-GATE-E2E-007",
+  "terminal_status": "BLOCKED",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-TRUSTED-GATE-E2E-007.json",
+  "implementation_head_sha": "d18da4a34682f37ce4c00639def607c985f52891",
+  "branch": "builder/trusted-gate-e2e-007",
+  "pr_number": 7,
+  "recorded_at": "2026-10-02T22:55:00Z",
+  "state_observed_at": "2026-10-02T22:54:00Z",
+  "superseded_by": null,
+  "post_transition_record": null,
+  "changes": [
+    "Added only the v2 Task Authorization record and a harmless test fixture to exercise the trusted gate runtime."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Control contract tests run 37073955354 passed scope enforcement on implementation head d18da4a34682f37ce4c00639def607c985f52891."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Worker Result now carries the real successful standard CI run IDs for implementation head d18da4a34682f37ce4c00639def607c985f52891; trusted gate will verify them externally."
+    },
+    {
+      "name": "Trusted authorization gate runtime",
+      "status": "SKIPPED",
+      "evidence": "Awaiting the trusted pull_request_target gate rerun after this Worker Result is present."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37073955354
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37073955355
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37073955381
+    }
+  ],
+  "artifacts": [],
+  "material_non_effects": [
+    "No merge to main",
+    "No branch protection or ruleset change",
+    "No release or publication",
+    "No managed-project mutation",
+    "No production effect",
+    "No cost"
+  ],
+  "residual_blockers": [
+    "Trusted authorization gate runtime proof is still pending on the head containing this Worker Result."
+  ]
+}
