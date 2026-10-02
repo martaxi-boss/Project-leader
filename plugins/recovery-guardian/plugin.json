@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "recovery-guardian",
-  "version": "0.2.0",
-  "description": "Independent recovery controller for interrupted or failing Project Leader workflows using live GitHub evidence and bounded anti-loop rules.",
+  "version": "0.3.0",
+  "description": "Recovery controller with append-only anti-loop history and live GitHub reconstruction for interrupted Project Leader workflows.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
