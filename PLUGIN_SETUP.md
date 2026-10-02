@@ -1,55 +1,60 @@
-# Project Leader plugin setup
+# Project Leader marketplace setup
 
-This repository now contains a ChatGPT plugin named **Project Leader**.
+This repository contains two ChatGPT plugins:
 
-## Goal
+- **Project Leader** — primary project controller.
+- **Recovery Guardian** — independent recovery controller for interrupted/failed sessions.
 
-After the one-time workspace import/install, the normal mobile flow is:
-
-```text
-Open a ChatGPT Project -> New chat -> @Project Leader
-```
-
-A bare invocation only activates Project Leader and waits. The Owner then gives the command, for example:
-
-```text
-Faz uma auditoria completa deste projeto.
-Continua a construção a partir do estado atual.
-Vê o PR aberto e corrige o que faltar.
-```
-
-Project Leader then uses the current Project context and the GitHub control plane to route the work internally through Consultant, Supervisor, and Builder.
+Project Leader also uses the Recovery Guardian protocol internally, so normal work does not require manual role switching.
 
 ## One-time workspace import
 
-After this plugin is on `main`:
+After this repository is on `main`:
 
 1. Open **Workspace settings -> Plugins**.
 2. Select **Add -> Import marketplace**.
 3. Source: `https://github.com/martaxi-boss/Project-leader`
 4. Leave **Path** empty.
-5. Leave **Branch** empty to follow the default branch `main`.
-6. Import the marketplace.
-7. Open the imported **Project Leader** plugin and set its installation policy to **Installed** (or install it for the intended workspace role).
-8. Confirm the required GitHub app is enabled and connected.
+5. Leave **Branch** empty to follow `main`.
+6. Import the marketplace and authorize GitHub when prompted.
+7. Open **Project Leader** and set installation policy to **Installed** for the intended role/users.
+8. Open **Recovery Guardian** and set it to **Installed** if you want direct `@Recovery Guardian` access.
+9. Confirm the required GitHub app is enabled and connected.
 
-The marketplace manifest is at `.agents/plugins/marketplace.json`.
-The plugin source is at `plugins/project-leader/`.
+## Normal use
+
+Inside a ChatGPT Project:
+
+`@Project Leader`
+
+Then give the command, for example:
+
+- `Faz uma auditoria completa deste projeto.`
+- `Continua a construção a partir do estado atual.`
+- `Vê o PR aberto e corrige o que faltar.`
+
+Project Leader automatically routes through Consultant, Supervisor, Builder, and Recovery Guardian phases as needed.
+
+## Manual recovery
+
+After an interrupted session you may instead invoke:
+
+`@Recovery Guardian`
+
+Then:
+
+`Recupera e continua a partir do último estado verificável.`
+
+Recovery Guardian reconstructs from GitHub before repeating any write.
+
+## Important limitation
+
+Neither plugin can keep running inside ChatGPT while the ChatGPT service itself is unavailable, and Recovery Guardian cannot passively watch another dead chat. The resilience mechanism is durable-state recovery from GitHub after service returns.
 
 ## GitHub dependency
 
-The plugin references the OpenAI GitHub connector with app id:
+Both plugins reference the installed OpenAI GitHub connector. Access remains limited to the repositories and actions authorized for the signed-in account.
 
-```text
-connector_76869538009648d5b282a4bb21c3d157
-```
+## Updates
 
-The connector remains subject to the workspace and GitHub permissions of the signed-in user.
-
-## Update model
-
-The GitHub marketplace can sync updates from this repository. Keep the plugin package and control-plane files in the same repository so role and registry changes can be reviewed and versioned together.
-
-## Safety
-
-Project Leader preserves the repository's Human Gates. Invocation is not authorization to merge, deploy, release, mutate production data, change secrets, perform irreversible infrastructure work, or spend money.
+The GitHub marketplace can sync future changes from this repository. Use **Sync now** in Workspace settings -> Plugins -> Marketplaces when you want an immediate refresh after a merged update.

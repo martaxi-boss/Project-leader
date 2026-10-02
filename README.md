@@ -1,63 +1,55 @@
 # Project Leader
 
-GitHub-backed control plane packaged as a ChatGPT plugin named **Project Leader**.
+GitHub-backed control plane packaged as two ChatGPT plugins:
 
-## Goal
+- **Project Leader** — the primary single entry point for software-project work.
+- **Recovery Guardian** — an independent recovery controller for interrupted or failing execution.
 
-Use one invokable Project Leader as the single entry point for software-project work. The Owner should not have to copy prompts between separate Consultant, Supervisor, and Builder chats.
+## Intended use
 
-The intended flow is:
+`Open a ChatGPT Project -> New chat -> @Project Leader`
 
-```text
-Open a ChatGPT Project -> New chat -> @Project Leader
-```
+A bare invocation activates Project Leader and waits for the Owner's next instruction.
 
-A bare invocation activates Project Leader and waits for the Owner's next instruction. It does **not** automatically audit or continue the project.
+Project Leader internally routes work through four phases:
 
-Example follow-up commands:
+1. Consultant
+2. Supervisor
+3. Builder
+4. Recovery Guardian
 
-```text
-Faz uma auditoria completa deste projeto.
-Continua a construção a partir do estado atual.
-Vê o PR aberto e diz-me o que falta.
-Corrige o problema encontrado na auditoria.
-```
+After Builder work, Supervisor independently audits evidence. If execution fails transiently, a write outcome is ambiguous, the response is interrupted, or progress loops, Recovery Guardian automatically enters, verifies durable GitHub state, retries/replans safely, and returns to Supervisor.
 
-## Architecture
+The standalone `@Recovery Guardian` plugin is available for explicit recovery after an interrupted session.
 
-Project Leader is one controller with three internal operating phases:
+## Durable recovery
 
-- **Consultant** — product, architecture, requirements, reuse, tradeoffs, and risk analysis. Read-only.
-- **Supervisor** — reconstructs live state, bounds work, audits diffs/CI/evidence, and enforces gates. Read-only for implementation.
-- **Builder** — implements only authorized bounded work, tests it, commits, and prepares PRs.
+GitHub is the durable source of truth for branches, commits, PRs, CI, and artifacts. A possibly-completed write is always verified before retrying. Repeated no-progress attempts are bounded by `RECOVERY_PROTOCOL.md`.
 
-After Builder work, control returns to Supervisor audit. In-scope remediation can continue automatically.
+A ChatGPT-wide outage cannot be repaired by another ChatGPT agent while the service itself is unavailable. When service returns, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
 
-The live control-plane source of truth is:
+## Control-plane source of truth
 
 - `PROJECT_LEADER.md`
 - `RUNBOOK.md`
+- `RECOVERY_PROTOCOL.md`
 - `roles/CONSULTANT.md`
 - `roles/SUPERVISOR.md`
 - `roles/BUILDER.md`
+- `roles/RECOVERY_GUARDIAN.md`
 - `projects/registry.yaml`
 - project-specific files under `projects/`
 
-## ChatGPT plugin packaging
+## Plugin packaging
 
-The installable plugin lives at:
+Marketplace:
+`.agents/plugins/marketplace.json`
 
-```text
-plugins/project-leader/
-```
+Plugins:
+- `plugins/project-leader/`
+- `plugins/recovery-guardian/`
 
-The repository marketplace lives at:
-
-```text
-.agents/plugins/marketplace.json
-```
-
-The plugin requires the OpenAI GitHub connector and uses the live GitHub repositories as evidence.
+Both require the OpenAI GitHub connector.
 
 See `PLUGIN_SETUP.md` for the one-time workspace import/install.
 
@@ -67,37 +59,8 @@ See `PLUGIN_SETUP.md` for the one-time workspace import/install.
 - `martaxi-boss/fadego`
 - `martaxi-boss/VCAM-PRO`
 
-See `projects/registry.yaml`.
+## Safety
 
-## Safety model
+Automatic inside an authorized bounded task: repository reads, analysis, branch/commit/PR work, CI inspection, in-scope remediation, and bounded recovery.
 
-Automatic within an authorized bounded task:
-
-- read repository state;
-- analyze requirements and architecture;
-- create a working branch;
-- edit project files;
-- run or trigger CI;
-- inspect tests and workflow results;
-- commit changes;
-- open or update a pull request;
-- remediate failed audit findings inside the same authorized scope.
-
-Human gate by default unless the current Owner instruction explicitly authorizes the exact action:
-
-- merge to `main`;
-- release/publication;
-- production deployment;
-- destructive data operations;
-- repository/history deletion;
-- production secret changes;
-- irreversible infrastructure changes;
-- paid-service activation.
-
-## Legacy note
-
-`AGENT_BUILDER_PROMPT.md` is retained as a historical/manual fallback. The preferred current architecture is the repository-backed ChatGPT plugin.
-
-## Sources
-
-See `SOURCES.md` for the OpenAI patterns and current plugin packaging references.
+Human-gated by default unless explicitly authorized: merge to main, release/publication, production deployment, destructive data operations, repository/history deletion, production secret changes, irreversible infrastructure changes, and paid-service activation.

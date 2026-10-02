@@ -12,18 +12,34 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check required control files
         run: |
+          set -eu
           test -f PROJECT_LEADER.md
-          test -f AGENT_BUILDER_PROMPT.md
           test -f RUNBOOK.md
+          test -f RECOVERY_PROTOCOL.md
           test -f SMOKE_TESTS.md
           test -f roles/CONSULTANT.md
           test -f roles/SUPERVISOR.md
           test -f roles/BUILDER.md
+          test -f roles/RECOVERY_GUARDIAN.md
           test -f projects/registry.yaml
           test -f projects/pink-iptv.md
           test -f projects/fadego.md
           test -f projects/vcam-pro.md
+          test -f .agents/plugins/marketplace.json
+          test -f plugins/project-leader/plugin.json
+          test -f plugins/project-leader/.app.json
+          test -f plugins/project-leader/skills/project-leader/SKILL.md
+          test -f plugins/recovery-guardian/plugin.json
+          test -f plugins/recovery-guardian/.app.json
+          test -f plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
           grep -q "martaxi-boss/pink-iptv" projects/registry.yaml
           grep -q "martaxi-boss/fadego" projects/registry.yaml
           grep -q "martaxi-boss/VCAM-PRO" projects/registry.yaml
-          echo "Project Leader control plane structure: PASS"
+          grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
+          grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
+          python -m json.tool .agents/plugins/marketplace.json >/dev/null
+          python -m json.tool plugins/project-leader/plugin.json >/dev/null
+          python -m json.tool plugins/project-leader/.app.json >/dev/null
+          python -m json.tool plugins/recovery-guardian/plugin.json >/dev/null
+          python -m json.tool plugins/recovery-guardian/.app.json >/dev/null
+          echo "Project Leader + Recovery Guardian structure: PASS"

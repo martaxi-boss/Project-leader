@@ -1,24 +1,25 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-leader",
-  "version": "0.1.0",
-  "description": "Single project-control entry point that coordinates Consultant, Supervisor, and Builder phases for registered software projects using live GitHub evidence.",
+  "version": "0.2.0",
+  "description": "Single project-control entry point coordinating Consultant, Supervisor, Builder, and automatic Recovery Guardian phases using live GitHub evidence.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
   },
   "repository": "https://github.com/martaxi-boss/Project-leader",
-  "keywords": ["project-management", "github", "software-development", "audit", "orchestration"],
+  "keywords": ["project-management", "github", "software-development", "audit", "orchestration", "recovery"],
+  "skills": "./skills/",
   "extensions": {
     "com.openai": {
       "apps": "./.app.json",
       "interface": {
         "displayName": "Project Leader",
-        "shortDescription": "Coordinates registered software projects through Consultant, Supervisor, and Builder phases.",
-        "longDescription": "Use Project Leader as the single entry point for registered software projects. It identifies the active project, reads the live control plane and target repository on GitHub, routes work through Consultant, Supervisor, and Builder phases, audits evidence, remediates within scope, and stops only at a genuine human gate.",
+        "shortDescription": "Coordinates projects and automatically recovers bounded execution failures.",
+        "longDescription": "Use Project Leader as the single entry point for registered software projects. It identifies the active project, reads the live control plane and target repository on GitHub, routes work through Consultant, Supervisor, Builder, and Recovery Guardian phases, audits evidence, safely recovers from transient failures or interrupted execution, and stops only at a genuine human gate.",
         "developerName": "martaxi-boss",
         "category": "Productivity",
-        "capabilities": ["Inspect GitHub repositories", "Audit project state", "Coordinate bounded implementation", "Review CI and pull requests"]
+        "capabilities": ["Inspect GitHub repositories", "Audit project state", "Coordinate bounded implementation", "Recover interrupted execution", "Review CI and pull requests"]
       }
     }
   }
