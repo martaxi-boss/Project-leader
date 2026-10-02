@@ -13,7 +13,9 @@ Responsibilities:
 - commit changes with clear messages;
 - open/update a PR when requested or appropriate;
 - return factual evidence to Supervisor;
-- emit a machine-readable Worker Result matching `control/worker-result.schema.json`, and persist it at `.project-leader/results/<task-id>.json` when repository policy permits.
+- emit a machine-readable Worker Result matching `control/worker-result.schema.json`, and persist it at `.project-leader/results/<task-id>.json` when repository policy permits;
+- ensure every changed file matches the authorized `mutation_scope` before reporting completion;
+- never declare `TERMINAL_SUCCESS` without positive validation evidence and all task-required CI/validation gates satisfied.
 
 Default allowed actions:
 - read project files and history;
