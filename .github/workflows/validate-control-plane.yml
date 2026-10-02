@@ -20,7 +20,13 @@ jobs:
           test -f RUNBOOK.md
           test -f RECOVERY_PROTOCOL.md
           test -f SMOKE_TESTS.md
+          test -f control/task-authorization.v1.schema.json
+          test -f control/worker-result.v1.schema.json
           test -f control/recovery-checkpoint.schema.json
+          test -f control/recovery-event.schema.json
+          test -f control/project-policy.schema.json
+          test -f control/trusted_gate.py
+          test -f control/verify_github_evidence.py
           test -f control/transition-authorization.schema.json
           test -f control/transition-result.schema.json
           test -f roles/CONSULTANT.md
@@ -28,9 +34,13 @@ jobs:
           test -f roles/BUILDER.md
           test -f roles/RECOVERY_GUARDIAN.md
           test -f projects/registry.yaml
+          test -f projects/policy-profiles.json
+          test -f projects/policies/project-leader.json
           test -f projects/pink-iptv.md
           test -f projects/fadego.md
           test -f projects/vcam-pro.md
+          test -f .github/workflows/trusted-pr-gate.yml
+          test -f scripts/package_plugins.py
           test -f .agents/plugins/marketplace.json
           test -f plugins/project-leader/plugin.json
           test -f plugins/project-leader/.app.json
@@ -45,6 +55,10 @@ jobs:
           grep -q "martaxi-boss/pink-iptv" projects/registry.yaml
           grep -q "martaxi-boss/fadego" projects/registry.yaml
           grep -q "martaxi-boss/VCAM-PRO" projects/registry.yaml
+          grep -q 'policy_profile: "projects/policy-profiles.json#pink-iptv"' projects/registry.yaml
+          grep -q 'policy_profile: "projects/policy-profiles.json#fadego"' projects/registry.yaml
+          grep -q 'policy_profile: "projects/policy-profiles.json#vcam-pro"' projects/registry.yaml
+          python control/validate_records.py policy projects/policies/project-leader.json
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
           grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml
@@ -60,4 +74,6 @@ jobs:
           python -m json.tool plugins/project-leader/.app.json >/dev/null
           python -m json.tool plugins/recovery-guardian/plugin.json >/dev/null
           python -m json.tool plugins/recovery-guardian/.app.json >/dev/null
+          python -m json.tool projects/policy-profiles.json >/dev/null
+          python -m json.tool projects/policies/project-leader.json >/dev/null
           echo "Project Leader + Recovery Guardian structure: PASS"
