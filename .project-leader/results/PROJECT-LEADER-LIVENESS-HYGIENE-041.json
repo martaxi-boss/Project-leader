@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-LIVENESS-HYGIENE-041.json",
   "authorization_commit_sha": "887e9e6e85858697a356a09cf8684474a64e1403",
-  "authorization_sha256": "fb6b45a8fbf1e9fa8f89b7e1a046a8c161e76a8361e1b5dbce02d9672f49b3cb",
+  "authorization_sha256": "509d024a6b894e3a49cad2201fa5dcb810b287542205dc65620d88300ee8a763",
   "implementation_head_sha": "854a616337b33f6b99bad4c7f88a694688c523b9",
   "branch": "builder/liveness-hygiene-041",
   "pr_number": 41,
