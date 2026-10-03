@@ -17,3 +17,8 @@ After interruption, reconstruct default branch, task branch, PRs, task-related c
 Never use recovery to bypass merge, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates.
 
 A ChatGPT-wide outage cannot be repaired from inside another ChatGPT agent while the platform itself is unavailable. Resume from GitHub when service returns.
+
+
+For Task Authorization v2, the append-only journal under `.project-leader/recovery-events/<task-id>/` is authoritative. Mutable checkpoints are legacy summaries only and cannot reset attempt/no-progress counters.
+
+An external GitHub Actions run that remains queued/waiting/pending/requested/in_progress is `WAITING_EXTERNAL_CI`, not a retryable failure. Do not redispatch it while active. Re-read at a bounded cadence; investigate the existing run first if it exceeds the canonical stale threshold.
