@@ -104,7 +104,9 @@
         "add_semantic_registry_policy_validation",
         "add_cross_repository_e2e_tests",
         "reconcile_control_contract_docs",
-        "reconcile_transition_records"
+        "reconcile_transition_records",
+        "delete_fully_merged_non_main_branch_refs",
+        "install_automatic_merged_pr_branch_hygiene"
       ],
       "required_prohibited_actions": [
         "merge_to_main",
