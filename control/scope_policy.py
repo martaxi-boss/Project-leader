@@ -26,6 +26,9 @@ def scope_pattern_is_within(requested_pattern, allowed_pattern):
     requested = _normalize_scope_pattern(requested_pattern)
     allowed = _normalize_scope_pattern(allowed_pattern)
 
+    if allowed == "**":
+        return True
+
     if requested == allowed:
         return True
 
