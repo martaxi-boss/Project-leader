@@ -57,6 +57,10 @@ Key requirements:
 
 If ChatGPT itself is unavailable, no ChatGPT agent can continue at that instant. GitHub remains the durable state. When service returns, `@Project Leader` or `@Recovery Guardian` can reconstruct and resume without requiring the Owner to re-explain repository state.
 
+## Repository hygiene
+
+Use `.github/workflows/repository-hygiene.yml` for branch cleanup. The manual sweep may delete only non-`main` branch refs whose tip is proven by GitHub compare ancestry to be fully contained in canonical `main`. Branches with unique/divergent history are preserved for explicit audit. When a same-repository PR is merged, its head branch is automatically removed. Branch-ref deletion never rewrites commit history and must never target `main`.
+
 ## Human Gates
 
 A development-branch integration is not a main Human Gate, but it is still an explicit action: the task must include `merge_development_branch`, the live PR base must not be `main`, and no other gated effect may be triggered. If that action is absent from the task, do not merge and do not infer it from generic implementation authority.
