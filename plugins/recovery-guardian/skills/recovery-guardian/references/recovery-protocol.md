@@ -17,6 +17,6 @@ Resume: reconstruct default branch, task branch, PRs, task-related commits, chec
 Never automatically cross merge-to-main, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates without explicit authorization.
 
 
-V2 recovery: use the append-only hash-chained journal under `.project-leader/recovery-events/<task-id>/` as the authoritative retry history. A checkpoint cannot reset the retry budget.
+V2 recovery: use the append-only hash-chained journal under `.project-leader/recovery-events/<task-id>/` as the authoritative retry history. Commit `FAILURE_OBSERVED` before deciding the retry, commit a matching `RETRY_AUTHORIZED` before the rerun/redispatch starts, and commit `RECOVERED` after success. Retroactive retry authorization is invalid, and an event file must never be rewritten. A checkpoint cannot reset the retry budget.
 
 External CI wait: queued/waiting/pending/requested/in_progress GitHub Actions are `WAITING_EXTERNAL_CI`, not failures. Do not dispatch a duplicate run while the current run is active; investigate the existing run first if it becomes stale.
