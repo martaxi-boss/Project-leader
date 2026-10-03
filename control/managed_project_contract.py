@@ -17,6 +17,7 @@ CI_ROUTE_CONTINUE = "AUDIT_CONTINUE"
 CI_ROUTE_RECOVERY = "RECOVERY"
 CI_ROUTE_INVESTIGATE = "INVESTIGATE"
 POLICY_BINDING_MODE = "CENTRAL_CONTROL_V1"
+GENERIC_POLICY_PATH = "control/generic-project-policy.json"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
@@ -32,6 +33,11 @@ POST_CI_DESCENDANT_MATERIAL = "MATERIAL_DESCENDANT"
 POST_CI_ROUTE_CERTIFICATION_UNCHANGED = "CERTIFICATION_UNCHANGED"
 POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE = "FINAL_HEAD_GOVERNANCE_CHECK"
 POST_CI_ROUTE_FRESH_IMPLEMENTATION = "FRESH_IMPLEMENTATION_CI"
+
+
+def resolve_project_policy_path(explicit_policy_path=None):
+    """Use a target-specific central policy when explicitly selected, otherwise the generic active-project policy."""
+    return explicit_policy_path or GENERIC_POLICY_PATH
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -52,8 +58,8 @@ def validate_managed_task(task, repository, control_repository=None):
         raise ValueError("managed task policy repository does not match canonical control repository")
 
     required_ci = task.get("required_ci")
-    if not isinstance(required_ci, list) or not required_ci or not all(isinstance(x, str) and x for x in required_ci):
-        raise ValueError("managed task required_ci must be non-empty")
+    if not isinstance(required_ci, list) or not all(isinstance(x, str) and x for x in required_ci):
+        raise ValueError("managed task required_ci must be a list of non-empty workflow names")
     return True
 
 
@@ -81,6 +87,19 @@ def policy_sha256(raw_bytes):
     return hashlib.sha256(raw_bytes).hexdigest()
 
 
+def _task_transition_actions(task):
+    items = task.get("transition_controls") or task.get("human_gates") or []
+    return {item["action"] for item in items}
+
+
+def _policy_transition_actions(effect_policy):
+    return set(
+        effect_policy.get("required_transition_controls")
+        or effect_policy.get("required_human_gates")
+        or []
+    )
+
+
 def verify_managed_task_against_control_policy(
     task,
     policy,
@@ -94,7 +113,9 @@ def verify_managed_task_against_control_policy(
     validate_managed_task(task, task["repository"], control_repository)
     validate_project_policy(policy)
 
-    if task["repository"] != policy["repository"]:
+    if policy.get("repository_mode") == "ACTIVE_TARGET":
+        pass
+    elif task["repository"] != policy.get("repository"):
         raise ValueError("task repository does not match central policy repository")
     if task["starting_state"]["base_sha"] != actual_target_base_sha:
         raise ValueError("task starting_state.base_sha does not match actual target PR base SHA")
@@ -104,8 +125,9 @@ def verify_managed_task_against_control_policy(
         raise ValueError("task policy repository does not match canonical control repository")
     if binding["revision"] != control_revision:
         raise ValueError("task policy revision does not match the exact control-plane revision")
-    if binding["path"] != expected_policy_path:
-        raise ValueError("task policy path does not match registered central policy path")
+    selected_policy_path = resolve_project_policy_path(expected_policy_path)
+    if binding["path"] != selected_policy_path:
+        raise ValueError("task policy path does not match selected central policy path")
     if binding["profile"] != policy["policy_id"]:
         raise ValueError("task policy profile does not match central policy_id")
     if binding["sha256"] != policy_sha256(policy_raw):
@@ -127,6 +149,11 @@ def verify_managed_task_against_control_policy(
         )
 
     allowed_patterns = effect_policy["allowed_scope_patterns"]
+    if policy.get("repository_mode") == "ACTIVE_TARGET" and any(
+        pattern == "**" for pattern in task["mutation_scope"]
+    ):
+        raise ValueError("generic active-target task must narrow mutation_scope below **")
+
     widened_patterns = sorted(
         pattern
         for pattern in task["mutation_scope"]
@@ -146,12 +173,10 @@ def verify_managed_task_against_control_policy(
     if missing_prohibitions:
         raise ValueError("managed task is missing required prohibitions: " + ", ".join(missing_prohibitions))
 
-    task_gates = {
-        item["action"] for item in task["human_gates"] if item["requires_owner_approval"] is True
-    }
-    missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
+    task_gates = _task_transition_actions(task)
+    missing_gates = sorted(_policy_transition_actions(effect_policy) - task_gates)
     if missing_gates:
-        raise ValueError("managed task is missing required Human Gates: " + ", ".join(missing_gates))
+        raise ValueError("managed task is missing required consequential transition controls: " + ", ".join(missing_gates))
 
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
@@ -358,6 +383,8 @@ def classify_post_implementation_descendant(
     }
 
 
+# Legacy validation compatibility for the pre-hygiene main workflow.
+# Current Project Leader runtime does not consult the central project registry.
 def _parse_registry_projects(registry_text):
     projects = {}
     current = None
@@ -375,7 +402,6 @@ def _parse_registry_projects(registry_text):
             continue
         if not in_projects:
             continue
-
         match_project = re.match(r"^  ([A-Za-z0-9._-]+):\s*$", raw)
         if match_project:
             current = match_project.group(1)
@@ -383,7 +409,6 @@ def _parse_registry_projects(registry_text):
             continue
         if current is None:
             continue
-
         match_field = re.match(r'^    ([A-Za-z0-9_]+):\s*"?([^"]*)"?\s*$', raw)
         if match_field:
             projects[current][match_field.group(1)] = match_field.group(2)
@@ -391,11 +416,11 @@ def _parse_registry_projects(registry_text):
 
 
 def validate_registry_profile_consistency(registry_text, profiles, policies):
+    """Legacy-only validator retained until the old main validation workflow is removed."""
     registry_projects = _parse_registry_projects(registry_text)
     profile_projects = profiles.get("profiles") or {}
     if set(registry_projects) != set(profile_projects):
         raise ValueError("registry and policy profile project sets differ")
-
     for project_id, entry in registry_projects.items():
         profile = profile_projects[project_id]
         if entry.get("repository") != profile.get("repository"):
@@ -411,11 +436,13 @@ def validate_registry_profile_consistency(registry_text, profiles, policies):
         if not policy:
             raise ValueError(f"{project_id}: central policy file is missing: {policy_path}")
         validate_project_policy(policy)
-        if policy["repository"] != entry.get("repository"):
+        if policy.get("repository") != entry.get("repository"):
             raise ValueError(f"{project_id}: registry/policy repository mismatch")
-        if policy["default_branch"] != entry.get("default_branch"):
+        if policy.get("default_branch") != entry.get("default_branch"):
             raise ValueError(f"{project_id}: registry/policy default_branch mismatch")
-        allowed_ci = (policy.get("effect_policies") or {}).get("E1_RECOVERABLE_PROJECT_LOCAL", {}).get("allowed_ci", [])
+        allowed_ci = (policy.get("effect_policies") or {}).get(
+            "E1_RECOVERABLE_PROJECT_LOCAL", {}
+        ).get("allowed_ci", [])
         if set(profile.get("allowed_ci_names") or []) != set(allowed_ci):
             raise ValueError(f"{project_id}: profile/policy allowed CI mismatch")
     return True

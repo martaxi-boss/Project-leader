@@ -16,12 +16,12 @@
     "mutation_scope",
     "allowed_actions",
     "prohibited_actions",
+    "human_gates",
     "required_validation",
     "required_ci",
     "policy",
     "recovery",
-    "terminal_condition",
-    "transition_controls"
+    "terminal_condition"
   ],
   "properties": {
     "schema_version": {
@@ -145,6 +145,27 @@
       },
       "uniqueItems": true
     },
+    "human_gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "requires_owner_approval"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requires_owner_approval": {
+            "const": true
+          }
+        }
+      }
+    },
     "required_validation": {
       "type": "array",
       "minItems": 1,
@@ -156,7 +177,7 @@
     },
     "required_ci": {
       "type": "array",
-      "minItems": 0,
+      "minItems": 1,
       "items": {
         "type": "string",
         "minLength": 1
@@ -178,7 +199,7 @@
         },
         "path": {
           "type": "string",
-          "pattern": "^(projects/policies/[A-Za-z0-9._-]+\\.json|control/generic-project-policy\\.json)$"
+          "pattern": "^projects/policies/[A-Za-z0-9._-]+\\.json$"
         },
         "base_sha": {
           "type": "string",
@@ -234,27 +255,6 @@
     },
     "integrity_mode": {
       "const": "IMMUTABLE_AUTHORIZATION_V1"
-    },
-    "transition_controls": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "action",
-          "requires_authority_resolution"
-        ],
-        "properties": {
-          "action": {
-            "type": "string",
-            "minLength": 1
-          },
-          "requires_authority_resolution": {
-            "const": true
-          }
-        }
-      }
     }
   }
 }

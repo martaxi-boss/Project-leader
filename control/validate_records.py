@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 TASK_SCHEMA = ROOT / "task-authorization.schema.json"
 TASK_SCHEMA_V1 = ROOT / "task-authorization.v1.schema.json"
+TASK_SCHEMA_V2_LEGACY = ROOT / "task-authorization.v2.schema.json"
 RESULT_SCHEMA = ROOT / "worker-result.schema.json"
 RESULT_SCHEMA_V1 = ROOT / "worker-result.v1.schema.json"
 CHECKPOINT_SCHEMA = ROOT / "recovery-checkpoint.schema.json"
@@ -20,7 +21,7 @@ TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
 SUPPORTED_SCHEMA_KEYS = {
-    "$schema", "$id", "title", "type", "additionalProperties", "required",
+    "$schema", "$id", "title", "description", "type", "additionalProperties", "required",
     "properties", "const", "enum", "pattern", "minLength", "maxLength",
     "minimum", "minItems", "uniqueItems", "items", "format"
 }
@@ -118,6 +119,20 @@ def _reject_duplicate_names(items, label):
 
 def validate_project_policy(record):
     _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
+    fixed_target = bool(record.get("repository")) and bool(record.get("default_branch"))
+    dynamic_target = (
+        record.get("repository_mode") == "ACTIVE_TARGET"
+        and record.get("default_branch_mode") == "ACTIVE_TARGET"
+    )
+    if fixed_target == dynamic_target:
+        raise ValueError("project policy must declare exactly one target mode: fixed repository/default_branch or ACTIVE_TARGET")
+    for effect_name, effect_policy in (record.get("effect_policies") or {}).items():
+        legacy = effect_policy.get("required_human_gates")
+        current = effect_policy.get("required_transition_controls")
+        if bool(legacy) == bool(current):
+            raise ValueError(
+                f"{effect_name}: project policy must declare exactly one of required_transition_controls or legacy required_human_gates"
+            )
     return True
 
 
@@ -130,6 +145,10 @@ def validate_task(record):
     version = record.get("schema_version")
     if version == "1.0":
         schema = TASK_SCHEMA_V1
+    elif version == "2.0" and "transition_controls" in record:
+        schema = TASK_SCHEMA
+    elif version == "2.0" and "human_gates" in record:
+        schema = TASK_SCHEMA_V2_LEGACY
     elif version == "2.0":
         schema = TASK_SCHEMA
     else:
@@ -158,6 +177,7 @@ def validate_task(record):
                 raise ValueError("CENTRAL_CONTROL_V1 requires repository+revision and forbids base_sha")
         else:
             raise ValueError(f"unsupported v2 policy binding_mode: {mode!r}")
+
     return True
 
 def validate_result(record):

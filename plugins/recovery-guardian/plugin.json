@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "recovery-guardian",
-  "version": "0.4.0",
-  "description": "Recovery controller with append-only v2 anti-loop history, external-CI wait semantics, and live GitHub reconstruction.",
+  "version": "0.5.0",
+  "description": "Recovery controller with append-only anti-loop history, standing-authority preservation, external-CI wait semantics, and live GitHub reconstruction.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "Recovery Guardian",
         "shortDescription": "Recovers interrupted project workflows and prevents duplicate retries.",
-        "longDescription": "Use Recovery Guardian after a failed, interrupted, looping, or ambiguous Project Leader execution. It reconstructs durable state from GitHub, verifies whether writes already happened before retrying, breaks no-progress loops, resumes only inside existing authorization, and preserves all human gates.",
+        "longDescription": "Use Recovery Guardian after a failed, interrupted, looping, or ambiguous Project Leader execution. It reconstructs durable state from GitHub, verifies whether writes already happened before retrying, breaks no-progress loops, preserves existing standing authority, and returns consequential next actions to Supervisor without creating routine Owner-permission prompts.",
         "developerName": "martaxi-boss",
         "category": "Productivity",
         "capabilities": [

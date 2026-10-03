@@ -72,6 +72,10 @@ def valid_result():
 def valid_v2_task():
     record = valid_task()
     record["schema_version"] = "2.0"
+    record["transition_controls"] = [
+        {"action": item["action"], "requires_authority_resolution": True}
+        for item in record.pop("human_gates")
+    ]
     record["integrity_mode"] = "IMMUTABLE_AUTHORIZATION_V1"
     record["recovery"] = {"mode": "APPEND_ONLY_V1"}
     record["policy"] = {
@@ -175,7 +179,8 @@ class ControlContractTests(unittest.TestCase):
         transition_auth = json.loads((ROOT / "control/transition-authorization.schema.json").read_text())
         transition_result = json.loads((ROOT / "control/transition-result.schema.json").read_text())
         self.assertIn("task_id", task["required"])
-        self.assertIn("human_gates", task["required"])
+        self.assertIn("transition_controls", task["required"])
+        self.assertNotIn("human_gates", task["properties"])
         self.assertIn("implementation_head_sha", result["required"])
         self.assertIn("material_non_effects", result["required"])
         self.assertIn("attempt_count", checkpoint["required"])
@@ -215,8 +220,14 @@ class ControlContractTests(unittest.TestCase):
     def test_nested_unknown_field_fails(self):
         self.assertInvalidTask(lambda r: r["authority"].__setitem__("extra", "nope"))
 
-    def test_human_gate_false_fails(self):
+    def test_legacy_human_gate_false_fails(self):
         self.assertInvalidTask(lambda r: r["human_gates"][0].__setitem__("requires_owner_approval", False))
+
+    def test_active_v2_transition_control_false_fails(self):
+        record = valid_v2_task()
+        record["transition_controls"][0]["requires_authority_resolution"] = False
+        with self.assertRaises(ValueError):
+            validate_task(record)
 
     def test_result_invalid_sha_fails(self):
         self.assertInvalidResult(lambda r: r.__setitem__("implementation_head_sha", "abc"))
@@ -342,7 +353,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn(".project-leader/tasks/<task-id>.json", project)
         self.assertIn("Task Authorization Record", skill)
         self.assertIn(".project-leader/checkpoints/<task-id>.json", recovery)
-        self.assertIn("Human-Gate Transition", control)
+        self.assertIn("Consequential transition authorization/result", control)
 
 
     def test_v2_central_policy_revision_can_differ_from_target_base(self):
@@ -413,7 +424,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE", skill)
         self.assertIn("convergence preflight", skill)
         self.assertIn("exhaust covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions", skill)
-        self.assertIn("Its presence does not automatically mean \"ask the Owner now\"", project)
+        self.assertIn("A transition-control entry does not mean \"ask the Owner now\"", project)
         self.assertIn("If controls are not yet satisfied, route to Builder/Recovery for remediation and validation.", project)
         self.assertIn("An audit finding is an input to remediation", project)
         self.assertIn("If controls do not yet pass, remediate/recover and revalidate instead of asking the Owner.", runbook)
@@ -537,6 +548,46 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("IMMUTABLE_AUTHORIZATION_V1", builder)
         self.assertIn("WAITING_EXTERNAL_CI", recovery)
         self.assertNotIn("whose central profile declares a control contract", builder)
+
+
+    def test_active_runtime_is_registry_free(self):
+        for path in (
+            "PROJECT_LEADER.md",
+            "RUNBOOK.md",
+            "RECOVERY_PROTOCOL.md",
+            "AGENT_BUILDER_PROMPT.md",
+            "README.md",
+            "plugins/project-leader/skills/project-leader/SKILL.md",
+            "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
+        ):
+            text = (ROOT / path).read_text(encoding="utf-8")
+            self.assertNotIn("projects/registry.yaml", text, path)
+
+    def test_active_task_schema_is_transition_controls_only_and_legacy_v2_is_archived(self):
+        active = json.loads((ROOT / "control/task-authorization.schema.json").read_text(encoding="utf-8"))
+        legacy = json.loads((ROOT / "control/task-authorization.v2.schema.json").read_text(encoding="utf-8"))
+        self.assertIn("transition_controls", active["required"])
+        self.assertIn("transition_controls", active["properties"])
+        self.assertNotIn("human_gates", active["properties"])
+        self.assertIn("human_gates", legacy["required"])
+        self.assertIn("human_gates", legacy["properties"])
+
+    def test_final_smoke_contract_requires_autonomous_transition_and_real_human_gate(self):
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+        self.assertIn("Autonomous covered implementation and transition", smoke)
+        self.assertIn("does **not** stop merely to ask whether it may merge", smoke)
+        self.assertIn("EXCLUSIVE_HUMAN_INTERVENTION", smoke)
+        self.assertIn("NEW_UNCOVERED_MATERIAL_DECISION", smoke)
+        self.assertIn("New-project bootstrap without registration", smoke)
+
+    def test_plugin_versions_mark_autonomous_runtime_generation(self):
+        project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
+        recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(project_leader["version"], "0.6.0")
+        self.assertEqual(recovery["version"], "0.5.0")
+        self.assertIn("standing authority", project_leader["description"].lower())
+        self.assertIn("standing-authority", recovery["description"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

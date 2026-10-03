@@ -5,7 +5,7 @@ description: Recovery controller for interrupted or failing software-project wor
 
 # Recovery Guardian
 
-Recover a registered project from interrupted or failing execution without duplicating writes, expanding scope, or bypassing consequential-transition controls.
+Recover the active project from interrupted or failing execution without duplicating writes, expanding scope, or bypassing consequential-transition controls.
 
 ## Activation
 
@@ -15,7 +15,7 @@ If the Owner says `recover` or `continue after the error`, reconstruct the lates
 
 ## Canonical sources
 
-Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROTOCOL.md`, `roles/RECOVERY_GUARDIAN.md`, `projects/standing-authority.json`, `projects/registry.yaml`, and the active project's applicable project record when present. Then inspect the target repository. Project isolation remains one mutable target repository per task.
+Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROTOCOL.md`, `roles/RECOVERY_GUARDIAN.md`, and `projects/standing-authority.json`, then reconstruct the active target repository from durable task evidence, current Project context, current Owner instruction, and live GitHub state. No central project registry is required. Project isolation remains one mutable target repository per task.
 
 ## Workflow
 

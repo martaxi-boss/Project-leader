@@ -1,34 +1,94 @@
-# Durable control records
+# Durable Project Leader control records
 
-Project Leader uses machine-readable records to bind authorization, execution evidence, Human-Gate transitions, and recovery state.
+Project Leader uses machine-readable records to bind task authority, execution evidence, consequential transitions, and recovery state.
 
-## Task Authorization Record
+These records preserve continuity and auditability. They do not invent product scope, architecture, or new authority.
 
-Canonical schema: `task-authorization.schema.json`.
+## Task Authorization
 
-Supervisor defines the record from the current Owner authorization and verified starting state. Builder persists it as the first task artifact in the **target repository**:
+Canonical current schema:
+
+`task-authorization.schema.json`
+
+Supervisor compiles the bounded record from verified target state plus current/canonical authority. Builder persists it as the first task artifact in the target repository:
 
 `.project-leader/tasks/<task-id>.json`
 
-The record is continuity evidence only. It cannot grant itself authority, widen scope, override a later Owner instruction, cross a Human Gate, or prove that an unrecorded historical mutation was authorized.
+Current v2 records use:
 
-Optional `required_validation` and `required_ci` fields make acceptance gates machine-enforceable. When present, a `TERMINAL_SUCCESS` Worker Result must contain those validation names as `PASS` and those CI names as `SUCCESS`.
+- `transition_controls` for consequential effects that require separate authority/evidence resolution;
+- `required_validation` for acceptance checks;
+- `required_ci` for applicable named workflows; this list may be empty when the target project has no applicable automated CI;
+- `IMMUTABLE_AUTHORIZATION_V1` plus exact authorization commit/digest binding;
+- `APPEND_ONLY_V1` recovery history.
 
-Do not store credentials, secrets, private conversation text, personal data, or unrelated project information in the record.
+Historical `human_gates` fields are compatibility-only evidence. The current runtime must not generate them.
+
+A Task Authorization record never widens the project architecture or current Owner instruction. It contains no credentials, secrets, private conversation text, or unrelated project information.
 
 ## Worker Result
 
-Canonical schema: `worker-result.schema.json`.
+Canonical schema:
 
-Builder emits one result at the end of a mutation-capable task and, when repository policy permits, persists it in the target repository:
+`worker-result.schema.json`
+
+Builder emits one result for a mutation-capable task and, when target policy permits, persists it at:
 
 `.project-leader/results/<task-id>.json`
 
-`implementation_head_sha` identifies the implementation state being reported. The result record itself may be committed afterwards, so the result-file commit does not need to equal the implementation SHA.
+`implementation_head_sha` identifies the material implementation state being certified. Evidence-only result/recovery/transition commits may follow it without becoming a new implementation head.
 
-Worker Result is an audit index, not proof. Supervisor still verifies GitHub refs, commits, diffs, PRs, CI, artifacts, and prohibited non-effects independently.
+Worker Result is an audit index, not proof. Supervisor independently verifies refs, commits, diffs, PR state, CI, artifacts, and material non-effects.
 
-A `TERMINAL_SUCCESS` result requires non-empty positive validation. `SKIPPED` needs explicit evidence/justification and never satisfies a required validation gate. Required CI is enforced by task/result pair validation.
+`TERMINAL_SUCCESS` requires positive validation. Every task-required validation must be `PASS`; every task-required CI workflow must be represented by successful live GitHub run evidence. When `required_ci` is empty, positive validation/evidence remains mandatory.
+
+## Consequential transition authorization/result
+
+Canonical schemas:
+
+- `transition-authorization.schema.json`
+- `transition-result.schema.json`
+
+A consequential transition such as an exact merge, deploy, release, governance change, infrastructure/secret/data transition, or commercial activation is outside the ordinary Builder implementation step.
+
+Before the effect, Supervisor persists:
+
+`.project-leader/transitions/<transition-id>.authorization.json`
+
+When the standing-authority resolver proves that the canonical project already covers the effect and the system can execute it, the transition authority source may be:
+
+`STANDING_OWNER_GRANT`
+
+After the effect, persist:
+
+`.project-leader/transitions/<transition-id>.result.json`
+
+A `SUCCESS` transition result without matching prior authorization is invalid.
+
+Historical observed effects without durable authorization stay `HISTORICAL_OBSERVED`; never fabricate retroactive approval.
+
+## Human Gate
+
+`HUMAN_GATE` is a runtime decision, not a synonym for a merge/deploy/release action.
+
+It is valid only when the next irreducible step is:
+
+- `EXCLUSIVE_HUMAN_INTERVENTION`; or
+- `NEW_UNCOVERED_MATERIAL_DECISION`.
+
+Covered technical failures, incomplete checks, CI failures, retries, recovery, or executable consequential transitions are not Owner-permission events.
+
+## External target-project policy
+
+Project Leader does not require a central registry of projects.
+
+For external target repositories, use `CENTRAL_CONTROL_V1` bound to the exact canonical Project Leader revision.
+
+If an intentionally maintained target-specific central policy is explicitly selected, bind it. Otherwise use:
+
+`generic-project-policy.json`
+
+The generic policy is only a safety ceiling. Supervisor must still reconstruct the target project's architecture and narrow every task's mutation scope and actions accordingly.
 
 ## Mutation-scope enforcement
 
@@ -36,40 +96,44 @@ Use:
 
 `python control/validate_records.py scope <task-path> <changed-file> [<changed-file> ...]`
 
-Every changed file must match at least one `mutation_scope` glob from the Task Authorization Record. Pull-request CI computes the real Git diff and fails closed on any out-of-scope file.
+Every changed file must match the Task Authorization `mutation_scope`.
 
-## Recovery Checkpoint
+## Recovery
 
-Canonical schema: `recovery-checkpoint.schema.json`.
+Current mutation-capable v2 tasks use append-only recovery events:
 
-Persist active recovery state at:
+`.project-leader/recovery-events/<task-id>/`
 
-`.project-leader/checkpoints/<task-id>.json`
+Validate the journal with:
 
-The checkpoint records the last durable step, action fingerprint, attempt counters, no-progress count, strategy generation, last error, and next step. It contains no private conversation text and never creates authority.
+`python control/validate_records.py recovery-journal <event-1> <event-2> ...`
 
-The validator enforces the protocol ceilings: no more than 3 attempts for one fingerprint, no more than 2 identical failures before replan, and no more than 3 no-progress iterations.
+The journal is hash chained and monotonic so retry/no-progress history cannot be erased.
 
-## Human-Gate Transition Authorization and Result
+Mutable checkpoints remain only for historical/legacy continuity. A stored legacy `ACTIVE` checkpoint is not current-state proof without live branch/PR/CI corroboration.
 
-Canonical schemas:
+## Trust model
 
-- `transition-authorization.schema.json`
-- `transition-result.schema.json`
+`control/trusted_gate.py` evaluates untrusted task data against policy loaded from trusted base/control-plane state.
 
-For a Human Gate such as an authorized merge, persist an exact-revision authorization before the effect:
+The `pull_request_target` trusted workflow never executes PR-head control code.
 
-`.project-leader/transitions/<transition-id>.authorization.json`
+For external targets, target base SHA and canonical control-policy revision are independent states.
 
-After the effect, persist:
+Required CI claims are verified against live GitHub data by exact workflow/run/SHA evidence.
 
-`.project-leader/transitions/<transition-id>.result.json`
+## Historical compatibility
 
-A `SUCCESS` transition result is invalid without the matching durable authorization record. For legacy transitions whose effect is visible but whose authorization was not durably recorded, use `HISTORICAL_OBSERVED` with `authorization_record: null` and an explicit residual authorization-evidence gap. Never invent retroactive approval.
+Archived v1 schemas remain because historical records are part of the audit trail:
 
-## Validation
+- `task-authorization.v1.schema.json`
+- `worker-result.v1.schema.json`
 
-The stdlib-only validator applies every JSON Schema constraint used by the canonical schemas and rejects schema keywords it does not understand.
+They are not templates for new work.
+
+Historical v2 records that used old `human_gates` terminology remain readable for audit, while current runtime records use `transition_controls`.
+
+## Validation commands
 
 Examples:
 
@@ -79,7 +143,7 @@ Examples:
 
 `python control/validate_records.py pair <task-path> <result-path>`
 
-`python control/validate_records.py checkpoint <checkpoint-path>`
+`python control/validate_records.py recovery-journal <event-1> <event-2> ...`
 
 `python control/validate_records.py transition-auth <authorization-path>`
 
@@ -87,23 +151,4 @@ Examples:
 
 `python control/validate_records.py transition-pair <authorization-path> <result-path>`
 
-GitHub Actions run positive and negative contract tests on pull requests and pushes to `main`.
-
-## V2 trust model
-
-Historical Task Authorization and Worker Result records remain schema v1 and validate against archived v1 schemas. New hardened tasks use schema v2.
-
-Task Authorization v2 requires:
-- non-empty required validation and CI lists;
-- an exact base-policy binding: profile, policy path, base SHA, and SHA-256 of the exact policy bytes;
-- append-only recovery mode.
-
-Worker Result v2 requires a non-empty CI list and concrete run IDs. `control/verify_github_evidence.py` resolves those run IDs through GitHub and checks workflow name, repository, implementation SHA, completion, success, and ancestry to the current PR head.
-
-`control/trusted_gate.py` evaluates untrusted task data against a policy loaded from the PR base. The trusted `pull_request_target` workflow checks out only that base, fetches task/result records from the PR head as data, and never executes head code.
-
-For v2 recovery, use `control/recovery-event.schema.json` and validate the whole journal with:
-
-`python control/validate_records.py recovery-journal <event-1> <event-2> ...`
-
-The journal is contiguous and SHA-256 hash chained, so retry counters cannot be erased by rewriting a later checkpoint.
+GitHub Actions execute positive and negative contract tests on pull requests and pushes to `main`.

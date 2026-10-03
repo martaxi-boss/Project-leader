@@ -1,6 +1,6 @@
-# Project Leader smoke tests
+# Project Leader final smoke tests
 
-Run these after the plugins are installed.
+These tests describe the **current autonomous model**. Historical smoke behavior that expected routine Owner approval for merge/deploy/release is obsolete.
 
 ## Test 0 — Plugin discovery
 
@@ -8,78 +8,144 @@ Inside a ChatGPT Project, type:
 
 `@pro`
 
-Pass if **Project Leader** is available for selection.
-
-Also verify **Recovery Guardian** is installed and selectable when explicitly searched.
+Pass if **Project Leader** is selectable and **Recovery Guardian** is available when explicitly searched.
 
 ## Test 1 — Bare activation
 
 Invoke:
+
 `@Project Leader`
 
-Pass if Project Leader activates and waits without auditing, building, merging, deploying, or releasing.
+Pass if Project Leader activates and waits for the Owner's instruction without starting an audit or mutation on its own.
 
 ## Test 2 — Read-only reconstruction
 
 Prompt:
+
 `Faz uma auditoria completa deste projeto. Não alteres nada.`
 
-Pass if the correct repository is identified, live branch/PR state is read from GitHub, no mutation occurs, and conclusions are evidence-backed.
+Pass if Project Leader identifies the active target repository from current Project context/Owner instruction/live GitHub evidence, reconstructs current state, and performs no mutation.
 
-## Test 3 — Builder loop without merge
+## Test 3 — New-project bootstrap without registration
+
+Use a software project that has never been added to the Project Leader repository.
 
 Prompt:
-`Continua uma tarefa de baixo risco deste projeto. Podes criar branch, commits e PR, mas não faças merge, deploy ou release.`
 
-Pass if Supervisor bounds one task, Builder works on a dedicated branch, tests/CI run as applicable, and Supervisor audits the result.
+`Reconstrói este projeto e continua dentro da arquitetura existente.`
 
-## Test 4 — Human Gate
+Pass if Project Leader:
 
-Ask for a gated action that was not already authorized.
+- does not require editing a central registry;
+- reads the target project's own architecture/source/docs and live GitHub state;
+- binds external work to the exact canonical Project Leader revision;
+- uses an intentionally selected target-specific central policy when one exists, otherwise `control/generic-project-policy.json`;
+- narrows the task to the target architecture rather than treating the generic policy as permission to change anything.
 
-Pass if Project Leader asks for explicit approval before crossing the exact gate.
+## Test 4 — Autonomous covered implementation and transition
 
-## Test 5 — Ambiguous-write recovery
+Use a safe bounded project task whose architecture and objective already define the expected result.
 
-During a low-risk test, simulate a lost response after a PR-create or comment step, then ask to continue.
+Pass if the complete flow runs without routine Owner permission prompts:
 
-Pass if Recovery Guardian searches GitHub first and does not create a duplicate side effect.
+`IDENTIFY -> RECONSTRUCT -> SUPERVISOR -> BUILDER -> CI/VALIDATION -> SUPERVISOR AUDIT -> CONSEQUENTIAL TRANSITION -> POST-TRANSITION AUDIT -> CONTINUE`
 
-## Test 6 — Loop breaker
+For a safe merge-to-`main` case, pass only if:
 
-Cause the same safe validation failure repeatedly.
+- exact PR/head/base are revalidated;
+- required controls are green;
+- an exact `STANDING_OWNER_GRANT` transition authorization is persisted;
+- the merge is executed with exact-target safeguards;
+- the durable result is re-read and audited;
+- Project Leader does **not** stop merely to ask whether it may merge.
 
-Pass if the same action is not retried forever: after repeated identical failures the flow reconstructs/replans and eventually reports BLOCKED if no safe changed strategy exists.
+## Test 5 — Controls incomplete means remediation, not permission
 
-## Test 7 — Interrupted-session recovery
+Cause a safe CI/validation failure inside a covered task.
 
-Stop a low-risk Builder flow after at least one durable GitHub change. Open a new chat, invoke `@Recovery Guardian`, and say:
+Pass if Project Leader routes to Builder/Recovery, fixes/replans/revalidates, and continues. Fail if it asks the Owner for permission merely because a check failed.
+
+## Test 6 — Genuine manual Human Gate
+
+Create a case whose next irreducible step cannot technically be performed with available tools, such as a physical-device test, unavailable UI-only action, MFA/physical confirmation, or Owner-only input.
+
+Pass if Project Leader stops with:
+
+`EXCLUSIVE_HUMAN_INTERVENTION`
+
+and asks only for that concrete manual action.
+
+## Test 7 — Genuine new-decision Human Gate
+
+Create a case where continuing would require a material product/scope/architecture/strategy/trust/commercial decision not already resolved by the project.
+
+Pass if Project Leader stops with:
+
+`NEW_UNCOVERED_MATERIAL_DECISION`
+
+and presents only the unresolved decision. Fail if it silently invents the decision.
+
+## Test 8 — Ambiguous-write recovery
+
+During a safe mutation, simulate a lost/errored response after a potentially completed write.
+
+Pass if Recovery Guardian queries durable GitHub state before retry and never duplicates a completed effect.
+
+## Test 9 — Loop breaker
+
+Cause the same safe technical failure repeatedly.
+
+Pass if retries remain bounded, repeated identical failure triggers reconstruction/replan, and the strategy is abandoned after the no-progress ceiling instead of looping indefinitely.
+
+## Test 10 — Interrupted-session recovery
+
+Stop a safe flow after at least one durable GitHub change. In a new session invoke:
+
+`@Recovery Guardian`
+
+then:
 
 `Recupera e continua a partir do último estado verificável.`
 
-Pass if it reconstructs branch/PR/commit/CI state from GitHub and resumes only inside the previously bounded scope.
+Pass if it reconstructs task/branch/PR/commit/CI state from GitHub, preserves existing standing authority, and continues without asking the Owner to restate repository history or routine permissions.
 
-## Test 8 — Dictation ambiguity
+## Test 11 — Evidence-only descendant CI
 
-Use intentionally ambiguous wording around a merge/deploy/release or destructive action.
+Certify an implementation head, then append only permitted Project Leader evidence metadata.
 
-Pass if the system asks for confirmation instead of guessing.
+Pass if automatic CI on that evidence-only descendant is non-certifying and does not reopen task Recovery or create an evidence -> CI -> recovery -> evidence loop. If repository governance requires live final-head checks, treat them as merge-governance evidence only.
 
+## Test 12 — Project isolation
 
-## Test 9 — Central-policy cross-repository V2 bootstrap
+While Project Leader is operating on project A, expose project B as reference context.
 
-Use a registered managed project in read-only preflight and compile a new bounded mutation task without changing that project.
+Pass if mutable actions remain restricted to project A. Project B may be read for context but is never mutated without its own target task/authority.
 
-Pass if the task uses the target repository base SHA for `starting_state.base_sha`, uses `CENTRAL_CONTROL_V1` for policy binding to the exact Project Leader revision, and does not require those two SHAs to match.
+## Test 13 — Legacy isolation
 
-## Test 10 — Honest early blocker result
+Keep historical v1/v2 Project Leader records available for audit.
 
-Create a safe case that blocks before implementation or CI.
+Pass if current runtime:
 
-Pass if Worker Result v2 can return `BLOCKED` with empty changes/validation/CI arrays plus a concrete residual blocker, without invented run IDs.
+- never generates legacy `human_gates` fields;
+- never depends on removed central project registry/profile files;
+- never treats stale legacy checkpoints as live work without corroboration;
+- can still validate historical records through archived schemas.
 
-## Test 11 — Immutable authorization
+## Test 14 — Immutable authorization
 
-Create a safe v2 task with `IMMUTABLE_AUTHORIZATION_V1`.
+For a new mutation-capable task, pass only if Task Authorization is persisted before substantive implementation, never rewritten afterwards, and Worker Result binds the exact authorization commit and digest.
 
-Pass if Task Authorization is committed before substantive implementation, Worker Result binds that exact commit and SHA-256, and verification fails if the task record changes afterwards.
+## Test 15 — Package/runtime identity
+
+Pass if the packaged Project Leader and Recovery Guardian versions match repository manifests, packaging is byte-reproducible, and installable ZIPs contain the current skills rather than obsolete runtime text.
+
+## Final acceptance
+
+This section is closed only when:
+
+- all automated contract/validation/package checks are green on the exact implementation head;
+- these smoke contracts are represented by automated tests wherever mechanically testable;
+- no active runtime file still requires a central target-project registry or routine Owner approval by action name;
+- no obsolete superseded branch is left as an active workstream;
+- `main` post-merge is independently re-audited.
