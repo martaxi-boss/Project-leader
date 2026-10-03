@@ -26,7 +26,7 @@ LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
 CI_DISPATCH_REQUIRED = "DISPATCH_REQUIRED"
 CI_REUSE_ACTIVE = "REUSE_ACTIVE_RUN"
 CI_REUSE_SUCCESS = "REUSE_SUCCESSFUL_RUN"
-CI_ROUTE_RECOVERY = "ROUTE_RECOVERY"
+CI_DISPATCH_ROUTE_RECOVERY = "ROUTE_RECOVERY"
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -278,7 +278,7 @@ def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
         }
     if status == "completed":
         return {
-            "decision": CI_ROUTE_RECOVERY,
+            "decision": CI_DISPATCH_ROUTE_RECOVERY,
             "run_id": run_id,
             "reason": f"exact matching CI run is terminal non-success: {conclusion}",
         }
