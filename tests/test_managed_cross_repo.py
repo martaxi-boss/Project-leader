@@ -183,6 +183,45 @@ class ManagedCrossRepositoryTests(unittest.TestCase):
                 CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
             )
 
+    def test_development_merge_action_is_explicitly_policy_bounded(self):
+        t, p, _ = self.make()
+        t["allowed_actions"].append("merge_development_branch")
+        p["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_actions"].append(
+            "merge_development_branch"
+        )
+        raw = (json.dumps(p, indent=2) + "\n").encode("utf-8")
+        t["policy"]["sha256"] = hashlib.sha256(raw).hexdigest()
+        self.assertTrue(
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+        )
+
+    def test_merge_to_main_remains_outside_allowed_actions(self):
+        t, p, raw = self.make()
+        t["allowed_actions"].append("merge_to_main")
+        with self.assertRaises(ValueError):
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+
+    def test_real_managed_policies_separate_development_merge_from_main_gate(self):
+        for path in (
+            "projects/policies/pink-iptv.json",
+            "projects/policies/fadego.json",
+            "projects/policies/vcam-pro.json",
+        ):
+            policy_data = json.loads((ROOT / path).read_text(encoding="utf-8"))
+            e1 = policy_data["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]
+            self.assertIn("merge_development_branch", e1["allowed_actions"], path)
+            self.assertNotIn("merge_to_main", e1["allowed_actions"], path)
+            self.assertIn("merge_to_main", e1["required_prohibited_actions"], path)
+            self.assertIn("merge_to_main", e1["required_human_gates"], path)
+
     def test_real_registry_profiles_and_policies_are_consistent(self):
         registry = (ROOT / "projects/registry.yaml").read_text(encoding="utf-8")
         profiles = json.loads((ROOT / "projects/policy-profiles.json").read_text(encoding="utf-8"))
