@@ -413,7 +413,8 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE", skill)
         self.assertIn("convergence preflight", skill)
         self.assertIn("exhaust covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions", skill)
-        self.assertIn("Do not emit a Human Gate while any audit, correction, reconciliation", project)
+        self.assertIn("Its presence does not automatically mean \"ask the Owner now\"", project)
+        self.assertIn("If controls are not yet satisfied, route to Builder/Recovery for remediation and validation.", project)
         self.assertIn("An audit finding is an input to remediation", project)
         self.assertIn("If controls do not yet pass, remediate/recover and revalidate instead of asking the Owner.", runbook)
 
