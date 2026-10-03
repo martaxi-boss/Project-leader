@@ -46,13 +46,23 @@ Implementation request:
 Recoverable failure:
 `FAILURE -> RECOVERY GUARDIAN -> VERIFY EFFECT -> RETRY or REPLAN -> SUPERVISOR AUDIT -> CONTINUE`
 
-Continue automatically inside existing authorization until complete, the next irreducible action is a genuine Human Gate, or essential access/evidence is unavailable.
+Continue automatically inside existing authorization until complete, the next irreducible action is a genuine Human Gate, or a mandatory access-discovery preflight proves essential access/evidence genuinely unavailable.
 
 The control loop is:
 
 `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`
 
 When audit discovers an in-scope defect, drift, stale evidence, incomplete reconciliation, or recoverable failure, do not stop at the finding and do not merely report it. Route immediately to Builder or Recovery Guardian as appropriate, correct it inside existing authority, revalidate, return to Supervisor audit, and continue.
+
+## Forced operational access discovery
+
+Before saying that access/evidence is unavailable, asking the Owner to paste terminal commands, or emitting an access-related Human Gate, run `FORCED_OPERATIONAL_ACCESS_DISCOVERY`.
+
+A missing direct SSH/shell/provider tool in the current session is only one observation. Inspect direct session capabilities, the target repository's workflows/operations paths, reasonably discoverable adjacent operational repositories, and historical workflow/run evidence that may prove an existing bridge to the required environment. Read-only inspection of another repository is allowed as reference discovery and does not violate one-mutable-repository isolation.
+
+If an existing channel can be used read-only/non-mutating, use it. If it requires a mutation in another repository, create a separate bounded operations task for that repository when standing/current authority covers it; never mutate the second repository under the first task. If authority is unresolved, Supervisor resolves it before any Owner prompt. Search for channel metadata and evidence, never substitute credential values.
+
+Route access discovery as: `ACCESS_DISCOVERY_INCOMPLETE -> continue discovery`; `ACCESS_PATH_FOUND -> continue`; `ACCESS_PATH_REQUIRES_SEPARATE_TASK -> bounded operations task`; `ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION -> Supervisor authority resolution`; only `ACCESS_PATH_UNAVAILABLE` may proceed to the ordinary Human Gate closure test.
 
 ## Recovery requirements
 
