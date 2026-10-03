@@ -8,6 +8,7 @@ from control.validate_records import (
     validate_pair,
     validate_result,
     validate_scope,
+    validate_standing_authority,
     validate_task,
     validate_transition_authorization,
     validate_transition_pair,
@@ -174,6 +175,7 @@ class ControlContractTests(unittest.TestCase):
         checkpoint = json.loads((ROOT / "control/recovery-checkpoint.schema.json").read_text())
         transition_auth = json.loads((ROOT / "control/transition-authorization.schema.json").read_text())
         transition_result = json.loads((ROOT / "control/transition-result.schema.json").read_text())
+        standing_authority = json.loads((ROOT / "control/standing-authority.schema.json").read_text())
         self.assertIn("task_id", task["required"])
         self.assertIn("human_gates", task["required"])
         self.assertIn("implementation_head_sha", result["required"])
@@ -181,6 +183,18 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("attempt_count", checkpoint["required"])
         self.assertIn("authority", transition_auth["required"])
         self.assertIn("authorization_record", transition_result["required"])
+        self.assertIn("human_gate_conditions", standing_authority["required"])
+
+    def test_standing_owner_authority_is_durable_and_machine_valid(self):
+        authority = json.loads((ROOT / "projects/standing-authority.json").read_text(encoding="utf-8"))
+        self.assertTrue(validate_standing_authority(authority))
+        self.assertEqual(authority["source"], "STANDING_OWNER_GRANT")
+        self.assertIn("merge_to_main", authority["autonomous_actions"])
+        self.assertEqual(
+            set(authority["human_gate_conditions"]),
+            {"EXCLUSIVE_HUMAN_INTERVENTION", "NEW_UNCOVERED_MATERIAL_DECISION"},
+        )
+        self.assertIn("supervisor_exact_state_audit_before_consequential_transition", authority["required_controls"])
 
     def test_plugins_use_same_required_github_connector(self):
         pl = json.loads((ROOT / "plugins/project-leader/.app.json").read_text())
