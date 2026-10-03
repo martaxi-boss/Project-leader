@@ -416,6 +416,21 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("An audit finding is an input to remediation", project)
         self.assertIn("Do not stop merely to report a covered problem", runbook)
 
+    def test_project_leader_recovers_stale_external_ci_wait(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("STALE_WAIT_STATE", project)
+        self.assertIn("STALE_WAIT_STATE", runbook)
+        self.assertIn("STALE_WAIT_STATE", recovery)
+        self.assertIn("STALE_WAIT_STATE", skill)
+        self.assertIn("STALE_WAIT_STATE", guardian)
+        self.assertIn("exact live run IDs", project)
+        self.assertIn("all-success routes immediately to Supervisor audit/validate/continue", recovery)
+        self.assertIn("chat/UI spinner", recovery)
+
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
         recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")

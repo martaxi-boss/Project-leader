@@ -101,6 +101,7 @@ For every repository registered in `projects/registry.yaml`:
 - use `APPEND_ONLY_V1` recovery history;
 - bind Worker Result to the exact authorization commit + SHA-256, verify required CI from live GitHub run IDs and the exact implementation SHA, then prove authorization -> implementation -> current final PR head ancestry;
 - if a project-local trusted gate is absent, perform the external Supervisor audit from canonical control-plane rules and state the missing local gate honestly;
-- classify active GitHub Actions as `WAITING_EXTERNAL_CI`. Do not retry or redispatch an active run. Use a bounded polling cadence and investigate the existing run first if it exceeds the canonical stale threshold.
+- classify active GitHub Actions as `WAITING_EXTERNAL_CI`, bind the wait to exact run IDs, and treat that state as transient/nonterminal. Do not retry or redispatch an active run. Re-read the exact bound IDs at a bounded cadence and investigate the existing run first if it exceeds the canonical stale threshold;
+- if fresh GitHub state shows every bound run is terminal while the control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE` immediately. All-success routes to Supervisor audit/validate/continue; failure/cancellation/timeout routes to Recovery. On a resumed session, perform this reconciliation before any new dispatch.
 
-Do not mistake a long emulator/device-proof run for a Recovery loop merely because no new chat text appears while GitHub is still executing.
+Do not mistake a long emulator/device-proof run for a Recovery loop merely because no new chat text appears while GitHub is still executing. Conversely, do not remain parked on a stale chat/UI wait after GitHub has already become terminal.

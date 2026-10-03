@@ -131,9 +131,11 @@ For every registered managed project:
 - the implementation SHA must equal or be an ancestor of the final PR head before Supervisor accepts the result;
 - every new managed task sets `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`; its Worker Result binds the exact Task Authorization commit and SHA-256, and the verifier proves that authorization existed before implementation and was not changed afterwards;
 - when the managed repository does not yet have a project-local trusted gate on its base branch, Supervisor must perform the external v2 audit itself and record that absence honestly; it must not claim that a trusted PR gate ran;
-- a GitHub Actions run that is still queued/in-progress is `WAITING_EXTERNAL_CI`, not a failure. Do not redispatch/retry it while it is active. Re-read it at a bounded cadence; if it remains unchanged beyond the generic stale threshold, investigate the existing run before any new dispatch.
+- a GitHub Actions run that is still queued/in-progress is `WAITING_EXTERNAL_CI`, not a failure. Bind that wait to the exact live run IDs, do not redispatch/retry while any bound run is active, and re-read those exact IDs at a bounded cadence;
+- `WAITING_EXTERNAL_CI` is transient and nonterminal. If a fresh GitHub read shows all bound runs are terminal while the control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE` immediately: all-success routes to Supervisor audit/validate/continue; any failure/cancellation/timeout routes to Recovery. Never wait on the chat/UI spinner as evidence;
+- after an interrupted or resumed session, the first liveness action is to re-read the bound run IDs from GitHub before dispatching anything. A frozen host process cannot execute repository logic while frozen, so recovery on resume must reconstruct from durable GitHub state and must not duplicate already-completed work.
 
-This rule prevents a long emulator/device-proof job from being mistaken for a Recovery loop while preserving bounded anti-loop behavior.
+These rules prevent both a long emulator/device-proof job from being mistaken for a Recovery loop and a completed external job from leaving Project Leader stuck in an obsolete wait state.
 
 
 ## Terminal-result semantics

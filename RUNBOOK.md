@@ -20,6 +20,8 @@ Calling `@Project Leader` only activates it. It does not automatically authorize
 
 ## Runtime loop
 
+External CI waits are transient control states, not stopping points. When Project Leader enters `WAITING_EXTERNAL_CI`, bind the exact run IDs and re-read them at the bounded cadence. If live GitHub state becomes terminal while the stored state still says waiting, classify `STALE_WAIT_STATE`: all-success returns immediately to Supervisor audit/validation/continuation; failure/cancellation/timeout routes to Recovery. After any interrupted/resumed Work session, re-read the bound runs before dispatching anything so completed work is never repeated merely because the UI remained on “processing”.
+
 1. Consultant when analysis is needed.
 2. Supervisor bounds authorized work and acceptance evidence.
 3. Builder implements when authorized.

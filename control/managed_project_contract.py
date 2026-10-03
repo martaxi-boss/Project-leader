@@ -11,6 +11,11 @@ NEW_TASK_SCHEMA_VERSION = "2.0"
 WORKER_RESULT_SCHEMA_VERSION = "2.0"
 RECOVERY_MODE = "APPEND_ONLY_V1"
 CI_WAIT_STATE = "WAITING_EXTERNAL_CI"
+CI_STALE_WAIT_STATE = "STALE_WAIT_STATE"
+CI_ROUTE_WAIT = "WAIT"
+CI_ROUTE_CONTINUE = "AUDIT_CONTINUE"
+CI_ROUTE_RECOVERY = "RECOVERY"
+CI_ROUTE_INVESTIGATE = "INVESTIGATE"
 POLICY_BINDING_MODE = "CENTRAL_CONTROL_V1"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
@@ -245,3 +250,80 @@ def classify_external_ci(run, now=None, stale_after_minutes=DEFAULT_STALE_AFTER_
         if age_minutes > stale_after_minutes:
             return "INVESTIGATE_STALE_CI"
     return CI_WAIT_STATE
+
+
+def reconcile_external_ci_wait(bound_run_ids, live_runs, previous_state=CI_WAIT_STATE, now=None, stale_after_minutes=DEFAULT_STALE_AFTER_MINUTES):
+    """Reconcile a persisted external-CI wait against fresh live GitHub run state.
+
+    WAITING_EXTERNAL_CI is transient. Exact bound run IDs are re-read from GitHub;
+    once every bound run is terminal, an older wait becomes STALE_WAIT_STATE and
+    must route immediately to Supervisor audit/continue or Recovery.
+    """
+    if not isinstance(bound_run_ids, list) or not bound_run_ids:
+        raise ValueError("external CI wait must bind at least one exact run_id")
+    if len(set(bound_run_ids)) != len(bound_run_ids):
+        raise ValueError("external CI wait run_ids must be unique")
+    if not all(isinstance(run_id, int) and run_id > 0 for run_id in bound_run_ids):
+        raise ValueError("external CI wait run_ids must be positive integers")
+    if not isinstance(live_runs, list):
+        raise ValueError("live_runs must be a list")
+
+    by_id = {
+        run.get("id"): run
+        for run in live_runs
+        if isinstance(run, dict) and isinstance(run.get("id"), int)
+    }
+    missing = [run_id for run_id in bound_run_ids if run_id not in by_id]
+    if missing:
+        return {
+            "state": "INVESTIGATE_CI_STATE",
+            "route": CI_ROUTE_INVESTIGATE,
+            "bound_run_ids": list(bound_run_ids),
+            "missing_run_ids": missing,
+        }
+
+    classifications = {
+        run_id: classify_external_ci(
+            by_id[run_id],
+            now=now,
+            stale_after_minutes=stale_after_minutes,
+        )
+        for run_id in bound_run_ids
+    }
+
+    if any(value == "INVESTIGATE_STALE_CI" for value in classifications.values()):
+        return {
+            "state": "INVESTIGATE_STALE_CI",
+            "route": CI_ROUTE_INVESTIGATE,
+            "bound_run_ids": list(bound_run_ids),
+            "classifications": classifications,
+        }
+    if any(value == "INVESTIGATE_CI_STATE" for value in classifications.values()):
+        return {
+            "state": "INVESTIGATE_CI_STATE",
+            "route": CI_ROUTE_INVESTIGATE,
+            "bound_run_ids": list(bound_run_ids),
+            "classifications": classifications,
+        }
+
+    active = [run_id for run_id, value in classifications.items() if value == CI_WAIT_STATE]
+    if active:
+        return {
+            "state": CI_WAIT_STATE,
+            "route": CI_ROUTE_WAIT,
+            "bound_run_ids": list(bound_run_ids),
+            "active_run_ids": active,
+            "classifications": classifications,
+        }
+
+    failed = [run_id for run_id, value in classifications.items() if value == "COMPLETED_FAILURE"]
+    state = CI_STALE_WAIT_STATE if previous_state == CI_WAIT_STATE else (
+        "COMPLETED_FAILURE" if failed else "COMPLETED_SUCCESS"
+    )
+    return {
+        "state": state,
+        "route": CI_ROUTE_RECOVERY if failed else CI_ROUTE_CONTINUE,
+        "bound_run_ids": list(bound_run_ids),
+        "failed_run_ids": failed,
+        "classifications": classifications,
+    }
