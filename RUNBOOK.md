@@ -59,7 +59,7 @@ If ChatGPT itself is unavailable, no ChatGPT agent can continue at that instant.
 
 ## Repository hygiene
 
-Use `.github/workflows/repository-hygiene.yml` for branch cleanup. The manual sweep may delete only non-`main` branch refs whose tip is proven by GitHub compare ancestry to be fully contained in canonical `main`. Branches with unique/divergent history are preserved for explicit audit. When a same-repository PR is merged, its head branch is automatically removed. Branch-ref deletion never rewrites commit history and must never target `main`.
+Use `.github/workflows/repository-hygiene.yml` for branch cleanup. A non-`main` branch may be deleted automatically only when GitHub proves either (a) its tip is fully contained in canonical `main`, or (b) it has no open pull request and every branch-specific final file state is byte-identical to canonical `main` (including removals that are also absent from `main`). Renames, unsupported states, oversized/unavailable deltas, open-PR heads, and any divergent content are preserved for explicit audit. When a same-repository PR is merged, its head branch is automatically removed and the bounded sweep runs again. Branch-ref deletion never rewrites commit history and must never target `main`.
 
 ## Human Gates
 
