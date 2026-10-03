@@ -111,6 +111,10 @@ class TrustedGateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.verify()
 
+    def test_project_leader_policy_allows_explicit_development_merge_action(self):
+        self.task["allowed_actions"].append("merge_development_branch")
+        self.assertTrue(self.verify())
+
     def test_action_cannot_self_widen(self):
         self.task["allowed_actions"].append("merge_to_main")
         with self.assertRaises(ValueError):
