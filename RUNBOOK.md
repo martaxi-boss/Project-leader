@@ -41,7 +41,22 @@ The Work execution must not use the visible “processing” spinner or a blocki
 7. Recovery Guardian verifies durable state, retries/replans within bounds, then returns to Supervisor.
 8. If audit finds an in-scope defect, drift, stale evidence, overlap, or incomplete preparation, route it immediately to Builder/Recovery, correct it, validate it, and return to Supervisor. Do not stop merely to report a covered problem.
 9. Before any Human Gate, exhaust convergence work: reconcile active workstreams, final-head scope/evidence/CI, durable recovery state, and every covered remediation.
-10. Stop only when the requested task is complete, access/evidence is missing, the Owner changes direction, or no covered work remains and the next required action itself is a genuine Human Gate.
+10. Before any access/evidence Human Gate, execute `FORCED_OPERATIONAL_ACCESS_DISCOVERY`; lack of direct session SSH/tooling alone is not sufficient.
+11. Stop only when the requested task is complete, access discovery proves the required access/evidence unavailable, the Owner changes direction, or no covered work remains and the next required action itself is a genuine Human Gate.
+
+## Access discovery preflight
+
+Before declaring missing access or asking the Owner to run terminal commands, Project Leader must inspect four surfaces: direct session capabilities, target-repository automation, reasonably discoverable operational repositories, and historical execution evidence for candidate channels. Search for operational paths, not secret values.
+
+A read-only lookup in another repository is reference discovery and is compatible with one-mutable-repository-per-task isolation. If an adjacent operations repository contains an existing GitHub Actions/SSH/deploy channel, classify it before stopping:
+
+- `ACCESS_PATH_FOUND` -> use the non-mutating path and continue;
+- `ACCESS_PATH_REQUIRES_SEPARATE_TASK` -> when authority covers it, create a separate bounded task targeting that operations repository, execute it there, then return to the original project;
+- `ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION` -> Supervisor resolves standing/derived authority before any Owner interruption;
+- `ACCESS_DISCOVERY_INCOMPLETE` -> continue discovery, never stop;
+- `ACCESS_PATH_UNAVAILABLE` -> only now may an access Human Gate become a candidate, still subject to the normal Human Gate closure test.
+
+Do not confuse "this session has no SSH tool" with "the project has no operational access path".
 
 ## Recovery rules
 
