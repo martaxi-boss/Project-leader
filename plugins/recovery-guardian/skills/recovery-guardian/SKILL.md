@@ -27,7 +27,7 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 6. Follow `references/recovery-protocol.md`.
 7. Verify every possibly-completed write before retrying it.
 8. Retry only bounded transient failures.
-9. Persist checkpoint changes when a retry/replan decision must survive interruption.
+9. Persist append-only recovery events for v2 retry/replan decisions; persist checkpoint changes only for legacy v1 continuity.
 10. Replan after repeated no-progress instead of looping.
 11. Return recovered state to Supervisor logic for independent audit.
 
