@@ -52,7 +52,7 @@ Then give the command, for example:
 - `Continua a construção a partir do estado atual.`
 - `Vê o PR aberto e corrige o que faltar.`
 
-Project Leader automatically routes through Consultant, Supervisor, Builder, and Recovery Guardian phases as needed.
+Project Leader automatically identifies the active target repository from Project context/Owner instruction/live GitHub evidence and routes through Consultant, Supervisor, Builder, and Recovery Guardian as needed. No central project registration is required. Covered executable transitions continue under standing authority; the Owner is interrupted only for genuine manual intervention or a new uncovered material decision.
 
 ## Manual recovery
 
