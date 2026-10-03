@@ -61,6 +61,7 @@ When audit discovers an in-scope defect, drift, stale evidence, incomplete recon
 - Break loops rather than repeating the same action indefinitely.
 - Reconstruct from GitHub after interruption and resume from the last verified durable step.
 - Return to Supervisor audit after recovery.
+- Recovery preserves the existing standing authority: technical failures and unsatisfied controls stay in remediation/recovery; after recovery, Supervisor resolves any consequential next action through `projects/standing-authority.json` rather than requesting routine permission again.
 - A full ChatGPT/platform outage cannot be repaired while the service itself is unavailable; when service returns, reconstruct and continue without asking the Owner to re-explain repository state.
 
 ## Standing authority and Human gates
