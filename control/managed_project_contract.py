@@ -22,6 +22,22 @@ INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
 DEFAULT_LIVENESS_NO_PROGRESS_POLLS = 2
+ACCESS_DISCOVERY_REQUIRED_SURFACES = (
+    "direct_session_capabilities",
+    "target_repository_automation",
+    "operational_repository_discovery",
+    "existing_access_history",
+)
+ACCESS_DISCOVERY_INCOMPLETE = "ACCESS_DISCOVERY_INCOMPLETE"
+ACCESS_PATH_FOUND = "ACCESS_PATH_FOUND"
+ACCESS_PATH_REQUIRES_SEPARATE_TASK = "ACCESS_PATH_REQUIRES_SEPARATE_TASK"
+ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION = "ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION"
+ACCESS_PATH_UNAVAILABLE = "ACCESS_PATH_UNAVAILABLE"
+ACCESS_ROUTE_CONTINUE = "CONTINUE"
+ACCESS_ROUTE_DISCOVER = "CONTINUE_DISCOVERY"
+ACCESS_ROUTE_BOUND_TASK = "BOUND_OPERATIONS_TASK"
+ACCESS_ROUTE_AUTHORITY = "SUPERVISOR_AUTHORITY_RESOLUTION"
+ACCESS_ROUTE_HUMAN_GATE_CANDIDATE = "HUMAN_GATE_CANDIDATE"
 LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
 STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
 LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
@@ -260,6 +276,107 @@ def reconcile_external_ci_liveness(
 
     state["liveness_action"] = "POLL_AGAIN"
     return state
+
+
+def reconcile_operational_access_discovery(
+    searched_surfaces,
+    candidate_channels,
+    direct_access_available=False,
+):
+    """Reconcile access discovery before any access-related Human Gate.
+
+    Missing direct session SSH/tooling is not proof that operational access is
+    unavailable. Read-only discovery may inspect adjacent operational repositories
+    and historical automation without violating one-mutable-repository isolation.
+    Any mutation of another repository still requires a separate bounded task.
+    """
+    if not isinstance(searched_surfaces, list):
+        raise ValueError("searched_surfaces must be a list")
+    if len(set(searched_surfaces)) != len(searched_surfaces):
+        raise ValueError("searched_surfaces must be unique")
+    if not all(isinstance(item, str) and item for item in searched_surfaces):
+        raise ValueError("searched_surfaces entries must be non-empty strings")
+    if not isinstance(candidate_channels, list):
+        raise ValueError("candidate_channels must be a list")
+
+    if direct_access_available:
+        return {
+            "state": ACCESS_PATH_FOUND,
+            "route": ACCESS_ROUTE_CONTINUE,
+            "selected_channel": "direct_session_capabilities",
+            "missing_surfaces": [],
+        }
+
+    normalized = []
+    for index, candidate in enumerate(candidate_channels):
+        if not isinstance(candidate, dict):
+            raise ValueError("candidate channel must be an object")
+        name = candidate.get("name")
+        if not isinstance(name, str) or not name:
+            raise ValueError("candidate channel name must be a non-empty string")
+        usable = candidate.get("usable")
+        requires_mutation = candidate.get("requires_mutation", False)
+        authority_covered = candidate.get("authority_covered", False)
+        if not isinstance(usable, bool):
+            raise ValueError(f"candidate channel usable must be boolean: {name}")
+        if not isinstance(requires_mutation, bool):
+            raise ValueError(f"candidate channel requires_mutation must be boolean: {name}")
+        if not isinstance(authority_covered, bool):
+            raise ValueError(f"candidate channel authority_covered must be boolean: {name}")
+        normalized.append({
+            "index": index,
+            "name": name,
+            "usable": usable,
+            "requires_mutation": requires_mutation,
+            "authority_covered": authority_covered,
+        })
+
+    for candidate in normalized:
+        if candidate["usable"] and not candidate["requires_mutation"]:
+            return {
+                "state": ACCESS_PATH_FOUND,
+                "route": ACCESS_ROUTE_CONTINUE,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    for candidate in normalized:
+        if candidate["usable"] and candidate["requires_mutation"] and candidate["authority_covered"]:
+            return {
+                "state": ACCESS_PATH_REQUIRES_SEPARATE_TASK,
+                "route": ACCESS_ROUTE_BOUND_TASK,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    missing = [
+        surface
+        for surface in ACCESS_DISCOVERY_REQUIRED_SURFACES
+        if surface not in searched_surfaces
+    ]
+    if missing:
+        return {
+            "state": ACCESS_DISCOVERY_INCOMPLETE,
+            "route": ACCESS_ROUTE_DISCOVER,
+            "selected_channel": None,
+            "missing_surfaces": missing,
+        }
+
+    for candidate in normalized:
+        if candidate["usable"] and candidate["requires_mutation"]:
+            return {
+                "state": ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION,
+                "route": ACCESS_ROUTE_AUTHORITY,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    return {
+        "state": ACCESS_PATH_UNAVAILABLE,
+        "route": ACCESS_ROUTE_HUMAN_GATE_CANDIDATE,
+        "selected_channel": None,
+        "missing_surfaces": [],
+    }
 
 
 def reconcile_legacy_checkpoint_liveness(
