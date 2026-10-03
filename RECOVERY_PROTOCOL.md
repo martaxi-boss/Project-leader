@@ -120,12 +120,14 @@ An existing GitHub Actions run in `queued`, `waiting`, `pending`, `requested`, o
 
 For every registered managed project:
 
-1. classify the state as `WAITING_EXTERNAL_CI`;
-2. do not dispatch or retry the same workflow while that run is still active;
-3. re-read GitHub no more frequently than the canonical bounded polling cadence unless new evidence arrives;
-4. if the run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
-5. only failure/cancellation/timeout or verified stale/permanent state enters Recovery retry/replan logic.
+1. bind the wait to the exact GitHub Actions run IDs that satisfy the task's required CI;
+2. classify the state as `WAITING_EXTERNAL_CI` only while at least one bound run is still active;
+3. do not dispatch or retry the same workflow while any bound run is active;
+4. re-read those exact run IDs from GitHub no more frequently than the canonical bounded polling cadence unless new evidence arrives;
+5. if an active run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
+6. if every bound run is terminal but the stored/control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE`; all-success routes immediately to Supervisor audit/validate/continue, while any failure/cancellation/timeout routes to Recovery;
+7. on session resume after interruption, re-read the bound run IDs before any new dispatch. Never use a stale chat/UI spinner as proof that CI is still active.
 
-Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop.
+Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop. A completed external CI run must never leave the control plane parked indefinitely in `WAITING_EXTERNAL_CI`.
 
 For registered managed-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
