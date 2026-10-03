@@ -93,7 +93,7 @@
                 "minLength": 1
               },
               "uniqueItems": true,
-              "minItems": 1
+              "minItems": 0
             },
             "required_validation": {
               "type": "array",
@@ -103,6 +103,14 @@
               },
               "uniqueItems": true,
               "minItems": 1
+            },
+            "allowed_ci": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
             }
           }
         },
@@ -161,7 +169,7 @@
                 "minLength": 1
               },
               "uniqueItems": true,
-              "minItems": 1
+              "minItems": 0
             },
             "required_validation": {
               "type": "array",
@@ -171,6 +179,14 @@
               },
               "uniqueItems": true,
               "minItems": 1
+            },
+            "allowed_ci": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
             }
           }
         }
