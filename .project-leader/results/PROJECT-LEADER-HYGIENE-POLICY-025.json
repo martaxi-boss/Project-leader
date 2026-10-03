@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-HYGIENE-POLICY-025",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-HYGIENE-POLICY-025.json",
+  "authorization_commit_sha": "3633805b0319c585d16fdfe7f6efcbe5cab5af59",
+  "authorization_sha256": "d3a4dbe3414c48491472bf792400ab2ccf95ca1aa866811acc7438e1c2f77705",
+  "implementation_head_sha": "7890a257d7672f7af67b09e675eb13d8ac9c8194",
+  "branch": "builder/hygiene-policy-025",
+  "pr_number": 24,
+  "recorded_at": "2026-10-03T12:35:45.871Z",
+  "state_observed_at": "2026-10-03T12:35:45.871Z",
+  "superseded_by": null,
+  "post_transition_record": ".project-leader/transitions/PROJECT-LEADER-HYGIENE-POLICY-025-TRUST-ROOT.result.json",
+  "changes": [
+    "Project Leader E3 policy now explicitly allows delete_fully_merged_non_main_branch_refs.",
+    "Project Leader E3 policy now explicitly allows install_automatic_merged_pr_branch_hygiene.",
+    "The new actions are not added to E1.",
+    "No branch deletion or hygiene workflow execution occurs in this prerequisite task."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "PR #24 changes are limited to task/transition/result evidence, project-leader policy and its tests."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Required workflows completed successfully on exact implementation SHA 7890a257d7672f7af67b09e675eb13d8ac9c8194."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Exact Owner-authorized trust-root transition was persisted before the policy change and its result was persisted after validation."
+    },
+    {
+      "name": "Repository hygiene action ceiling validation",
+      "status": "PASS",
+      "evidence": "Tests verify both hygiene actions exist only under E3 and are absent from E1."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37123337508
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37123337513
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37123337512
+    }
+  ],
+  "artifacts": [],
+  "material_non_effects": [
+    "No branch deletion.",
+    "No merge to main yet.",
+    "No ruleset or branch-protection change.",
+    "No managed-project mutation.",
+    "No release, deployment, secret, infrastructure, data, or paid-service mutation."
+  ],
+  "residual_blockers": []
+}
