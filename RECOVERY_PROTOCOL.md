@@ -165,3 +165,11 @@ If two polling intervals elapse without a control-plane state transition while t
 A frozen/unavailable ChatGPT Work process cannot execute this guard while frozen. That platform limitation must be reported honestly. On the next activation, the first action is durable GitHub reconstruction and stale-wait reconciliation; never ask the Owner to recreate CI or repository history merely because the prior Work process stopped running.
 
 For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
+
+## Operational access discovery during recovery
+
+When Recovery or Supervisor encounters missing direct access, do not convert that observation directly into `BLOCKED` or `HUMAN_GATE`. Run `FORCED_OPERATIONAL_ACCESS_DISCOVERY` first. Reconstruct available direct session capabilities, inspect the target repository for existing automation, inspect reasonably discoverable adjacent operational repositories read-only, and inspect historical workflow/run evidence for candidate access paths.
+
+Read-only cross-repository discovery does not widen mutation authority. If an existing channel is usable only by changing another repository, route back to Supervisor for a separate bounded operations task and authority resolution. Recovery must never mutate the second repository under the first repository's task authorization.
+
+Do not search for replacement credential values or expose secrets. Discover channel metadata and proof of reachability only. An access Human Gate is eligible only after required discovery surfaces are complete and no direct, non-mutating, separately-taskable, or authority-resolvable channel remains.
