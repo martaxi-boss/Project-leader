@@ -6,7 +6,7 @@
   "created_at": "2026-10-03T00:36:00Z",
   "authority": {
     "kind": "TRANSACTIONAL_GRANT",
-    "summary": "Correct only the control-plane gaps evidenced by the PINK IPTV Work run: enforce v2 records for new managed-project mutation tasks, append-only recovery history, live GitHub CI evidence/final-head checks, and bounded external-CI waiting semantics so a long in-progress workflow is not misclassified as a loop or blindly retried. Do not mutate any managed project.",
+    "summary": "Correct only the Project Leader control-plane gaps found during a real managed-project run: require v2 records for all new managed-project mutation tasks, append-only recovery history, live GitHub CI evidence/final-head checks, and bounded external-CI waiting semantics so long in-progress workflows are not misclassified as loops or blindly retried. Do not mutate any managed project.",
     "source": "CURRENT_OWNER_INSTRUCTION",
     "binding_mode": "OBJECTIVE_SCOPE_BOUND"
   },
@@ -27,7 +27,6 @@
     "roles/RECOVERY_GUARDIAN.md",
     "plugins/project-leader/skills/project-leader/SKILL.md",
     "plugins/project-leader/plugin.json",
-    "projects/policy-profiles.json",
     "control/managed_project_contract.py",
     "tests/test_managed_project_contract.py",
     ".github/workflows/validate-control-plane.yml"
