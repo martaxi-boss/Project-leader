@@ -82,12 +82,12 @@ After the v2 trust contract is available on the PR base, compile new E1+ tasks w
 
 ## Registered managed-project runtime contract
 
-When the active project's entry in `projects/policy-profiles.json` contains `control_contract`:
+For every repository registered in `projects/registry.yaml`:
 
 - new mutation-capable tasks MUST use Task Authorization v2 and Worker Result v2; do not create new v1 records;
 - use `APPEND_ONLY_V1` recovery history;
 - verify required CI from live GitHub run IDs and the exact implementation SHA, then prove that SHA equals or is an ancestor of the current final PR head;
 - if a project-local trusted gate is absent, perform the external Supervisor audit from canonical control-plane rules and state the missing local gate honestly;
-- classify active GitHub Actions as `WAITING_EXTERNAL_CI`. Do not retry or redispatch an active run. Poll only at the profile cadence and investigate the existing run first if it exceeds the stale threshold.
+- classify active GitHub Actions as `WAITING_EXTERNAL_CI`. Do not retry or redispatch an active run. Use a bounded polling cadence and investigate the existing run first if it exceeds the canonical stale threshold.
 
 Do not mistake a long emulator/device-proof run for a Recovery loop merely because no new chat text appears while GitHub is still executing.
