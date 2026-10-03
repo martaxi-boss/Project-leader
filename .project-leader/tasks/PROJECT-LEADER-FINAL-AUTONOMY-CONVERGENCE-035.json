@@ -1,0 +1,130 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-03T17:30:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "summary": "Owner explicitly authorized final Project Leader convergence to 100%: remove conflicts between legacy Human Gate semantics and the new standing-autonomy model, make the Project Leader skill reusable on new projects without mandatory central registration, align Recovery and smoke/E2E contracts, version the plugins, audit legacy remnants, and delete obsolete superseded branch refs after durable evidence is preserved. Do not mutate any other repository or project-specific implementation.",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND"
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "ca2916d3c4ff46fef7783a4c081c49697a25dfbf",
+    "task_branch": "builder/final-autonomy-convergence-035",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    ".project-leader/tasks/**",
+    ".project-leader/results/**",
+    ".project-leader/recovery-events/**",
+    ".project-leader/transitions/**",
+    "control/**",
+    "tests/**",
+    "projects/registry.yaml",
+    "projects/policy-profiles.json",
+    "projects/README.md",
+    "projects/standing-authority.json",
+    "README.md",
+    "SMOKE_TESTS.md",
+    "PLUGIN_SETUP.md",
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "RECOVERY_PROTOCOL.md",
+    "AGENT_BUILDER_PROMPT.md",
+    "roles/**",
+    "plugins/**",
+    "scripts/package_plugins.py",
+    ".agents/plugins/marketplace.json"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "harden_trust_root",
+    "reconcile_control_contract_docs",
+    "reconcile_transition_records",
+    "delete_owner_authorized_superseded_non_main_branch_refs"
+  ],
+  "prohibited_actions": [
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "force_push",
+    "rewrite_git_history",
+    "repository_or_history_deletion",
+    "destructive_data_change",
+    "modify_other_project_repository",
+    "modify_pink_iptv_policy",
+    "modify_fadego_policy",
+    "modify_vcam_pro_policy"
+  ],
+  "human_gates": [
+    {
+      "action": "merge_to_main",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "license_selection",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_owner_approval": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_owner_approval": true
+    }
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Legacy semantic conflict audit",
+    "Generic project bootstrap contract",
+    "Standing authority compatibility",
+    "Recovery autonomy regression",
+    "Smoke/E2E contract coverage",
+    "Plugin package/version consistency",
+    "Repository hygiene and obsolete-branch audit"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "ca2916d3c4ff46fef7783a4c081c49697a25dfbf",
+    "sha256": "9d185a662234060031ef6919238a480c2a419adf4cbf60f71f31ca376500ea1d",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Project Leader main must have one coherent autonomy model with no active legacy Owner-approval semantics that can cause routine permission prompts; gated/consequential effects resolve through standing authority; new projects can bootstrap from active project/repository architecture without mandatory registry enrollment; Recovery remains bounded and autonomous; smoke/E2E tests represent the final model; plugin versions identify the new runtime; obsolete superseded branch refs are removed only after durable evidence is preserved; all required CI and independent audits pass; no other project repository or project-specific policy is changed.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1"
+}
