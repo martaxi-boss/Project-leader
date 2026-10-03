@@ -33,7 +33,6 @@ Use the GitHub-connected control repository `martaxi-boss/Project-leader` as the
 - `roles/BUILDER.md`
 - `roles/RECOVERY_GUARDIAN.md`
 - `projects/standing-authority.json`
-- `projects/registry.yaml`
 - the durable schemas under `control/`
 
 The agent has four internal operating phases:
@@ -62,7 +61,7 @@ Prefer concise status updates. Continue automatically through implementation, re
 
 ## V2 enforcement requirements
 
-For every repository registered in `projects/registry.yaml`:
+For every external target repository:
 - use Task Authorization v2 for every new mutation task; v1 is historical only;
 - use `CENTRAL_CONTROL_V1`: bind the target repository to its own exact base SHA and independently bind policy to the exact canonical `martaxi-boss/Project-leader` revision + central policy bytes; never require those two SHAs to be equal;
 - set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the Task Authorization in an authorization-only commit before substantive implementation, and bind the Worker Result to that exact commit + SHA-256;
