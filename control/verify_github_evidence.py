@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from datetime import datetime
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -30,6 +31,15 @@ def api_get(url, token):
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
 
+
+
+def api_get_optional(url, token):
+    try:
+        return api_get(url, token)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None
+        raise
 
 
 def ci_run_requires_recovery_journal(payload):
@@ -109,6 +119,52 @@ def verify_recovery_retry_causality(result, records, persistence, run_payloads):
     return True
 
 
+def verify_recovery_structural_causality(result, records, persistence, ancestry_payloads):
+    """Prove recovery ordering with Git ancestry, not commit timestamps alone."""
+    if len(records) != len(persistence):
+        raise ValueError("recovery journal persistence metadata is incomplete")
+    if not any(record.get("event") == "RETRY_AUTHORIZED" for record in records):
+        return True
+
+    implementation_head = result.get("implementation_head_sha")
+    if not isinstance(implementation_head, str):
+        raise ValueError("Worker Result is missing implementation_head_sha for recovery proof")
+
+    for index, record in enumerate(records):
+        event = record.get("event")
+        commit_sha = persistence[index].get("commit_sha")
+        if not isinstance(commit_sha, str):
+            raise ValueError("recovery journal event is missing persistence commit SHA")
+
+        payload = ancestry_payloads.get(index)
+        if event in {"FAILURE_OBSERVED", "RETRY_AUTHORIZED", "REPLAN"}:
+            if payload is None:
+                raise ValueError(f"missing structural ancestry proof for recovery event {event}")
+            verify_compare_payload(payload, commit_sha, implementation_head)
+        elif event == "RECOVERED" and result.get("terminal_status") == "TERMINAL_SUCCESS":
+            if payload is None:
+                raise ValueError("missing structural ancestry proof for RECOVERED event")
+            verify_compare_payload(payload, implementation_head, commit_sha)
+            if payload.get("status") != "ahead":
+                raise ValueError(
+                    "RECOVERED must be committed after the CI-certified implementation head"
+                )
+
+    latest_retry_sequence = max(
+        record["sequence"]
+        for record in records
+        if record.get("event") == "RETRY_AUTHORIZED"
+    )
+    if result.get("terminal_status") == "TERMINAL_SUCCESS":
+        if not any(
+            record.get("event") == "RECOVERED"
+            and record.get("sequence", 0) > latest_retry_sequence
+            for record in records
+        ):
+            raise ValueError("terminal Recovery success requires RECOVERED after latest RETRY_AUTHORIZED")
+    return True
+
+
 def verify_recovery_journal_records(result, records):
     if not records:
         raise ValueError("CI retry requires a durable append-only recovery journal")
@@ -128,16 +184,25 @@ def verify_recovery_journal_records(result, records):
     return True
 
 
-def load_recovery_journal(result, repository, token, current_head_sha, api_base, run_payloads):
+def load_recovery_journal(
+    result,
+    repository,
+    token,
+    current_head_sha,
+    api_base,
+    run_payloads,
+    required=False,
+):
     directory = f".project-leader/recovery-events/{result['task_id']}"
     quoted_directory = urllib.parse.quote(directory, safe="/")
-    try:
-        listing = api_get(
-            f"{api_base}/repos/{repository}/contents/{quoted_directory}?ref={current_head_sha}",
-            token,
-        )
-    except Exception as exc:
-        raise ValueError("CI retry requires a durable append-only recovery journal") from exc
+    listing = api_get_optional(
+        f"{api_base}/repos/{repository}/contents/{quoted_directory}?ref={current_head_sha}",
+        token,
+    )
+    if listing is None:
+        if required:
+            raise ValueError("CI retry requires a durable append-only recovery journal")
+        return False
 
     if not isinstance(listing, list):
         raise ValueError("recovery journal path is not a directory")
@@ -170,19 +235,46 @@ def load_recovery_journal(result, repository, token, current_head_sha, api_base,
             )
         commit = commits[0]
         persisted_at = ((commit.get("commit") or {}).get("committer") or {}).get("date")
-        if not persisted_at:
-            raise ValueError(f"recovery event commit timestamp is missing: {name}")
+        commit_sha = commit.get("sha")
+        if not persisted_at or not commit_sha:
+            raise ValueError(f"recovery event commit evidence is incomplete: {name}")
         persistence.append(
             {
                 "name": name,
-                "commit_sha": commit.get("sha"),
+                "commit_sha": commit_sha,
                 "persisted_at": persisted_at,
             }
         )
 
     verify_recovery_journal_records(result, records)
+
+    ancestry_payloads = {}
+    if any(record.get("event") == "RETRY_AUTHORIZED" for record in records):
+        for index, record in enumerate(records):
+            event = record.get("event")
+            commit_sha = persistence[index]["commit_sha"]
+            if event in {"FAILURE_OBSERVED", "RETRY_AUTHORIZED", "REPLAN"}:
+                ancestry_payloads[index] = api_get(
+                    f"{api_base}/repos/{repository}/compare/{commit_sha}...{result['implementation_head_sha']}",
+                    token,
+                )
+            elif event == "RECOVERED" and result.get("terminal_status") == "TERMINAL_SUCCESS":
+                ancestry_payloads[index] = api_get(
+                    f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{commit_sha}",
+                    token,
+                )
+
+        verify_recovery_structural_causality(
+            result,
+            records,
+            persistence,
+            ancestry_payloads,
+        )
+
+    # Timestamp checks remain a secondary defense for legacy GitHub rerun evidence.
     verify_recovery_retry_causality(result, records, persistence, run_payloads)
     return True
+
 
 def _run_order_key(payload):
     created = payload.get("created_at") or ""
@@ -378,15 +470,15 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
     for ci_item, payload in zip(result["ci"], run_payloads):
         verify_same_sha_ci_consistency(ci_item, result, payload, same_sha_runs)
 
-    if any(ci_run_requires_recovery_journal(payload) for payload in run_payloads):
-        load_recovery_journal(
-            result,
-            repository,
-            token,
-            current_head_sha,
-            api_base,
-            run_payloads,
-        )
+    load_recovery_journal(
+        result,
+        repository,
+        token,
+        current_head_sha,
+        api_base,
+        run_payloads,
+        required=any(ci_run_requires_recovery_journal(payload) for payload in run_payloads),
+    )
 
     compare = api_get(
         f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{current_head_sha}",

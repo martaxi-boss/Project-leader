@@ -111,7 +111,11 @@ For v2 recovery, persistence is part of the recovery transition itself:
 
 The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZED` record persisted after the retry started is invalid for that retry and must not be accepted as authorization. Recovery-event files are append-only: each event file must be created once and never rewritten.
 
-Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. For GitHub Actions evidence, any certified run whose live `run_attempt` is greater than 1 requires a valid current-head journal containing `FAILURE_OBSERVED`, a matching `RETRY_AUTHORIZED` for that attempt durably persisted no later than the retry start, and, for terminal success, `RECOVERED`.
+Causality is structural as well as temporal. For any v2 task whose journal contains a retry, the commits that persist `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and any pre-retry `REPLAN` must be ancestors of the CI-certified `implementation_head_sha`. For terminal success, the `RECOVERED` commit must be a descendant of that implementation SHA on the final task line. Timestamp checks remain an additional defense, not the sole proof.
+
+Therefore an old-SHA GitHub `rerun` cannot be the terminal Recovery certificate: its `head_sha` predates the committed retry authorization. After `RETRY_AUTHORIZED`, create/retain a descendant task SHA containing the pre-retry journal and obtain a fresh required CI run on that descendant SHA (for example via the normal push trigger or an authorized workflow dispatch). Then append `RECOVERED` only after success.
+
+Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. A live `run_attempt > 1` still requires its current-head recovery journal and timestamp checks, but structural ancestry may additionally reject that rerun as unsuitable for terminal certification.
 
 
 ## Waiting on external CI

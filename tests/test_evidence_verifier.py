@@ -9,6 +9,7 @@ from control.verify_github_evidence import (
     verify_recovery_journal_records,
     verify_same_sha_ci_consistency,
     verify_recovery_retry_causality,
+    verify_recovery_structural_causality,
     verify_run_payload,
 )
 
@@ -270,6 +271,110 @@ class EvidenceVerifierTests(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             verify_recovery_journal_records(result, [first, second])
+
+    def structural_compare(self, base, head, status="ahead"):
+        return {
+            "status": status,
+            "base_commit": {"sha": base},
+            "commits": [] if status == "identical" else [{"sha": head}],
+            "files": [],
+        }
+
+    def test_structural_recovery_causality_accepts_pre_retry_ancestry_and_post_run_recovered(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+            "implementation_head_sha": "d" * 40,
+        }
+        persistence = [
+            {"commit_sha": "a" * 40, "persisted_at": "2026-10-03T01:01:00Z"},
+            {"commit_sha": "b" * 40, "persisted_at": "2026-10-03T01:02:00Z"},
+            {"commit_sha": "e" * 40, "persisted_at": "2026-10-03T01:04:00Z"},
+        ]
+        ancestry = {
+            0: self.structural_compare("a" * 40, "d" * 40),
+            1: self.structural_compare("b" * 40, "d" * 40),
+            2: self.structural_compare("d" * 40, "e" * 40),
+        }
+        self.assertTrue(
+            verify_recovery_structural_causality(result, [first, second, third], persistence, ancestry)
+        )
+
+    def test_structural_recovery_rejects_retry_authorization_outside_run_ancestry(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+            "implementation_head_sha": "d" * 40,
+        }
+        persistence = [
+            {"commit_sha": "a" * 40, "persisted_at": "2026-10-03T01:01:00Z"},
+            {"commit_sha": "b" * 40, "persisted_at": "2026-10-03T01:02:00Z"},
+            {"commit_sha": "e" * 40, "persisted_at": "2026-10-03T01:04:00Z"},
+        ]
+        ancestry = {
+            0: self.structural_compare("a" * 40, "d" * 40),
+            1: {"status": "diverged", "base_commit": {"sha": "b" * 40}, "commits": []},
+            2: self.structural_compare("d" * 40, "e" * 40),
+        }
+        with self.assertRaises(ValueError):
+            verify_recovery_structural_causality(result, [first, second, third], persistence, ancestry)
+
+    def test_structural_recovery_rejects_recovered_inside_implementation_head(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+            "implementation_head_sha": "d" * 40,
+        }
+        persistence = [
+            {"commit_sha": "a" * 40, "persisted_at": "2026-10-03T01:01:00Z"},
+            {"commit_sha": "b" * 40, "persisted_at": "2026-10-03T01:02:00Z"},
+            {"commit_sha": "d" * 40, "persisted_at": "2026-10-03T01:03:00Z"},
+        ]
+        ancestry = {
+            0: self.structural_compare("a" * 40, "d" * 40),
+            1: self.structural_compare("b" * 40, "d" * 40),
+            2: self.structural_compare("d" * 40, "d" * 40, status="identical"),
+        }
+        with self.assertRaises(ValueError):
+            verify_recovery_structural_causality(result, [first, second, third], persistence, ancestry)
+
+    def test_structural_recovery_requires_recovered_after_latest_retry(self):
+        first = self.recovery_event(1, "RECOVERED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+            "implementation_head_sha": "d" * 40,
+        }
+        persistence = [
+            {"commit_sha": "e" * 40, "persisted_at": "2026-10-03T01:01:00Z"},
+            {"commit_sha": "b" * 40, "persisted_at": "2026-10-03T01:02:00Z"},
+        ]
+        ancestry = {
+            0: self.structural_compare("d" * 40, "e" * 40),
+            1: self.structural_compare("b" * 40, "d" * 40),
+        }
+        with self.assertRaises(ValueError):
+            verify_recovery_structural_causality(result, [first, second], persistence, ancestry)
 
     def test_retry_causality_accepts_precommitted_authorization(self):
         from control.validate_records import canonical_sha256
