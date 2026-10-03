@@ -549,5 +549,45 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("WAITING_EXTERNAL_CI", recovery)
         self.assertNotIn("whose central profile declares a control contract", builder)
 
+
+    def test_active_runtime_is_registry_free(self):
+        for path in (
+            "PROJECT_LEADER.md",
+            "RUNBOOK.md",
+            "RECOVERY_PROTOCOL.md",
+            "AGENT_BUILDER_PROMPT.md",
+            "README.md",
+            "plugins/project-leader/skills/project-leader/SKILL.md",
+            "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
+        ):
+            text = (ROOT / path).read_text(encoding="utf-8")
+            self.assertNotIn("projects/registry.yaml", text, path)
+
+    def test_active_task_schema_is_transition_controls_only_and_legacy_v2_is_archived(self):
+        active = json.loads((ROOT / "control/task-authorization.schema.json").read_text(encoding="utf-8"))
+        legacy = json.loads((ROOT / "control/task-authorization.v2.schema.json").read_text(encoding="utf-8"))
+        self.assertIn("transition_controls", active["required"])
+        self.assertIn("transition_controls", active["properties"])
+        self.assertNotIn("human_gates", active["properties"])
+        self.assertIn("human_gates", legacy["required"])
+        self.assertIn("human_gates", legacy["properties"])
+
+    def test_final_smoke_contract_requires_autonomous_transition_and_real_human_gate(self):
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+        self.assertIn("Autonomous covered implementation and transition", smoke)
+        self.assertIn("does **not** stop merely to ask whether it may merge", smoke)
+        self.assertIn("EXCLUSIVE_HUMAN_INTERVENTION", smoke)
+        self.assertIn("NEW_UNCOVERED_MATERIAL_DECISION", smoke)
+        self.assertIn("New-project bootstrap without registration", smoke)
+
+    def test_plugin_versions_mark_autonomous_runtime_generation(self):
+        project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
+        recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(project_leader["version"], "0.6.0")
+        self.assertEqual(recovery["version"], "0.5.0")
+        self.assertIn("standing authority", project_leader["description"].lower())
+        self.assertIn("standing-authority", recovery["description"].lower())
+
+
 if __name__ == "__main__":
     unittest.main()
