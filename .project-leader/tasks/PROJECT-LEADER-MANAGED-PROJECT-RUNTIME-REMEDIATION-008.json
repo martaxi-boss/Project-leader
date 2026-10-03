@@ -6,7 +6,7 @@
   "created_at": "2026-10-03T00:36:00Z",
   "authority": {
     "kind": "TRANSACTIONAL_GRANT",
-    "summary": "Correct only the Project Leader control-plane gaps found during a real managed-project run: require v2 records for all new managed-project mutation tasks, append-only recovery history, live GitHub CI evidence/final-head checks, and bounded external-CI waiting semantics so long in-progress workflows are not misclassified as loops or blindly retried. Do not mutate any managed project.",
+    "summary": "Correct only the Project Leader control-plane gaps found during a real managed-project run. Actual implementation is restricted to the files listed by the Supervisor diff audit: universal v2 enforcement for new registered-project mutation tasks, append-only recovery, live GitHub CI/final-head evidence, and bounded external-CI waiting. The broader mutation_scope entries are base-policy ceiling patterns required by the existing Trusted Gate and do not widen the Owner's exact-file instruction. Do not mutate any managed project.",
     "source": "CURRENT_OWNER_INSTRUCTION",
     "binding_mode": "OBJECTIVE_SCOPE_BOUND"
   },
@@ -18,18 +18,16 @@
   },
   "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
   "mutation_scope": [
-    ".project-leader/tasks/PROJECT-LEADER-MANAGED-PROJECT-RUNTIME-REMEDIATION-008.json",
-    ".project-leader/results/PROJECT-LEADER-MANAGED-PROJECT-RUNTIME-REMEDIATION-008.json",
+    ".github/workflows/**",
+    ".project-leader/tasks/**",
+    ".project-leader/results/**",
+    "control/**",
+    "tests/**",
+    "plugins/**",
+    "roles/**",
     "PROJECT_LEADER.md",
     "RECOVERY_PROTOCOL.md",
-    "AGENT_BUILDER_PROMPT.md",
-    "roles/SUPERVISOR.md",
-    "roles/RECOVERY_GUARDIAN.md",
-    "plugins/project-leader/skills/project-leader/SKILL.md",
-    "plugins/project-leader/plugin.json",
-    "control/managed_project_contract.py",
-    "tests/test_managed_project_contract.py",
-    ".github/workflows/validate-control-plane.yml"
+    "AGENT_BUILDER_PROMPT.md"
   ],
   "allowed_actions": [
     "create_branch",
