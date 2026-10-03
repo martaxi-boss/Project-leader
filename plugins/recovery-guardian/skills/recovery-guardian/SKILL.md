@@ -29,7 +29,8 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 8. Retry only bounded transient failures.
 9. Persist append-only recovery events for v2 retry/replan decisions; persist checkpoint changes only for legacy v1 continuity.
 10. Replan after repeated no-progress instead of looping.
-11. If the interrupted state was `WAITING_EXTERNAL_CI`, re-read the exact bound GitHub run IDs before any dispatch. When every bound run is already terminal, classify `STALE_WAIT_STATE`; route all-success to Supervisor continuation and any failure/cancellation/timeout to Recovery without duplicating the run.
+11. Before any CI dispatch/rerun during recovery, query exact workflow name + target SHA + event context. Reuse an active/successful exact run or route a terminal non-success through Recovery; create a new run only when no exact match exists.
+12. If the interrupted state was `WAITING_EXTERNAL_CI`, re-read the exact bound GitHub run IDs before any dispatch. When every bound run is already terminal, classify `STALE_WAIT_STATE`; route all-success to Supervisor continuation and any failure/cancellation/timeout to Recovery without duplicating the run.
 12. Return recovered state to Supervisor logic for independent audit.
 
 ## Authorization
