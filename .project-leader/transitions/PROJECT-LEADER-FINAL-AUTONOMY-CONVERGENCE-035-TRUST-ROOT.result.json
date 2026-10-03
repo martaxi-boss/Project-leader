@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/final-autonomy-convergence-035",
+    "revision": "5dbbd44840200fdf6dd22fcade3faee09a173341",
+    "base_revision": "ca2916d3c4ff46fef7783a4c081c49697a25dfbf",
+    "environment": null
+  },
+  "observed_at": "2026-10-03T18:02:00Z",
+  "final_state": {
+    "status": "MUTATED",
+    "revision": "626677508baec52cfac5de2f3e0c8c447e6b3e2f"
+  },
+  "evidence": [
+    "Trust-root authorization was durably persisted before substantive mutation at commit 5ea0af68995ce097b5d2ee63972352800c035e25.",
+    "Exact material implementation head 626677508baec52cfac5de2f3e0c8c447e6b3e2f passed Control contract tests run 37142635074.",
+    "Exact material implementation head 626677508baec52cfac5de2f3e0c8c447e6b3e2f passed Validate control plane run 37142635112.",
+    "Exact material implementation head 626677508baec52cfac5de2f3e0c8c447e6b3e2f passed Package ChatGPT plugins run 37142635069.",
+    "Trusted gate on the material head failed only because the final Worker Result had not yet been persisted; no scope/policy/authorization-ceiling defect was reported.",
+    "This phase intentionally leaves the old registry/profile/project-specific bootstrap files untouched until a separate workflow-aware destructive hygiene task can remove them without weakening current main CI."
+  ],
+  "residual_blockers": []
+}
