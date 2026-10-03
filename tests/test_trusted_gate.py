@@ -73,6 +73,39 @@ class TrustedGateTests(unittest.TestCase):
     def test_valid_task_passes_base_policy(self):
         self.assertTrue(self.verify())
 
+    def test_exact_file_scope_can_narrow_policy_pattern(self):
+        self.task["mutation_scope"] = [
+            "tests/test_trusted_gate.py",
+            ".project-leader/tasks/TEST-TRUSTED-001.json",
+        ]
+        self.changed = [
+            "tests/test_trusted_gate.py",
+            ".project-leader/tasks/TEST-TRUSTED-001.json",
+        ]
+        self.assertTrue(self.verify())
+
+    def test_nested_subpattern_can_narrow_policy_pattern(self):
+        self.task["mutation_scope"] = ["tests/unit/**", ".project-leader/tasks/**"]
+        self.changed = ["tests/unit/test_scope.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        self.assertTrue(self.verify())
+
+    def test_narrow_wildcard_can_remain_inside_policy_prefix(self):
+        self.task["mutation_scope"] = ["tests/test_*.py", ".project-leader/tasks/**"]
+        self.changed = ["tests/test_scope.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        self.assertTrue(self.verify())
+
+    def test_prefix_collision_does_not_fit_policy_ceiling(self):
+        self.task["mutation_scope"] = ["testing/**", ".project-leader/tasks/**"]
+        self.changed = ["testing/test_scope.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_parent_traversal_scope_pattern_fails_closed(self):
+        self.task["mutation_scope"] = ["tests/../control/**", ".project-leader/tasks/**"]
+        self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        with self.assertRaises(ValueError):
+            self.verify()
+
     def test_scope_cannot_self_widen_to_double_star(self):
         self.task["mutation_scope"] = ["**"]
         with self.assertRaises(ValueError):
