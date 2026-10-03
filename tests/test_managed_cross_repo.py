@@ -7,9 +7,52 @@ from control.managed_project_contract import (
     validate_registry_profile_consistency,
     verify_managed_task_against_control_policy,
 )
-from tests.test_managed_project_contract import CONTROL_REPOSITORY, REPOSITORY, task
-
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY = "owner/project"
+CONTROL_REPOSITORY = "owner/control"
+
+
+def task():
+    return {
+        "schema_version": "2.0",
+        "task_id": "TASK-001",
+        "project": "TEST",
+        "repository": REPOSITORY,
+        "created_at": "2026-10-03T01:00:00Z",
+        "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+        "authority": {
+            "kind": "STANDING_DELEGATION",
+            "summary": "bounded managed task",
+            "source": "CURRENT_OWNER_INSTRUCTION",
+            "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+        },
+        "starting_state": {
+            "default_branch": "main",
+            "base_sha": "a" * 40,
+            "task_branch": "builder/task-001",
+            "pr_number": None,
+        },
+        "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+        "mutation_scope": ["src/**", ".project-leader/tasks/**", ".project-leader/results/**"],
+        "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
+        "prohibited_actions": ["merge_to_main"],
+        "human_gates": [{"action": "merge_to_main", "requires_owner_approval": True}],
+        "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
+        "required_ci": ["Project CI"],
+        "policy": {
+            "binding_mode": "CENTRAL_CONTROL_V1",
+            "profile": "project-v1",
+            "path": "projects/policies/project.json",
+            "repository": CONTROL_REPOSITORY,
+            "revision": "c" * 40,
+            "sha256": "d" * 64,
+        },
+        "recovery": {"mode": "APPEND_ONLY_V1"},
+        "terminal_condition": "green PR",
+        "privacy": {"contains_secrets": False, "contains_private_conversation_text": False},
+    }
+
+
 
 
 def policy():
