@@ -164,6 +164,8 @@ def validate_result(record):
     _validate(record, _load_schema(schema))
     _reject_duplicate_names(record["validation"], "validation")
     _reject_duplicate_names(record.get("ci", []), "CI")
+    if bool(record.get("authorization_commit_sha")) != bool(record.get("authorization_sha256")):
+        raise ValueError("authorization_commit_sha and authorization_sha256 must be provided together")
     if record["terminal_status"] in {"BLOCKED", "HUMAN_GATE", "STALE_EXECUTION_PACKET"}:
         if not record.get("residual_blockers"):
             raise ValueError(f"{record['terminal_status']} requires at least one residual_blocker")
