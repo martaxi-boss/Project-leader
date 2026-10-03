@@ -127,8 +127,9 @@ An existing GitHub Actions run in `queued`, `waiting`, `pending`, `requested`, o
 For every registered managed project:
 
 1. bind the wait to the exact GitHub Actions run IDs that satisfy the task's required CI;
-2. classify the state as `WAITING_EXTERNAL_CI` only while at least one bound run is still active;
-3. do not dispatch or retry the same workflow while any bound run is active;
+2. before any explicit dispatch/rerun, deduplicate by exact workflow name + target SHA + event context: reuse an active/successful exact match, route a terminal non-success to Recovery, and dispatch only if no exact match exists;
+3. classify the state as `WAITING_EXTERNAL_CI` only while at least one bound run is still active;
+4. do not dispatch or retry the same workflow while any bound run is active;
 4. re-read those exact run IDs from GitHub no more frequently than the canonical bounded polling cadence unless new evidence arrives;
 5. if an active run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
 6. if every bound run is terminal but the stored/control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE`; all-success routes immediately to Supervisor audit/validate/continue, while any failure/cancellation/timeout routes to Recovery;
