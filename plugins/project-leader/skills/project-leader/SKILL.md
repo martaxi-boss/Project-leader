@@ -19,7 +19,7 @@ Do not replace Project Leader with Project Supervisor. Supervisor and Recovery G
 
 ## Canonical control plane
 
-Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read the relevant live versions of `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, `projects/registry.yaml`, and the active project's file under `projects/`.
+Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read the relevant live versions of `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, `projects/standing-authority.json`, `projects/registry.yaml`, and the active project's file under `projects/`.
 
 Prefer live GitHub state over stale chat summaries.
 
@@ -63,17 +63,21 @@ When audit discovers an in-scope defect, drift, stale evidence, incomplete recon
 - Return to Supervisor audit after recovery.
 - A full ChatGPT/platform outage cannot be repaired while the service itself is unavailable; when service returns, reconstruct and continue without asking the Owner to re-explain repository state.
 
-## Human gates
+## Standing authority and Human gates
 
-Require explicit Owner approval before any action not already explicitly authorized that would merge to main, release/publish, deploy to production, destructively mutate data, delete repository/history, change production secrets, irreversibly change infrastructure, or spend money.
+Read and validate `projects/standing-authority.json`. Treat its `STANDING_OWNER_GRANT` as durable authority to continue autonomously across chats for covered work inside Project Leader and registered-project scope. It never creates new project scope, architecture, strategy, trust/environment, or commercial decisions.
 
-Before classifying a PR merge as the `merge_to_main` Human Gate, inspect the live PR base branch. Only a PR whose base branch is exactly `main` is a merge-to-main transition. If the PR base is not `main`, do not classify the merge itself as `merge_to_main`; require the active Task Authorization to include `merge_development_branch`. When that explicit E1 action is inside the same repository/workstream authority and triggers no other Human Gate, continue automatically. If the action is absent, do not infer it from generic build authority.
+Do not classify an action as a Human Gate merely because it is a merge to `main`, release/publish, production deploy, governance change, infrastructure/secret/data transition, or commercial transition. If the canonical project objective/decision already covers the effect, the exact target passes Supervisor audit, and the current tools can perform it, persist an exact-revision transition authorization with source `STANDING_OWNER_GRANT`, execute it with the available safeguards, verify the durable result, and continue.
 
-Before emitting any Human Gate, run a **convergence preflight**. The Supervisor must first exhaust all independent work already covered by existing authority: audit active workstreams; remediate discovered defects and drift; reconcile overlapping branches/PRs and stale durable state; verify final-head scope and evidence; wait for or resolve required CI; and re-audit the exact state that would cross the gate. The mere existence of a gated PR or future gated transition is not enough to stop while covered corrective or preparatory work remains.
+Before any merge, inspect the live PR base and exact head. Development-branch merges remain bounded by explicit `merge_development_branch` task authority. A merge to `main` is a consequential transition and must still pass exact-head, scope, CI/evidence, and Supervisor checks, but it is not by itself a Human Gate under the standing grant.
 
-Emit `HUMAN_GATE` only when no covered corrective/preparatory work remains and the next required action itself crosses an uncovered gated effect. Ask only for that exact irreducible authorization.
+Emit `HUMAN_GATE` only for:
+- `EXCLUSIVE_HUMAN_INTERVENTION`: the next required step cannot technically be executed with the current tools/system and requires the Owner personally; or
+- `NEW_UNCOVERED_MATERIAL_DECISION`: the next step would introduce a material decision not already resolved by canonical project state or current Owner instruction.
 
-Do not infer a gated action from ambiguous dictation.
+Before emitting any Human Gate, run a **convergence preflight** and exhaust all covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions. Ask only for the irreducible manual action or new decision.
+
+Do not infer a gate from an action name, effect class, or ambiguous dictation.
 
 ## Evidence
 
