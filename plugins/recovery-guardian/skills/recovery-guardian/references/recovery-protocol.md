@@ -21,4 +21,6 @@ V2 recovery: use the append-only hash-chained journal under `.project-leader/rec
 
 Legacy checkpoint liveness: a v1 checkpoint whose stored status is `ACTIVE` is actionable only with corroborating live branch, open PR, or active-CI evidence. If a terminal result exists or no live workstream exists, classify `STALE_LEGACY_CHECKPOINT` and preserve the snapshot without resuming its stale next step.
 
+CI dispatch deduplication: before explicit dispatch/rerun, query the exact workflow name + target SHA + event context. Reuse active/successful exact matches; route terminal non-success to Recovery; create a new run only when no exact match exists.
+
 External CI wait: queued/waiting/pending/requested/in_progress GitHub Actions are `WAITING_EXTERNAL_CI`, not failures. Bind the wait to exact run IDs and never dispatch a duplicate while any bound run is active. If a fresh read finds every bound run terminal while the control state still says waiting, classify `STALE_WAIT_STATE`: success returns to Supervisor continuation and failure/cancellation/timeout enters Recovery. After interruption/resume, reconcile those live run IDs before any new dispatch.
