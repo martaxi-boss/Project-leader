@@ -26,7 +26,8 @@ For any request to continue, build, fix, or audit an active project:
 8. Recovery Guardian follows `RECOVERY_PROTOCOL.md`, then returns to Supervisor audit.
 9. Continue inside the authorized scope using `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. An audit finding is an input to remediation, not a stopping condition when the correction is already covered.
 10. Before any Human Gate, run convergence preflight: exhaust covered remediation, reconcile overlapping workstreams and durable state, bind validation to the exact final heads, and re-audit the state that would cross the gate.
-11. Stop only when the objective is complete, essential access/evidence is unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
+11. Before claiming essential access/evidence is unavailable or emitting an access-related Human Gate, run the mandatory `FORCED_OPERATIONAL_ACCESS_DISCOVERY` preflight described below.
+12. Stop only when the objective is complete, the access-discovery closure test proves essential access/evidence genuinely unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
 
 ## Standing Owner Authority and Human Gates
 
@@ -47,6 +48,23 @@ Emit `HUMAN_GATE` only for:
 - `NEW_UNCOVERED_MATERIAL_DECISION`: the next step would introduce a material scope, architecture, strategy, trust/environment, commercial, or irreversible-risk decision not already resolved by canonical project state or current Owner instruction.
 
 A merge to `main`, release, deploy, governance change, infrastructure/secret/data transition, or paid/commercial transition is not a Human Gate by action name alone. It remains consequential and must pass exact-target Supervisor audit and durable transition evidence.
+
+### Forced Operational Access Discovery
+
+Missing a direct shell, SSH client, provider tool, workflow-dispatch action, or connector in the current Work session is **not** proof that operational access is unavailable.
+
+Before Project Leader may claim `essential access/evidence is unavailable` or emit `EXCLUSIVE_HUMAN_INTERVENTION` for access, it must run `FORCED_OPERATIONAL_ACCESS_DISCOVERY` and record what was checked. At minimum, inspect:
+
+1. direct session capabilities/connectors;
+2. the active target repository for existing workflows, deployment/operations scripts, environment references and access paths;
+3. reasonably discoverable adjacent operational repositories owned by the same project/Owner context, using strong repository/project/infrastructure identifiers rather than broad credential hunting;
+4. existing workflow/PR/run history that proves whether a discovered channel previously reached the required environment.
+
+Read-only inspection of an adjacent operational repository does not violate one-mutable-repository isolation. It may be used to discover a GitHub Actions -> SSH bridge, deployment workflow, provider connector, operations runner, or equivalent existing path. Never expose or search for substitute secret values; inspect only metadata, workflow definitions, configured secret *names*, and durable execution evidence permitted by the available tools.
+
+If a usable access path exists without a new mutation, use it and continue. If using the path requires mutating a different repository, do **not** mutate it inside the current task: return to Supervisor, resolve authority, and when covered create a separate bounded operations task for that repository, then return to the original project. If such a path exists but authority is unresolved, resolve authority before interrupting the Owner.
+
+Only after all required discovery surfaces are exhausted and no executable or separately-bindable path remains may Project Leader classify `ACCESS_PATH_UNAVAILABLE` and treat a Human Gate as a candidate. A request that the Owner manually copy terminal commands merely because the current Work session lacks direct SSH fails this preflight whenever an existing operational channel is reasonably discoverable.
 
 Project isolation is mandatory: one mutable target repository per task. Using the Project Leader skill inside another project does not authorize mutation of any third project or make that project's implementation part of the Project Leader repository.
 
