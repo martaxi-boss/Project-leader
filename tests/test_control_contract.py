@@ -398,13 +398,13 @@ class ControlContractTests(unittest.TestCase):
 
 
 
-    def test_skill_distinguishes_development_branch_merge_from_main_gate(self):
+    def test_skill_resolves_main_merge_through_standing_authority(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("inspect the live PR base branch", skill)
-        self.assertIn("Only a PR whose base branch is exactly `main` is a merge-to-main transition.", skill)
-        self.assertIn("If the PR base is not `main`, do not classify the merge itself as `merge_to_main`", skill)
-        self.assertIn("merge_development_branch", skill)
-        self.assertIn("continue automatically", skill)
+        self.assertIn("Before any merge, inspect the live PR base and exact head.", skill)
+        self.assertIn("Development-branch merges remain bounded by explicit `merge_development_branch` task authority.", skill)
+        self.assertIn("A merge to `main` remains a consequential transition", skill)
+        self.assertIn("it is not by itself a Human Gate", skill)
+        self.assertIn("STANDING_OWNER_GRANT", skill)
 
     def test_project_leader_converges_before_human_gate(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
@@ -412,10 +412,10 @@ class ControlContractTests(unittest.TestCase):
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
         self.assertIn("DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE", skill)
         self.assertIn("convergence preflight", skill)
-        self.assertIn("The mere existence of a gated PR", skill)
-        self.assertIn("no covered corrective/preparatory work remains", skill)
+        self.assertIn("exhaust covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions", skill)
+        self.assertIn("Do not emit a Human Gate while any audit, correction, reconciliation", project)
         self.assertIn("An audit finding is an input to remediation", project)
-        self.assertIn("Do not stop merely to report a covered problem", runbook)
+        self.assertIn("If controls do not yet pass, remediate/recover and revalidate instead of asking the Owner.", runbook)
 
     def test_project_leader_recovers_stale_external_ci_wait(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
