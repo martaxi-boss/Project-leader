@@ -20,7 +20,8 @@
         "edit_project_files",
         "create_commits",
         "run_ci",
-        "open_or_update_pull_request"
+        "open_or_update_pull_request",
+        "merge_development_branch"
       ],
       "required_prohibited_actions": [
         "merge_to_main",
