@@ -398,6 +398,13 @@ class ControlContractTests(unittest.TestCase):
 
 
 
+    def test_skill_distinguishes_development_branch_merge_from_main_gate(self):
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("inspect the live PR base branch", skill)
+        self.assertIn("Only a PR whose base branch is exactly `main` is a merge-to-main transition.", skill)
+        self.assertIn("If the PR base is not `main`, do not classify the merge itself as `merge_to_main`", skill)
+        self.assertIn("continue automatically", skill)
+
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
