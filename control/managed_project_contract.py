@@ -23,6 +23,10 @@ DEFAULT_STALE_AFTER_MINUTES = 60
 LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
 STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
 LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
+CI_DISPATCH_REQUIRED = "DISPATCH_REQUIRED"
+CI_REUSE_ACTIVE = "REUSE_ACTIVE_RUN"
+CI_REUSE_SUCCESS = "REUSE_SUCCESSFUL_RUN"
+CI_DISPATCH_ROUTE_RECOVERY = "ROUTE_RECOVERY"
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -216,6 +220,72 @@ def reconcile_legacy_checkpoint_liveness(
         "actionable": True,
         "checkpoint_status": status,
         "reason": "legacy ACTIVE checkpoint is corroborated by current live workstream evidence",
+    }
+
+
+
+def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
+    """Decide whether Project Leader should explicitly create another CI run.
+
+    Deduplication is exact by workflow name, target SHA, and GitHub event
+    context. Automatic runs from different contexts remain independent evidence.
+    """
+    for label, value in (
+        ("workflow_name", workflow_name),
+        ("target_sha", target_sha),
+        ("event", event),
+    ):
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{label} must be a non-empty string")
+    if not isinstance(workflow_runs, list):
+        raise ValueError("workflow_runs must be a list")
+
+    matching = [
+        run for run in workflow_runs
+        if isinstance(run, dict)
+        and run.get("name") == workflow_name
+        and run.get("head_sha") == target_sha
+        and run.get("event") == event
+    ]
+    if not matching:
+        return {
+            "decision": CI_DISPATCH_REQUIRED,
+            "run_id": None,
+            "reason": "no existing exact workflow/SHA/context run",
+        }
+
+    def order_key(run):
+        timestamp = run.get("created_at") or run.get("run_started_at") or run.get("updated_at") or ""
+        run_id = run.get("id")
+        return (timestamp, run_id if isinstance(run_id, int) else -1)
+
+    latest = max(matching, key=order_key)
+    status = latest.get("status")
+    conclusion = latest.get("conclusion")
+    run_id = latest.get("id")
+
+    if status in {"queued", "waiting", "pending", "requested", "in_progress"}:
+        return {
+            "decision": CI_REUSE_ACTIVE,
+            "run_id": run_id,
+            "reason": "exact matching CI run is already active",
+        }
+    if status == "completed" and conclusion == "success":
+        return {
+            "decision": CI_REUSE_SUCCESS,
+            "run_id": run_id,
+            "reason": "exact matching CI run already completed successfully",
+        }
+    if status == "completed":
+        return {
+            "decision": CI_DISPATCH_ROUTE_RECOVERY,
+            "run_id": run_id,
+            "reason": f"exact matching CI run is terminal non-success: {conclusion}",
+        }
+    return {
+        "decision": "INVESTIGATE_CI_STATE",
+        "run_id": run_id,
+        "reason": f"unrecognized exact matching CI state: {status}",
     }
 
 
