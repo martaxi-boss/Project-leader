@@ -68,23 +68,101 @@
         "Mutation scope audit",
         "GitHub evidence verification"
       ]
+    },
+    "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED": {
+      "allowed_scope_patterns": [
+        "control/**",
+        "tests/**",
+        ".github/workflows/**",
+        ".project-leader/tasks/**",
+        ".project-leader/results/**",
+        ".project-leader/recovery-events/**",
+        ".project-leader/transitions/**",
+        "projects/**",
+        "scripts/**",
+        ".agents/plugins/**",
+        "PROJECT_LEADER.md",
+        "RUNBOOK.md",
+        "RECOVERY_PROTOCOL.md",
+        "AGENT_BUILDER_PROMPT.md",
+        "SMOKE_TESTS.md",
+        "roles/**",
+        "plugins/**"
+      ],
+      "allowed_actions": [
+        "create_branch",
+        "edit_project_files",
+        "create_commits",
+        "run_ci",
+        "open_or_update_pull_request",
+        "harden_trust_root",
+        "add_cross_repository_policy_binding",
+        "add_authorization_integrity_binding",
+        "repair_result_terminal_semantics",
+        "add_semantic_registry_policy_validation",
+        "add_cross_repository_e2e_tests",
+        "reconcile_control_contract_docs",
+        "reconcile_transition_records"
+      ],
+      "required_prohibited_actions": [
+        "merge_to_main",
+        "branch_protection_or_ruleset_change",
+        "release_or_publish",
+        "license_selection",
+        "managed_project_mutation",
+        "production_deploy",
+        "production_secret_change",
+        "paid_service_activation"
+      ],
+      "required_human_gates": [
+        "merge_to_main",
+        "branch_protection_or_ruleset_change",
+        "release_or_publish",
+        "license_selection",
+        "managed_project_mutation",
+        "trust_root_mutation"
+      ],
+      "required_ci": [
+        "Control contract tests",
+        "Validate control plane",
+        "Package ChatGPT plugins"
+      ],
+      "required_validation": [
+        "Mutation scope audit",
+        "GitHub evidence verification",
+        "Trust-root governance path"
+      ]
     }
   },
   "sensitive_paths": [
     ".github/workflows/**",
     "control/**",
-    "plugins/**",
+    "projects/registry.yaml",
+    "projects/policy-profiles.json",
+    "projects/policies/**",
+    "scripts/package_plugins.py",
+    ".agents/plugins/**",
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "RECOVERY_PROTOCOL.md",
+    "AGENT_BUILDER_PROMPT.md",
     "roles/**",
+    "plugins/**",
     ".project-leader/**"
   ],
   "protected_paths": [
-    ".github/workflows/trusted-pr-gate.yml",
-    "projects/policies/project-leader.json",
-    "control/project-policy.schema.json",
-    "control/trusted_gate.py",
-    "control/verify_github_evidence.py",
-    "control/validate_records.py",
-    "control/task-authorization.schema.json",
-    "control/worker-result.schema.json"
+    ".github/workflows/**",
+    "control/**",
+    "projects/registry.yaml",
+    "projects/policy-profiles.json",
+    "projects/policies/**",
+    "scripts/package_plugins.py",
+    ".agents/plugins/**",
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "RECOVERY_PROTOCOL.md",
+    "AGENT_BUILDER_PROMPT.md",
+    "roles/**",
+    "plugins/**"
   ]
 }
