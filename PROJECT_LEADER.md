@@ -28,22 +28,24 @@ For any request to continue, build, fix, or audit a registered project:
 10. Before any Human Gate, run convergence preflight: exhaust covered remediation, reconcile overlapping workstreams and durable state, bind validation to the exact final heads, and re-audit the state that would cross the gate.
 11. Stop only when the objective is complete, essential access/evidence is unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
 
+## Standing Owner Authority
+
+Read and validate `projects/standing-authority.json` before consequential work. It is the durable standing delegation for autonomous operation inside Project Leader and the registered projects. It does not widen project scope or invent new product decisions; it transports the Owner's standing authority across chats and recovery sessions.
+
+When an action is already covered by the canonical project objective/decision, remains inside the correct repository and scope, and the system has the tools/capability to execute it, continue automatically after the required Supervisor evidence checks. This includes normal consequential transitions such as merge to `main`; do not stop merely because an action belongs to an E2/E3 class.
+
+For a consequential transition, Supervisor first binds the exact target/revision and evidence. Persist the transition authorization using `STANDING_OWNER_GRANT`, execute the effect with exact-target safeguards when available, then persist and independently verify the transition result.
+
 ## Human Gates
 
-A Human Gate is the last irreducible boundary, not an early reporting point. Do not emit it while any independent audit, correction, reconciliation, final-head validation, CI completion, or evidence repair remains covered by existing authority.
+A Human Gate is the last irreducible boundary, not an early reporting point. It exists only when either:
 
-A merge whose live PR base is not `main` is a development integration, not the `merge_to_main` Human Gate. It may proceed as E1 only when the active Task Authorization explicitly contains `merge_development_branch`, the target remains inside the same repository/workstream authority, and the merge causes no separate E2/E3 effect. Never derive `merge_development_branch` merely from the absence of a main gate.
+- `EXCLUSIVE_HUMAN_INTERVENTION`: the required next step cannot technically be performed with the currently available system/tools and requires the Owner personally (for example an unavailable UI-only action, MFA/physical confirmation, or Owner-only credential/input); or
+- `NEW_UNCOVERED_MATERIAL_DECISION`: the next step would introduce a material scope, architecture, strategy, trust/environment, commercial, or irreversible-risk decision not already resolved by the canonical project state or current Owner instruction.
 
-Stop and ask the Owner before any action not already explicitly authorized that would:
+A merge whose live PR base is not `main` remains a development integration and follows the task's bounded `merge_development_branch` authority. A merge to `main` is a consequential transition, but under the Standing Owner Authority it is not by itself a Human Gate.
 
-- merge to `main`;
-- release/publication;
-- production deploy;
-- destructive database/data mutation;
-- delete repositories or valuable history;
-- change production credentials/secrets;
-- make irreversible infrastructure changes;
-- spend money or enable paid services.
+Do not emit a Human Gate while any audit, correction, reconciliation, final-head validation, CI completion, recovery, or covered transition remains executable by the system.
 
 ## Internal roles
 
