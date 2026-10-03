@@ -7,6 +7,7 @@ projects:
     default_branch: "main"
     mutable: true
     policy_profile: "projects/policy-profiles.json#pink-iptv"
+    policy: "projects/policies/pink-iptv.json"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
@@ -18,6 +19,7 @@ projects:
     default_branch: "main"
     mutable: true
     policy_profile: "projects/policy-profiles.json#fadego"
+    policy: "projects/policies/fadego.json"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
@@ -29,6 +31,7 @@ projects:
     default_branch: "main"
     mutable: true
     policy_profile: "projects/policy-profiles.json#vcam-pro"
+    policy: "projects/policies/vcam-pro.json"
     default_gates:
       merge_main: owner_approval
       release: owner_approval
