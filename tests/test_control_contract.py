@@ -428,7 +428,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("STALE_WAIT_STATE", skill)
         self.assertIn("STALE_WAIT_STATE", guardian)
         self.assertIn("exact live run IDs", project)
-        self.assertIn("all-success routes to Supervisor audit/validate/continue", recovery)
+        self.assertIn("all-success routes immediately to Supervisor audit/validate/continue", recovery)
         self.assertIn("chat/UI spinner", recovery)
 
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
