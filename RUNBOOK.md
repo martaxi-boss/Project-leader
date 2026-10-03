@@ -30,6 +30,8 @@ Automatic CI triggered only because an allowed evidence-only descendant was push
 
 External CI waits are transient control states, not stopping points. When Project Leader enters `WAITING_EXTERNAL_CI`, bind the exact run IDs and re-read them at the bounded cadence. If live GitHub state becomes terminal while the stored state still says waiting, classify `STALE_WAIT_STATE`: all-success returns immediately to Supervisor audit/validation/continuation; failure/cancellation/timeout routes to Recovery. After any interrupted/resumed Work session, re-read the bound runs before dispatching anything so completed work is never repeated merely because the UI remained on “processing”.
 
+The Work execution must not use the visible “processing” spinner or a blocking wait as the mechanism that keeps an external-CI wait alive. While the execution can still call tools, run an active liveness cycle: fresh exact-run read every bounded interval, reconcile, route. After two intervals without control-plane progress, enter `LIVENESS_RECONCILE_REQUIRED`, reconstruct task/PR/head/run bindings and re-poll before doing anything else. This forced reconstruction does not retry CI and does not create a Human Gate when the bound run is still legitimately active.
+
 1. Consultant when analysis is needed.
 2. Supervisor bounds authorized work and acceptance evidence.
 3. Builder implements when authorized.
