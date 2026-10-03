@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_from_live_github": "2026-10-02",
+  "generated_from_live_github": "2026-10-03",
   "profiles": {
     "pink-iptv": {
       "repository": "martaxi-boss/pink-iptv",
@@ -19,7 +19,25 @@
         ".github/workflows/**",
         ".env.example"
       ],
-      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution"
+      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution",
+      "allowed_ci_names": [
+        "Android CI",
+        "Backend CI"
+      ],
+      "control_contract": {
+        "new_task_schema_version": "2.0",
+        "worker_result_schema_version": "2.0",
+        "recovery_mode": "APPEND_ONLY_V1",
+        "ci_evidence_mode": "LIVE_GITHUB_RUN_ID_AND_SHA",
+        "final_head_rule": "IMPLEMENTATION_ANCESTOR_OF_FINAL_HEAD",
+        "trusted_gate_mode": "SUPERVISOR_EXTERNAL_AUDIT_REQUIRED_IF_PROJECT_LOCAL_GATE_ABSENT",
+        "ci_wait": {
+          "state": "WAITING_EXTERNAL_CI",
+          "poll_interval_minutes": 5,
+          "stale_after_minutes": 60,
+          "retry_while_running": false
+        }
+      }
     },
     "fadego": {
       "repository": "martaxi-boss/fadego",
