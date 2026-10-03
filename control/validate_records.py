@@ -129,8 +129,28 @@ def validate_task(record):
         raise ValueError(f"unsupported task schema_version: {version!r}")
     _validate(record, _load_schema(schema))
     if version == "2.0":
-        if record["policy"]["base_sha"] != record["starting_state"]["base_sha"]:
-            raise ValueError("v2 task policy.base_sha must equal starting_state.base_sha")
+        policy = record["policy"]
+        mode = policy.get("binding_mode")
+        has_local = "base_sha" in policy
+        has_central = "repository" in policy or "revision" in policy
+
+        if mode is None:
+            # Backward-compatible validation for historical v2 records created
+            # before central-control policy binding existed.
+            if not has_local or has_central:
+                raise ValueError("legacy v2 task policy binding must use base_sha only")
+            if policy["base_sha"] != record["starting_state"]["base_sha"]:
+                raise ValueError("v2 task policy.base_sha must equal starting_state.base_sha")
+        elif mode == "LOCAL_BASE_V1":
+            if not has_local or has_central:
+                raise ValueError("LOCAL_BASE_V1 requires base_sha and forbids repository/revision")
+            if policy["base_sha"] != record["starting_state"]["base_sha"]:
+                raise ValueError("LOCAL_BASE_V1 policy.base_sha must equal starting_state.base_sha")
+        elif mode == "CENTRAL_CONTROL_V1":
+            if has_local or not policy.get("repository") or not policy.get("revision"):
+                raise ValueError("CENTRAL_CONTROL_V1 requires repository+revision and forbids base_sha")
+        else:
+            raise ValueError(f"unsupported v2 policy binding_mode: {mode!r}")
     return True
 
 def validate_result(record):
@@ -144,6 +164,9 @@ def validate_result(record):
     _validate(record, _load_schema(schema))
     _reject_duplicate_names(record["validation"], "validation")
     _reject_duplicate_names(record.get("ci", []), "CI")
+    if record["terminal_status"] in {"BLOCKED", "HUMAN_GATE", "STALE_EXECUTION_PACKET"}:
+        if not record.get("residual_blockers"):
+            raise ValueError(f"{record['terminal_status']} requires at least one residual_blocker")
     if record["terminal_status"] == "TERMINAL_SUCCESS":
         failed = [item["name"] for item in record["validation"] if item["status"] == "FAIL"]
         if failed:
@@ -176,6 +199,9 @@ def validate_pair(task, result):
     validate_result(result)
     if task["schema_version"] == "2.0" and result["schema_version"] != "2.0":
         raise ValueError("v2 task requires a v2 Worker Result")
+    if task.get("integrity_mode") == "IMMUTABLE_AUTHORIZATION_V1":
+        if not result.get("authorization_commit_sha") or not result.get("authorization_sha256"):
+            raise ValueError("immutable authorization task requires authorization_commit_sha and authorization_sha256")
     checks = {
         "task_id": (task["task_id"], result["task_id"]),
         "repository": (task["repository"], result["repository"]),
