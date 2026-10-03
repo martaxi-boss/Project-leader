@@ -28,6 +28,8 @@ jobs:
           test -f control/trusted_gate.py
           test -f control/verify_github_evidence.py
           test -f control/managed_project_contract.py
+          grep -q 'NEW_TASK_SCHEMA_VERSION = "2.0"' control/managed_project_contract.py
+          grep -q 'CI_WAIT_STATE = "WAITING_EXTERNAL_CI"' control/managed_project_contract.py
           test -f control/transition-authorization.schema.json
           test -f control/transition-result.schema.json
           test -f roles/CONSULTANT.md
@@ -76,7 +78,5 @@ jobs:
           python -m json.tool plugins/recovery-guardian/plugin.json >/dev/null
           python -m json.tool plugins/recovery-guardian/.app.json >/dev/null
           python -m json.tool projects/policy-profiles.json >/dev/null
-          grep -q '"new_task_schema_version": "2.0"' projects/policy-profiles.json
-          grep -q '"state": "WAITING_EXTERNAL_CI"' projects/policy-profiles.json
           python -m json.tool projects/policies/project-leader.json >/dev/null
           echo "Project Leader + Recovery Guardian structure: PASS"
