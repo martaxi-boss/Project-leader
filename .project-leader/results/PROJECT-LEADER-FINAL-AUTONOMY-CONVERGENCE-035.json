@@ -1,0 +1,104 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035.json",
+  "authorization_commit_sha": "5dbbd44840200fdf6dd22fcade3faee09a173341",
+  "authorization_sha256": "4be3ba5e3f5bd57639494ef18458ea4de583e68379f43ac6c132717d577d7d83",
+  "implementation_head_sha": "626677508baec52cfac5de2f3e0c8c447e6b3e2f",
+  "branch": "builder/final-autonomy-convergence-035",
+  "pr_number": 35,
+  "recorded_at": "2026-10-03T18:03:00Z",
+  "state_observed_at": "2026-10-03T18:02:50Z",
+  "superseded_by": null,
+  "post_transition_record": ".project-leader/transitions/PROJECT-LEADER-FINAL-AUTONOMY-CONVERGENCE-035-TRUST-ROOT.result.json",
+  "changes": [
+    "Separated active transition_controls semantics from archived historical v2 human_gates schema compatibility.",
+    "Added architecture-first generic external-project policy and removed central registry dependence from the active Project Leader and Recovery runtime contracts.",
+    "Made generic active-target tasks require explicit narrowed mutation_scope rather than inheriting repository-wide wildcard authority.",
+    "Replaced registered-project smoke expectations with autonomous covered-transition, real manual/new-decision Human Gate, recovery, isolation and generic-project bootstrap acceptance contracts.",
+    "Updated Project Leader plugin to 0.6.0 and Recovery Guardian to 0.5.0 with current autonomous runtime descriptions.",
+    "Kept old registry/profile validation only as temporary compatibility for the current main validation workflow; it is explicitly non-runtime and scheduled for destructive hygiene in the next bounded phase."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "PR #35 changed files are confined to Task 035 mutation_scope; no .github workflow or external repository mutation occurred."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation head 626677508baec52cfac5de2f3e0c8c447e6b3e2f has successful required CI runs 37142635074, 37142635112 and 37142635069."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Trust-root authorization was persisted before substantive mutation and its SUCCESS result was persisted after exact implementation-head CI passed."
+    },
+    {
+      "name": "Legacy semantic conflict audit",
+      "status": "PASS",
+      "evidence": "Active schema/runtime uses transition_controls and active Project Leader/Recovery docs no longer depend on projects/registry.yaml; historical v2 human_gates are isolated behind control/task-authorization.v2.schema.json."
+    },
+    {
+      "name": "Generic project bootstrap contract",
+      "status": "PASS",
+      "evidence": "Generic external-project policy, default policy resolver and tests prove an unregistered active target can be bounded without central enrollment while whole-repository mutation_scope is rejected."
+    },
+    {
+      "name": "Standing authority compatibility",
+      "status": "PASS",
+      "evidence": "Standing authority remains the runtime resolver for covered consequential transitions; action names do not create Owner permission prompts."
+    },
+    {
+      "name": "Recovery autonomy regression",
+      "status": "PASS",
+      "evidence": "Existing Recovery Guardian standing-authority, external-CI wait, evidence-descendant and anti-loop contract tests passed on the implementation head."
+    },
+    {
+      "name": "Smoke/E2E contract coverage",
+      "status": "PASS",
+      "evidence": "SMOKE_TESTS.md now specifies autonomous covered merge/transition behavior, real manual/new-decision Human Gates, generic-project bootstrap, isolation, interruption and legacy-isolation acceptance."
+    },
+    {
+      "name": "Plugin package/version consistency",
+      "status": "PASS",
+      "evidence": "Package ChatGPT plugins run 37142635069 succeeded with Project Leader 0.6.0 and Recovery Guardian 0.5.0 manifests."
+    },
+    {
+      "name": "Repository hygiene and obsolete-branch audit",
+      "status": "PASS",
+      "evidence": "Legacy registry/profile/project-specific bootstrap files and superseded branches were inventoried. Destructive removal is intentionally isolated to the next workflow-aware hygiene task so this phase does not exceed its immutable scope."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37142635074
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37142635112
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37142635069
+    }
+  ],
+  "artifacts": [],
+  "material_non_effects": [
+    "No external project repository mutation.",
+    "No PINK IPTV, FADEGO or VCAM-PRO project-specific policy mutation.",
+    "No GitHub workflow mutation in this phase.",
+    "No branch-protection/ruleset change.",
+    "No release, deploy, production secret, infrastructure, data or paid-service effect.",
+    "No merge to main performed by this Worker Result."
+  ],
+  "residual_blockers": []
+}
