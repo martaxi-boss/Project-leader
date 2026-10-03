@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
-from control.validate_records import validate_project_policy, validate_result, validate_scope, validate_task
+from control.validate_records import validate_checkpoint, validate_project_policy, validate_result, validate_scope, validate_task
 from control.scope_policy import scope_pattern_is_within
 
 NEW_TASK_SCHEMA_VERSION = "2.0"
@@ -20,6 +20,9 @@ POLICY_BINDING_MODE = "CENTRAL_CONTROL_V1"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
+LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
+STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
+LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -160,6 +163,60 @@ def verify_managed_task_against_control_policy(
 
     validate_scope(task, changed_files)
     return True
+
+
+
+def reconcile_legacy_checkpoint_liveness(
+    checkpoint,
+    has_live_branch=False,
+    has_open_pr=False,
+    has_active_ci=False,
+    has_terminal_result=False,
+):
+    """Interpret legacy v1 checkpoint state against current durable evidence.
+
+    Legacy checkpoint status is historical evidence. ACTIVE is actionable only
+    when current repository state independently corroborates a live workstream.
+    """
+    validate_checkpoint(checkpoint)
+    status = checkpoint.get("status")
+    task_id = checkpoint.get("task_id")
+
+    if status != "ACTIVE":
+        return {
+            "task_id": task_id,
+            "state": LEGACY_CHECKPOINT_TERMINAL,
+            "actionable": False,
+            "checkpoint_status": status,
+            "reason": "legacy checkpoint already records a terminal/non-active state",
+        }
+
+    if has_terminal_result:
+        return {
+            "task_id": task_id,
+            "state": STALE_LEGACY_CHECKPOINT,
+            "actionable": False,
+            "checkpoint_status": status,
+            "reason": "terminal task result supersedes legacy ACTIVE checkpoint snapshot",
+        }
+
+    live_evidence = bool(has_live_branch or has_open_pr or has_active_ci)
+    if not live_evidence:
+        return {
+            "task_id": task_id,
+            "state": STALE_LEGACY_CHECKPOINT,
+            "actionable": False,
+            "checkpoint_status": status,
+            "reason": "legacy ACTIVE checkpoint has no corroborating live branch, PR, or active CI",
+        }
+
+    return {
+        "task_id": task_id,
+        "state": LEGACY_ACTIVE_CORROBORATED,
+        "actionable": True,
+        "checkpoint_status": status,
+        "reason": "legacy ACTIVE checkpoint is corroborated by current live workstream evidence",
+    }
 
 
 def _parse_registry_projects(registry_text):

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from control.managed_project_contract import (
     classify_external_ci,
     reconcile_external_ci_wait,
+    reconcile_legacy_checkpoint_liveness,
     validate_managed_result,
     validate_managed_task,
 )
@@ -50,6 +51,25 @@ def task(version="2.0"):
         "recovery": {"mode": "APPEND_ONLY_V1"},
         "terminal_condition": "green PR",
         "privacy": {"contains_secrets": False, "contains_private_conversation_text": False},
+    }
+
+
+def legacy_checkpoint(status="ACTIVE"):
+    return {
+        "schema_version": "1.0",
+        "task_id": "LEGACY-TASK-001",
+        "repository": REPOSITORY,
+        "updated_at": "2026-10-03T01:00:00Z",
+        "last_durable_step": "legacy step",
+        "action_fingerprint": "legacy|task|ci",
+        "attempt_count": 1,
+        "identical_failure_count": 0,
+        "no_progress_iterations": 0,
+        "strategy": "legacy recovery",
+        "strategy_generation": 1,
+        "last_error": None,
+        "next_step": "inspect current durable state",
+        "status": status,
     }
 
 
@@ -123,6 +143,42 @@ class ManagedProjectContractTests(unittest.TestCase):
         item["ci"][0]["run_id"] = None
         with self.assertRaises(ValueError):
             validate_managed_result(task(), item, REPOSITORY, CONTROL_REPOSITORY)
+
+    def test_legacy_active_checkpoint_without_live_workstream_is_stale(self):
+        state = reconcile_legacy_checkpoint_liveness(legacy_checkpoint())
+        self.assertEqual(state["state"], "STALE_LEGACY_CHECKPOINT")
+        self.assertFalse(state["actionable"])
+
+    def test_legacy_active_checkpoint_with_live_branch_is_corroborated(self):
+        state = reconcile_legacy_checkpoint_liveness(
+            legacy_checkpoint(), has_live_branch=True
+        )
+        self.assertEqual(state["state"], "LEGACY_ACTIVE_CORROBORATED")
+        self.assertTrue(state["actionable"])
+
+    def test_legacy_active_checkpoint_with_open_pr_is_corroborated(self):
+        state = reconcile_legacy_checkpoint_liveness(
+            legacy_checkpoint(), has_open_pr=True
+        )
+        self.assertEqual(state["state"], "LEGACY_ACTIVE_CORROBORATED")
+
+    def test_legacy_active_checkpoint_with_active_ci_is_corroborated(self):
+        state = reconcile_legacy_checkpoint_liveness(
+            legacy_checkpoint(), has_active_ci=True
+        )
+        self.assertEqual(state["state"], "LEGACY_ACTIVE_CORROBORATED")
+
+    def test_terminal_result_supersedes_legacy_active_checkpoint(self):
+        state = reconcile_legacy_checkpoint_liveness(
+            legacy_checkpoint(), has_live_branch=True, has_terminal_result=True
+        )
+        self.assertEqual(state["state"], "STALE_LEGACY_CHECKPOINT")
+        self.assertFalse(state["actionable"])
+
+    def test_non_active_legacy_checkpoint_is_historical_terminal_state(self):
+        state = reconcile_legacy_checkpoint_liveness(legacy_checkpoint("COMPLETE"))
+        self.assertEqual(state["state"], "LEGACY_CHECKPOINT_TERMINAL")
+        self.assertFalse(state["actionable"])
 
     def test_recent_in_progress_ci_is_wait_not_failure(self):
         run = {"status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:25:12Z"}

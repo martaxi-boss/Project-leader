@@ -116,7 +116,7 @@ The trusted workflow uses `pull_request_target` and never checks out or executes
 
 Worker Result v2 requires concrete CI run IDs. `control/verify_github_evidence.py` queries GitHub to prove each run name, repository, implementation SHA, completion state, and successful conclusion, and proves the implementation SHA is an ancestor of the final PR head.
 
-For v2 tasks, append-only recovery events under `.project-leader/recovery-events/<task-id>/` are the authoritative retry/anti-loop history. Mutable checkpoints remain a convenience summary for legacy/v1 continuity, not the source of truth for v2 retry counters.
+For v2 tasks, append-only recovery events under `.project-leader/recovery-events/<task-id>/` are the authoritative retry/anti-loop history. Mutable checkpoints remain a convenience summary for legacy/v1 continuity, not the source of truth for v2 retry counters. A legacy checkpoint whose stored status is `ACTIVE` is not current-state proof by itself: corroborate it against live branch/PR/active-CI state. A terminal result or absence of a live workstream classifies it as `STALE_LEGACY_CHECKPOINT`; preserve the historical file and do not let it block or resurrect completed work.
 
 Registered managed projects also have central policy profiles in `projects/policy-profiles.json`; live repository state must still be refreshed before execution.
 
