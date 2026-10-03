@@ -1,9 +1,11 @@
 import base64
 import hashlib
 import unittest
+from unittest.mock import patch
 
 from control.verify_github_evidence import (
     ci_run_requires_recovery_journal,
+    list_same_sha_workflow_runs,
     verify_authorization_payloads,
     verify_compare_payload,
     verify_recovery_journal_records,
@@ -161,6 +163,63 @@ class EvidenceVerifierTests(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             verify_same_sha_ci_consistency(self.ci, self.result, selected, [])
+
+    @patch("control.verify_github_evidence.api_get")
+    def test_same_sha_workflow_listing_paginates_beyond_first_100(self, mocked_get):
+        mocked_get.side_effect = [
+            {
+                "total_count": 101,
+                "workflow_runs": [{"id": index} for index in range(1, 101)],
+            },
+            {
+                "total_count": 101,
+                "workflow_runs": [{"id": 101}],
+            },
+        ]
+        runs = list_same_sha_workflow_runs(
+            self.repository,
+            "a" * 40,
+            "token",
+            "https://api.github.com",
+        )
+        self.assertEqual(101, len(runs))
+        self.assertEqual(2, mocked_get.call_count)
+        self.assertIn("page=1", mocked_get.call_args_list[0].args[0])
+        self.assertIn("page=2", mocked_get.call_args_list[1].args[0])
+
+    @patch("control.verify_github_evidence.api_get")
+    def test_same_sha_workflow_listing_fails_closed_at_search_limit(self, mocked_get):
+        mocked_get.return_value = {
+            "total_count": 1000,
+            "workflow_runs": [{"id": index} for index in range(1, 101)],
+        }
+        with self.assertRaisesRegex(ValueError, "1000-result search limit"):
+            list_same_sha_workflow_runs(
+                self.repository,
+                "a" * 40,
+                "token",
+                "https://api.github.com",
+            )
+
+    @patch("control.verify_github_evidence.api_get")
+    def test_same_sha_workflow_listing_rejects_unstable_pagination(self, mocked_get):
+        mocked_get.side_effect = [
+            {
+                "total_count": 101,
+                "workflow_runs": [{"id": index} for index in range(1, 101)],
+            },
+            {
+                "total_count": 102,
+                "workflow_runs": [{"id": 101}],
+            },
+        ]
+        with self.assertRaisesRegex(ValueError, "changed during pagination"):
+            list_same_sha_workflow_runs(
+                self.repository,
+                "a" * 40,
+                "token",
+                "https://api.github.com",
+            )
 
     def test_ancestor_compare_with_task_local_result_only_is_accepted(self):
         payload = {
