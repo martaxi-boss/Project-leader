@@ -19,6 +19,8 @@ from control.validate_records import validate_recovery_journal, validate_result
 
 
 GITHUB_COMPARE_FILES_LIMIT = 300
+GITHUB_ACTIONS_RUNS_PAGE_SIZE = 100
+GITHUB_ACTIONS_RUNS_SEARCH_LIMIT = 1000
 
 
 def api_get(url, token):
@@ -33,6 +35,53 @@ def api_get(url, token):
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def list_same_sha_workflow_runs(repository, head_sha, token, api_base):
+    collected = []
+    seen_ids = set()
+    expected_total = None
+    max_pages = GITHUB_ACTIONS_RUNS_SEARCH_LIMIT // GITHUB_ACTIONS_RUNS_PAGE_SIZE
+
+    for page in range(1, max_pages + 1):
+        payload = api_get(
+            f"{api_base}/repos/{repository}/actions/runs"
+            f"?head_sha={head_sha}&per_page={GITHUB_ACTIONS_RUNS_PAGE_SIZE}&page={page}",
+            token,
+        )
+        page_runs = payload.get("workflow_runs")
+        total_count = payload.get("total_count")
+        if not isinstance(page_runs, list):
+            raise ValueError("GitHub same-SHA workflow listing is missing workflow_runs")
+        if not isinstance(total_count, int) or total_count < 0:
+            raise ValueError("GitHub same-SHA workflow listing is missing valid total_count")
+        if total_count >= GITHUB_ACTIONS_RUNS_SEARCH_LIMIT:
+            raise ValueError(
+                "GitHub same-SHA workflow listing reached the 1000-result search limit "
+                "and may be truncated"
+            )
+        if expected_total is None:
+            expected_total = total_count
+        elif total_count != expected_total:
+            raise ValueError("GitHub same-SHA workflow listing changed during pagination")
+
+        for run in page_runs:
+            run_id = run.get("id") if isinstance(run, dict) else None
+            if not isinstance(run_id, int):
+                raise ValueError("GitHub same-SHA workflow listing contains a run without an integer id")
+            if run_id in seen_ids:
+                raise ValueError("GitHub same-SHA workflow pagination returned a duplicate run id")
+            seen_ids.add(run_id)
+            collected.append(run)
+
+        if len(collected) == expected_total:
+            return collected
+        if len(collected) > expected_total:
+            raise ValueError("GitHub same-SHA workflow listing exceeded advertised total_count")
+        if len(page_runs) < GITHUB_ACTIONS_RUNS_PAGE_SIZE:
+            raise ValueError("GitHub same-SHA workflow pagination ended before advertised total_count")
+
+    raise ValueError("GitHub same-SHA workflow pagination exceeded the safe search bound")
 
 
 
@@ -467,14 +516,12 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         verify_run_payload(ci_item, result, payload, repository)
         run_payloads.append(payload)
 
-    same_sha_listing = api_get(
-        f"{api_base}/repos/{repository}/actions/runs"
-        f"?head_sha={result['implementation_head_sha']}&per_page=100",
+    same_sha_runs = list_same_sha_workflow_runs(
+        repository,
+        result["implementation_head_sha"],
         token,
+        api_base,
     )
-    same_sha_runs = same_sha_listing.get("workflow_runs")
-    if not isinstance(same_sha_runs, list):
-        raise ValueError("GitHub same-SHA workflow listing is missing workflow_runs")
     for ci_item, payload in zip(result["ci"], run_payloads):
         verify_same_sha_ci_consistency(ci_item, result, payload, same_sha_runs)
 
