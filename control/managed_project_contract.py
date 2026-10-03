@@ -27,6 +27,11 @@ CI_DISPATCH_REQUIRED = "DISPATCH_REQUIRED"
 CI_REUSE_ACTIVE = "REUSE_ACTIVE_RUN"
 CI_REUSE_SUCCESS = "REUSE_SUCCESSFUL_RUN"
 CI_DISPATCH_ROUTE_RECOVERY = "ROUTE_RECOVERY"
+POST_CI_DESCENDANT_EVIDENCE_ONLY = "EVIDENCE_ONLY_DESCENDANT"
+POST_CI_DESCENDANT_MATERIAL = "MATERIAL_DESCENDANT"
+POST_CI_ROUTE_CERTIFICATION_UNCHANGED = "CERTIFICATION_UNCHANGED"
+POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE = "FINAL_HEAD_GOVERNANCE_CHECK"
+POST_CI_ROUTE_FRESH_IMPLEMENTATION = "FRESH_IMPLEMENTATION_CI"
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -286,6 +291,70 @@ def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
         "decision": "INVESTIGATE_CI_STATE",
         "run_id": run_id,
         "reason": f"unrecognized exact matching CI state: {status}",
+    }
+
+
+def _is_task_local_post_ci_evidence_path(path, task_id):
+    if path == f".project-leader/results/{task_id}.json":
+        return True
+    if path.startswith(f".project-leader/recovery-events/{task_id}/") and path.endswith(".json"):
+        return True
+    if (
+        path.startswith(f".project-leader/transitions/{task_id}-")
+        and path.endswith(".result.json")
+    ):
+        return True
+    return False
+
+
+def classify_post_implementation_descendant(
+    changed_files,
+    task_id,
+    final_head_checks_required=False,
+):
+    """Classify changes after a CI-certified implementation head.
+
+    Required task CI is bound to implementation_head_sha. A newer PR head may
+    contain only task-local Project Leader evidence metadata without becoming a
+    new implementation head. Automatic CI that happens to run on such an
+    evidence-only descendant is non-certifying and must not by itself reopen
+    task Recovery. If repository governance explicitly requires checks on the
+    current PR head, that CI is a merge-governance condition, not a reason to
+    move implementation_head_sha or manufacture another evidence commit.
+    """
+    if not isinstance(task_id, str) or not task_id:
+        raise ValueError("task_id must be a non-empty string")
+    if not isinstance(changed_files, list) or not all(
+        isinstance(path, str) and path for path in changed_files
+    ):
+        raise ValueError("changed_files must be a list of non-empty paths")
+    if not isinstance(final_head_checks_required, bool):
+        raise ValueError("final_head_checks_required must be boolean")
+
+    material = sorted(
+        path
+        for path in changed_files
+        if not _is_task_local_post_ci_evidence_path(path, task_id)
+    )
+    if material:
+        return {
+            "state": POST_CI_DESCENDANT_MATERIAL,
+            "route": POST_CI_ROUTE_FRESH_IMPLEMENTATION,
+            "certification_ci_required": True,
+            "final_head_checks_required": final_head_checks_required,
+            "material_files": material,
+        }
+
+    return {
+        "state": POST_CI_DESCENDANT_EVIDENCE_ONLY,
+        "route": (
+            POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE
+            if final_head_checks_required
+            else POST_CI_ROUTE_CERTIFICATION_UNCHANGED
+        ),
+        "certification_ci_required": False,
+        "final_head_checks_required": final_head_checks_required,
+        "evidence_only_files": sorted(changed_files),
     }
 
 
