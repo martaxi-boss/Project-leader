@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-CI-WAIT-LIVENESS-015.json",
   "authorization_commit_sha": "a0c5075d61a1c93f46870a30a111ee60cf3ad039",
-  "authorization_sha256": "569de15c00f1edc779b09de706d95cc51f4adb3b05b616e56702dd233d5a393b",
+  "authorization_sha256": "1c0b482b1b9d5fc14659c0171d5f4161a4624f20e7205580660ca3d318fb2c38",
   "implementation_head_sha": "0b3c869deea4c336b85f2a335b8da1b41f18ad00",
   "branch": "builder/ci-wait-liveness-015",
   "pr_number": 15,
