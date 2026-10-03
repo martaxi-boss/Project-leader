@@ -7,6 +7,7 @@ from control.verify_github_evidence import (
     verify_authorization_payloads,
     verify_compare_payload,
     verify_recovery_journal_records,
+    verify_recovery_retry_causality,
     verify_run_payload,
 )
 
@@ -103,6 +104,79 @@ class EvidenceVerifierTests(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             verify_recovery_journal_records(result, [first, second])
+
+    def test_retry_causality_accepts_precommitted_authorization(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+        }
+        persistence = [
+            {"persisted_at": "2026-10-03T01:01:10Z"},
+            {"persisted_at": "2026-10-03T01:01:50Z"},
+            {"persisted_at": "2026-10-03T01:03:10Z"},
+        ]
+        runs = [{
+            "run_attempt": 2,
+            "run_started_at": "2026-10-03T01:02:00Z",
+            "updated_at": "2026-10-03T01:03:00Z",
+        }]
+        self.assertTrue(
+            verify_recovery_retry_causality(result, [first, second, third], persistence, runs)
+        )
+
+    def test_retroactive_retry_authorization_is_rejected(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+        }
+        persistence = [
+            {"persisted_at": "2026-10-03T01:01:10Z"},
+            {"persisted_at": "2026-10-03T01:02:10Z"},
+            {"persisted_at": "2026-10-03T01:03:10Z"},
+        ]
+        runs = [{
+            "run_attempt": 2,
+            "run_started_at": "2026-10-03T01:02:00Z",
+            "updated_at": "2026-10-03T01:03:00Z",
+        }]
+        with self.assertRaises(ValueError):
+            verify_recovery_retry_causality(result, [first, second, third], persistence, runs)
+
+    def test_recovered_event_cannot_predate_success(self):
+        from control.validate_records import canonical_sha256
+
+        first = self.recovery_event(1, "FAILURE_OBSERVED", attempt=1)
+        second = self.recovery_event(2, "RETRY_AUTHORIZED", canonical_sha256(first), attempt=2)
+        third = self.recovery_event(3, "RECOVERED", canonical_sha256(second), attempt=2)
+        result = {
+            "task_id": "TASK-001",
+            "repository": self.repository,
+            "terminal_status": "TERMINAL_SUCCESS",
+        }
+        persistence = [
+            {"persisted_at": "2026-10-03T01:01:10Z"},
+            {"persisted_at": "2026-10-03T01:01:50Z"},
+            {"persisted_at": "2026-10-03T01:02:50Z"},
+        ]
+        runs = [{
+            "run_attempt": 2,
+            "run_started_at": "2026-10-03T01:02:00Z",
+            "updated_at": "2026-10-03T01:03:00Z",
+        }]
+        with self.assertRaises(ValueError):
+            verify_recovery_retry_causality(result, [first, second, third], persistence, runs)
 
     def auth_payload(self, raw):
         return {
