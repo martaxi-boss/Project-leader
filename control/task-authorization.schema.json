@@ -190,7 +190,6 @@
       "required": [
         "profile",
         "path",
-        "base_sha",
         "sha256"
       ],
       "properties": {
@@ -209,6 +208,20 @@
         "sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "binding_mode": {
+          "enum": [
+            "LOCAL_BASE_V1",
+            "CENTRAL_CONTROL_V1"
+          ]
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
         }
       }
     },
@@ -239,6 +252,9 @@
           "const": false
         }
       }
+    },
+    "integrity_mode": {
+      "const": "IMMUTABLE_AUTHORIZATION_V1"
     }
   }
 }
