@@ -54,11 +54,8 @@
         "paid_service_activation"
       ],
       "required_human_gates": [
-        "merge_to_main",
-        "branch_protection_or_ruleset_change",
-        "release_or_publish",
-        "license_selection",
-        "managed_project_mutation"
+        "EXCLUSIVE_HUMAN_INTERVENTION",
+        "NEW_UNCOVERED_MATERIAL_DECISION"
       ],
       "required_ci": [
         "Control contract tests",
@@ -120,12 +117,8 @@
         "paid_service_activation"
       ],
       "required_human_gates": [
-        "merge_to_main",
-        "branch_protection_or_ruleset_change",
-        "release_or_publish",
-        "license_selection",
-        "managed_project_mutation",
-        "trust_root_mutation"
+        "EXCLUSIVE_HUMAN_INTERVENTION",
+        "NEW_UNCOVERED_MATERIAL_DECISION"
       ],
       "required_ci": [
         "Control contract tests",
