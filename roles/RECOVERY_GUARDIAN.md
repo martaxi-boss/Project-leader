@@ -8,7 +8,7 @@ Responsibilities:
 - retry only bounded transient failures;
 - detect repeated no-progress attempts and break loops;
 - reconstruct state from GitHub after an interrupted response;
-- persist and validate `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters or strategy state must survive interruption;
+- for v2 tasks, persist and validate append-only `.project-leader/recovery-events/<task-id>/` history when retry/no-progress state must survive interruption; legacy v1 checkpoints may only summarize older flows;
 - validate any durable Task Authorization Record and compare it with current Owner instructions before resuming mutations;
 - resume from the last verified durable step when authorization still covers the work;
 - return control to Supervisor for independent audit.
