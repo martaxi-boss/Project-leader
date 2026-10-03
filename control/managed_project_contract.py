@@ -17,6 +17,7 @@ CI_ROUTE_CONTINUE = "AUDIT_CONTINUE"
 CI_ROUTE_RECOVERY = "RECOVERY"
 CI_ROUTE_INVESTIGATE = "INVESTIGATE"
 POLICY_BINDING_MODE = "CENTRAL_CONTROL_V1"
+GENERIC_POLICY_PATH = "control/generic-project-policy.json"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
@@ -32,6 +33,11 @@ POST_CI_DESCENDANT_MATERIAL = "MATERIAL_DESCENDANT"
 POST_CI_ROUTE_CERTIFICATION_UNCHANGED = "CERTIFICATION_UNCHANGED"
 POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE = "FINAL_HEAD_GOVERNANCE_CHECK"
 POST_CI_ROUTE_FRESH_IMPLEMENTATION = "FRESH_IMPLEMENTATION_CI"
+
+
+def resolve_project_policy_path(explicit_policy_path=None):
+    """Use a target-specific central policy when explicitly selected, otherwise the generic active-project policy."""
+    return explicit_policy_path or GENERIC_POLICY_PATH
 
 
 def validate_managed_task(task, repository, control_repository=None):
@@ -119,8 +125,9 @@ def verify_managed_task_against_control_policy(
         raise ValueError("task policy repository does not match canonical control repository")
     if binding["revision"] != control_revision:
         raise ValueError("task policy revision does not match the exact control-plane revision")
-    if binding["path"] != expected_policy_path:
-        raise ValueError("task policy path does not match registered central policy path")
+    selected_policy_path = resolve_project_policy_path(expected_policy_path)
+    if binding["path"] != selected_policy_path:
+        raise ValueError("task policy path does not match selected central policy path")
     if binding["profile"] != policy["policy_id"]:
         raise ValueError("task policy profile does not match central policy_id")
     if binding["sha256"] != policy_sha256(policy_raw):
@@ -369,69 +376,6 @@ def classify_post_implementation_descendant(
         "final_head_checks_required": final_head_checks_required,
         "evidence_only_files": sorted(changed_files),
     }
-
-
-def _parse_registry_projects(registry_text):
-    projects = {}
-    current = None
-    in_projects = False
-    for raw in registry_text.splitlines():
-        if not raw.strip() or raw.lstrip().startswith("#"):
-            continue
-        if raw == "projects:":
-            in_projects = True
-            current = None
-            continue
-        if raw and not raw.startswith(" "):
-            in_projects = False
-            current = None
-            continue
-        if not in_projects:
-            continue
-
-        match_project = re.match(r"^  ([A-Za-z0-9._-]+):\s*$", raw)
-        if match_project:
-            current = match_project.group(1)
-            projects[current] = {}
-            continue
-        if current is None:
-            continue
-
-        match_field = re.match(r'^    ([A-Za-z0-9_]+):\s*"?([^"]*)"?\s*$', raw)
-        if match_field:
-            projects[current][match_field.group(1)] = match_field.group(2)
-    return projects
-
-
-def validate_registry_profile_consistency(registry_text, profiles, policies):
-    registry_projects = _parse_registry_projects(registry_text)
-    profile_projects = profiles.get("profiles") or {}
-    if set(registry_projects) != set(profile_projects):
-        raise ValueError("registry and policy profile project sets differ")
-
-    for project_id, entry in registry_projects.items():
-        profile = profile_projects[project_id]
-        if entry.get("repository") != profile.get("repository"):
-            raise ValueError(f"{project_id}: registry/profile repository mismatch")
-        if entry.get("default_branch") != profile.get("default_branch"):
-            raise ValueError(f"{project_id}: registry/profile default_branch mismatch")
-        policy_path = entry.get("policy")
-        if not policy_path:
-            raise ValueError(f"{project_id}: registry is missing executable central policy path")
-        if profile.get("central_policy_path") != policy_path:
-            raise ValueError(f"{project_id}: registry/profile central policy path mismatch")
-        policy = policies.get(policy_path)
-        if not policy:
-            raise ValueError(f"{project_id}: central policy file is missing: {policy_path}")
-        validate_project_policy(policy)
-        if policy["repository"] != entry.get("repository"):
-            raise ValueError(f"{project_id}: registry/policy repository mismatch")
-        if policy["default_branch"] != entry.get("default_branch"):
-            raise ValueError(f"{project_id}: registry/policy default_branch mismatch")
-        allowed_ci = (policy.get("effect_policies") or {}).get("E1_RECOVERABLE_PROJECT_LOCAL", {}).get("allowed_ci", [])
-        if set(profile.get("allowed_ci_names") or []) != set(allowed_ci):
-            raise ValueError(f"{project_id}: profile/policy allowed CI mismatch")
-    return True
 
 
 def _parse_time(value):
