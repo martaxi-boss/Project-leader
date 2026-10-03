@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-EVIDENCE-DESCENDANT-RECOVERY-031.json",
   "authorization_commit_sha": "11977f81231b4e1184557fbe84470db3f029cfc4",
-  "authorization_sha256": "72cd38401c0ee8c09763952265513c7e63516e043536dbff3e28a56e2e25866e",
+  "authorization_sha256": "d625ee91d889c65abffdce4d1ae8c8e1f48a4ebb827cffddcc658d1cd5501ad2",
   "implementation_head_sha": "c359fa1ddf84e1cfa0dae03f6d1e136fe07e0af3",
   "branch": "builder/evidence-descendant-recovery-031",
   "pr_number": 31,
