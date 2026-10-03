@@ -7,6 +7,15 @@ This repository contains two ChatGPT plugins:
 
 Project Leader also uses the Recovery Guardian protocol internally, so normal work does not require manual role switching.
 
+## Current canonical runtime
+
+- Project Leader **0.6.0**.
+- Recovery Guardian **0.5.0**.
+
+Before consequential work, read the live `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, role contracts and `projects/standing-authority.json` from canonical GitHub state. The active target's architecture and live repository state define its bounded task; external projects do not require central enrollment.
+
+Covered executable transitions continue through exact Supervisor authorization and validation under standing Owner authority. Human interruption is reserved for exclusive human intervention or a new uncovered material decision.
+
 ## Proven direct install path
 
 The installation path verified in the current ChatGPT workspace is:
