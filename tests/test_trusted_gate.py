@@ -125,6 +125,18 @@ class TrustedGateTests(unittest.TestCase):
             policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_actions"],
         )
 
+    def test_project_leader_policy_allows_owner_authorized_superseded_branch_purge_only_under_e3(self):
+        policy = json.loads((ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8"))
+        action = "delete_owner_authorized_superseded_non_main_branch_refs"
+        self.assertIn(
+            action,
+            policy["effect_policies"]["E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"]["allowed_actions"],
+        )
+        self.assertNotIn(
+            action,
+            policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_actions"],
+        )
+
     def test_action_cannot_self_widen(self):
         self.task["allowed_actions"].append("merge_to_main")
         with self.assertRaises(ValueError):
