@@ -179,7 +179,8 @@ class ControlContractTests(unittest.TestCase):
         transition_auth = json.loads((ROOT / "control/transition-authorization.schema.json").read_text())
         transition_result = json.loads((ROOT / "control/transition-result.schema.json").read_text())
         self.assertIn("task_id", task["required"])
-        self.assertIn("human_gates", task["required"])
+        self.assertIn("transition_controls", task["required"])
+        self.assertNotIn("human_gates", task["properties"])
         self.assertIn("implementation_head_sha", result["required"])
         self.assertIn("material_non_effects", result["required"])
         self.assertIn("attempt_count", checkpoint["required"])
@@ -219,8 +220,14 @@ class ControlContractTests(unittest.TestCase):
     def test_nested_unknown_field_fails(self):
         self.assertInvalidTask(lambda r: r["authority"].__setitem__("extra", "nope"))
 
-    def test_human_gate_false_fails(self):
+    def test_legacy_human_gate_false_fails(self):
         self.assertInvalidTask(lambda r: r["human_gates"][0].__setitem__("requires_owner_approval", False))
+
+    def test_active_v2_transition_control_false_fails(self):
+        record = valid_v2_task()
+        record["transition_controls"][0]["requires_authority_resolution"] = False
+        with self.assertRaises(ValueError):
+            validate_task(record)
 
     def test_result_invalid_sha_fails(self):
         self.assertInvalidResult(lambda r: r.__setitem__("implementation_head_sha", "abc"))
