@@ -149,6 +149,11 @@ def verify_managed_task_against_control_policy(
         )
 
     allowed_patterns = effect_policy["allowed_scope_patterns"]
+    if policy.get("repository_mode") == "ACTIVE_TARGET" and any(
+        pattern == "**" for pattern in task["mutation_scope"]
+    ):
+        raise ValueError("generic active-target task must narrow mutation_scope below **")
+
     widened_patterns = sorted(
         pattern
         for pattern in task["mutation_scope"]
