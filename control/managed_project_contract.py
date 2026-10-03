@@ -133,6 +133,11 @@ def verify_managed_task_against_control_policy(
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
         raise ValueError("managed task required_ci is weaker than central policy: " + ", ".join(missing_ci))
+    allowed_ci = effect_policy.get("allowed_ci")
+    if allowed_ci is not None:
+        unknown_ci = sorted(set(task["required_ci"]) - set(allowed_ci))
+        if unknown_ci:
+            raise ValueError("managed task required_ci contains workflows outside central policy: " + ", ".join(unknown_ci))
 
     missing_validation = sorted(
         set(effect_policy["required_validation"]) - set(task["required_validation"])
