@@ -47,7 +47,7 @@ Key requirements:
 - after 2 identical failures, reconstruct/replan;
 - after 3 no-progress iterations, stop that strategy;
 - on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response;
-- for v2 tasks, persist/re-read append-only `.project-leader/recovery-events/<task-id>/`; use mutable checkpoints only for legacy v1 continuity;
+- for v2 tasks, persist/re-read append-only `.project-leader/recovery-events/<task-id>/`; use mutable checkpoints only for legacy v1 continuity. A certifiable retry must run on an implementation SHA that descends from the committed `FAILURE_OBSERVED` and `RETRY_AUTHORIZED` events; terminal `RECOVERED` is committed afterward. Do not use an old-SHA workflow rerun as final Recovery proof;
 - never certify a consumed Human Gate without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
 
 ## Platform outage
