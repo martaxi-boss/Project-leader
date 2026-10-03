@@ -83,6 +83,11 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
         raise ValueError("task required_ci is weaker than base policy: " + ", ".join(missing_ci))
+    allowed_ci = effect_policy.get("allowed_ci")
+    if allowed_ci is not None:
+        unknown_ci = sorted(set(task["required_ci"]) - set(allowed_ci))
+        if unknown_ci:
+            raise ValueError("task required_ci contains workflows outside base policy: " + ", ".join(unknown_ci))
 
     missing_validation = sorted(set(effect_policy["required_validation"]) - set(task["required_validation"]))
     if missing_validation:
