@@ -10,7 +10,7 @@ For permanent/configuration failures, do not blind-retry. Inspect arguments, per
 
 For loop/no-progress, fingerprint `task + target + intended action + observed result`. After 2 identical failures, reconstruct/replan. After 3 no-progress iterations overall, stop the strategy and report BLOCKED or HUMAN_GATE if a changed plan cannot proceed safely.
 
-For legacy v1 tasks, persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters or strategy generation must survive interruption. For v2, use the append-only recovery journal instead.
+For legacy v1 tasks, persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters or strategy generation must survive interruption. For v2, use the append-only recovery journal instead. A legacy checkpoint marked `ACTIVE` is not live-state proof by itself: corroborate it with a current branch, open PR, or active CI. Without corroboration, or when a terminal result exists, classify `STALE_LEGACY_CHECKPOINT` and preserve it only as historical evidence.
 
 After interruption, reconstruct default branch, task branch, PRs, task-related commits, v2 recovery journal (or legacy v1 checkpoint), and CI/workflow state; determine the last durable completed step; verify ambiguous writes; then continue from the first incomplete step.
 
