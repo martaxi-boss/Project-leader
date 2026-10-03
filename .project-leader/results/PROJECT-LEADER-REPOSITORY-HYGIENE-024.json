@@ -1,0 +1,46 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-REPOSITORY-HYGIENE-024",
+  "terminal_status": "STALE_EXECUTION_PACKET",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-REPOSITORY-HYGIENE-024.json",
+  "authorization_commit_sha": "4d770c113fa7a580ac39f665fe9f4a725324d71a",
+  "authorization_sha256": "a5a4df2b6c9ae418c43fecacc01224b21986e802d676c3278288c911c032fa37",
+  "implementation_head_sha": "002c97859ff8661c314ae7d8a34b7eb8d38067f4",
+  "branch": "builder/repository-hygiene-024",
+  "pr_number": 22,
+  "recorded_at": "2026-10-03T12:30:45.518Z",
+  "state_observed_at": "2026-10-03T12:30:45.518Z",
+  "superseded_by": "PROJECT-LEADER-REPOSITORY-HYGIENE-024B",
+  "post_transition_record": null,
+  "changes": [],
+  "validation": [],
+  "ci": [
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37123049315
+    },
+    {
+      "name": "Control contract tests",
+      "status": "FAILURE",
+      "run_id": 37123049420
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37123049430
+    }
+  ],
+  "artifacts": [],
+  "material_non_effects": [
+    "No merge to main.",
+    "No branch deletion was executed.",
+    "No managed-project repository mutation.",
+    "No history rewrite or force push."
+  ],
+  "residual_blockers": [
+    "Control contract tests correctly rejected tests/test_control_contract.py because the immutable Task Authorization mutation_scope omitted tests/**. Packet abandoned rather than widened retroactively."
+  ]
+}
