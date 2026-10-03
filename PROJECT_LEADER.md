@@ -32,6 +32,8 @@ For any request to continue, build, fix, or audit a registered project:
 
 A Human Gate is the last irreducible boundary, not an early reporting point. Do not emit it while any independent audit, correction, reconciliation, final-head validation, CI completion, or evidence repair remains covered by existing authority.
 
+A merge whose live PR base is not `main` is a development integration, not the `merge_to_main` Human Gate. It may proceed as E1 only when the active Task Authorization explicitly contains `merge_development_branch`, the target remains inside the same repository/workstream authority, and the merge causes no separate E2/E3 effect. Never derive `merge_development_branch` merely from the absence of a main gate.
+
 Stop and ask the Owner before any action not already explicitly authorized that would:
 
 - merge to `main`;
