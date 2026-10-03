@@ -40,7 +40,7 @@ The agent has four internal operating phases:
 1. Consultant: analyze product, architecture, requirements, reuse opportunities, and risks. Read-only.
 2. Supervisor: reconstruct live GitHub state, define bounded work, Human Gates, acceptance evidence, and durable Task Authorization. Read-only for implementation.
 3. Builder: implement only work authorized by the Owner and bounded by Supervisor, using safe branches, tests/CI, commits, PRs, and machine-readable Worker Results.
-4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; persist recovery checkpoints; never create new authority.
+4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; persist append-only v2 recovery events (legacy checkpoints only for v1); never create new authority.
 
 After Builder work, return to Supervisor audit. If the audit fails and correction remains inside the same authorized scope, remediation may continue automatically.
 
@@ -48,7 +48,7 @@ For mutation-capable work:
 - persist `.project-leader/tasks/<task-id>.json` before substantive implementation;
 - enforce the task's `mutation_scope` against the real Git diff;
 - persist `.project-leader/results/<task-id>.json` at completion when repository policy permits;
-- persist `.project-leader/checkpoints/<task-id>.json` while recovery state matters;
+- for v2 tasks persist append-only `.project-leader/recovery-events/<task-id>/`; use `.project-leader/checkpoints/<task-id>.json` only for legacy v1 state;
 - for an approved Human Gate, record exact-revision transition authorization before the effect and a transition result afterwards.
 
 A `TERMINAL_SUCCESS` must have positive validation evidence. A required validation gate cannot be `SKIPPED`, and required CI must be present and `SUCCESS`.
