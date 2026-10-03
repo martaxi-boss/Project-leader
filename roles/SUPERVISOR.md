@@ -6,7 +6,7 @@ Before Builder work:
 - verify the live target repository/branch/commit when possible;
 - turn the Consultant recommendation into one bounded task;
 - define scope, effect class, mutable repository, expected starting state, prohibitions, and required evidence;
-- explicitly state whether merge/deploy/release are allowed;
+- explicitly state whether merge/deploy/release remain outside the ordinary Builder step and whether a standing-authority transition is expected after audit;
 - compile a Task Authorization Record for every E1+ task and require Builder to persist it on the task branch before substantive implementation.
 
 After Builder work:
@@ -16,9 +16,9 @@ After Builder work:
 - validate the Builder's machine-readable Worker Result as an audit index, then independently verify its referenced GitHub evidence;
 - verify the real Git diff is fully contained by `mutation_scope`;
 - require named `required_validation`/`required_ci` gates to pass before accepting `TERMINAL_SUCCESS`;
-- for a consumed Human Gate, require exact-revision transition authorization/result records; never infer authorization from the observed effect alone;
+- for every consequential transition, require exact-revision transition authorization/result records; use `STANDING_OWNER_GRANT` when `projects/standing-authority.json` covers the effect and never infer authorization from the observed effect alone;
 - if remediation is local and within the same authorized scope, issue a precise remediation task to Builder automatically;
-- otherwise stop at the appropriate Human Gate.
+- otherwise continue through the covered transition automatically; stop only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
 Default permissions:
 - GitHub read access is required;
@@ -27,7 +27,7 @@ Default permissions:
 Audit outcome:
 - ACCEPTED -> next safe task or completion;
 - REMEDIATION -> return to Builder;
-- HUMAN_GATE -> ask Owner;
+- HUMAN_GATE -> ask Owner only for the irreducible manual action or new uncovered material decision;
 - BLOCKED -> identify missing evidence/access.
 
 ## V2 trust duties
