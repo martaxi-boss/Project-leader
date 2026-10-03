@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from control.managed_project_contract import (
     classify_external_ci,
+    reconcile_external_ci_wait,
     validate_managed_result,
     validate_managed_task,
 )
@@ -135,6 +136,49 @@ class ManagedProjectContractTests(unittest.TestCase):
 
     def test_completed_success_is_terminal_success(self):
         self.assertEqual(classify_external_ci({"status": "completed", "conclusion": "success"}), "COMPLETED_SUCCESS")
+
+
+    def test_external_ci_wait_remains_wait_only_while_bound_run_is_active(self):
+        now = datetime(2026, 10, 3, 0, 33, 0, tzinfo=timezone.utc)
+        runs = [{"id": 101, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:30:00Z"}]
+        state = reconcile_external_ci_wait([101], runs, now=now)
+        self.assertEqual(state["state"], "WAITING_EXTERNAL_CI")
+        self.assertEqual(state["route"], "WAIT")
+
+    def test_terminal_success_invalidates_previous_wait_and_routes_continue(self):
+        runs = [{"id": 101, "status": "completed", "conclusion": "success"}]
+        state = reconcile_external_ci_wait([101], runs, previous_state="WAITING_EXTERNAL_CI")
+        self.assertEqual(state["state"], "STALE_WAIT_STATE")
+        self.assertEqual(state["route"], "AUDIT_CONTINUE")
+        self.assertEqual(state["failed_run_ids"], [])
+
+    def test_terminal_failure_invalidates_previous_wait_and_routes_recovery(self):
+        runs = [{"id": 101, "status": "completed", "conclusion": "failure"}]
+        state = reconcile_external_ci_wait([101], runs, previous_state="WAITING_EXTERNAL_CI")
+        self.assertEqual(state["state"], "STALE_WAIT_STATE")
+        self.assertEqual(state["route"], "RECOVERY")
+        self.assertEqual(state["failed_run_ids"], [101])
+
+    def test_mixed_active_and_terminal_runs_do_not_redispatch_early(self):
+        now = datetime(2026, 10, 3, 0, 33, 0, tzinfo=timezone.utc)
+        runs = [
+            {"id": 101, "status": "completed", "conclusion": "success"},
+            {"id": 102, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:30:00Z"},
+        ]
+        state = reconcile_external_ci_wait([101, 102], runs, now=now)
+        self.assertEqual(state["state"], "WAITING_EXTERNAL_CI")
+        self.assertEqual(state["route"], "WAIT")
+        self.assertEqual(state["active_run_ids"], [102])
+
+    def test_missing_bound_run_requires_investigation_not_new_dispatch(self):
+        state = reconcile_external_ci_wait([101, 102], [{"id": 101, "status": "completed", "conclusion": "success"}])
+        self.assertEqual(state["state"], "INVESTIGATE_CI_STATE")
+        self.assertEqual(state["route"], "INVESTIGATE")
+        self.assertEqual(state["missing_run_ids"], [102])
+
+    def test_duplicate_wait_run_ids_are_rejected(self):
+        with self.assertRaises(ValueError):
+            reconcile_external_ci_wait([101, 101], [])
 
 
 if __name__ == "__main__":
