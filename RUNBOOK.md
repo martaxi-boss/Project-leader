@@ -63,11 +63,19 @@ If ChatGPT itself is unavailable, no ChatGPT agent can continue at that instant.
 
 Use `.github/workflows/repository-hygiene.yml` for branch cleanup. A non-`main` branch may be deleted automatically only when GitHub proves one of three bounded cases: (a) its tip is fully contained in canonical `main`; (b) it has no open pull request and every branch-specific final file state is byte-identical to canonical `main` (including removals that are also absent from `main`); or (c) canonical `main` contains a durable `CURRENT_OWNER_INSTRUCTION` transition authorization for action `delete_owner_authorized_superseded_non_main_branch_refs` whose target branch name and exact revision both match the live ref. Owner-authorized revision mismatches, renames, unsupported states, oversized/unavailable deltas, open-PR heads, and any unlisted/divergent content are preserved for explicit audit. The bounded sweep runs after same-repository merges, on manual dispatch, and after pushes to `main`, so temporary control/authorization refs disappear automatically once their evidence is canonical. Branch-ref deletion never rewrites commit history and must never target `main`.
 
-## Human Gates
+## Standing authority and Human Gates
 
-A development-branch integration is not a main Human Gate, but it is still an explicit action: the task must include `merge_development_branch`, the live PR base must not be `main`, and no other gated effect may be triggered. If that action is absent from the task, do not merge and do not infer it from generic implementation authority.
+Load and validate `projects/standing-authority.json` at the start of consequential work and after resumption. It carries the Owner's standing autonomy grant across chats and recovery sessions.
 
-Owner approval is required by default for merge to main, release, production deployment, destructive data changes, repository/history deletion, production secret changes, irreversible infrastructure mutation, and paid service activation.
+A development-branch integration remains task-bounded: the task must include `merge_development_branch`, the live PR base must not be `main`, and no unrelated effect may be introduced.
+
+A merge to `main`, release/publish, deploy, governance change, infrastructure/secret/data transition, or commercial transition is **not automatically a Human Gate** merely because of its action name or effect class. When the canonical project objective/decision already covers the effect and the system can technically perform it, Supervisor must bind the exact target, verify the required evidence, persist a `STANDING_OWNER_GRANT` transition authorization, execute, verify the result, and continue.
+
+Stop for the Owner only when the next required step is either:
+- `EXCLUSIVE_HUMAN_INTERVENTION`: technically unavailable to the current system/tools and must be performed personally by the Owner; or
+- `NEW_UNCOVERED_MATERIAL_DECISION`: a material scope/architecture/strategy/trust/environment/commercial/irreversible-risk decision not already resolved canonically.
+
+Do not turn a routine executable transition into a permission prompt.
 
 ## Trust boundary
 
