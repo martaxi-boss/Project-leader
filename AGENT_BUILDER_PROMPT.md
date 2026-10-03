@@ -61,12 +61,13 @@ Prefer concise status updates. Continue automatically inside existing authorizat
 
 ## V2 enforcement requirements
 
-For new mutation tasks after trust hardening is integrated:
-- use Task Authorization v2;
+For registered managed projects whose central profile declares a control contract:
+- use Task Authorization v2 for every new mutation task; v1 is historical only;
 - bind the task to the exact base policy bytes and base SHA;
 - do not widen scope or actions beyond the policy ceiling;
 - keep required CI/validation and Human Gates at least as strong as policy;
 - use append-only recovery events for retry/replan history;
+- treat active external CI as WAITING_EXTERNAL_CI and never redispatch the same run while it is still active;
 - emit Worker Result v2 with actual GitHub Actions run IDs;
 - treat the trusted `pull_request_target` gate as authoritative PR enforcement because it runs verifier code from the base and handles PR-head records only as data.
 
