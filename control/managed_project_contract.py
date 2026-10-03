@@ -52,8 +52,8 @@ def validate_managed_task(task, repository, control_repository=None):
         raise ValueError("managed task policy repository does not match canonical control repository")
 
     required_ci = task.get("required_ci")
-    if not isinstance(required_ci, list) or not required_ci or not all(isinstance(x, str) and x for x in required_ci):
-        raise ValueError("managed task required_ci must be non-empty")
+    if not isinstance(required_ci, list) or not all(isinstance(x, str) and x for x in required_ci):
+        raise ValueError("managed task required_ci must be a list of non-empty workflow names")
     return True
 
 
@@ -81,6 +81,19 @@ def policy_sha256(raw_bytes):
     return hashlib.sha256(raw_bytes).hexdigest()
 
 
+def _task_transition_actions(task):
+    items = task.get("transition_controls") or task.get("human_gates") or []
+    return {item["action"] for item in items}
+
+
+def _policy_transition_actions(effect_policy):
+    return set(
+        effect_policy.get("required_transition_controls")
+        or effect_policy.get("required_human_gates")
+        or []
+    )
+
+
 def verify_managed_task_against_control_policy(
     task,
     policy,
@@ -94,7 +107,9 @@ def verify_managed_task_against_control_policy(
     validate_managed_task(task, task["repository"], control_repository)
     validate_project_policy(policy)
 
-    if task["repository"] != policy["repository"]:
+    if policy.get("repository_mode") == "ACTIVE_TARGET":
+        pass
+    elif task["repository"] != policy.get("repository"):
         raise ValueError("task repository does not match central policy repository")
     if task["starting_state"]["base_sha"] != actual_target_base_sha:
         raise ValueError("task starting_state.base_sha does not match actual target PR base SHA")
@@ -146,13 +161,8 @@ def verify_managed_task_against_control_policy(
     if missing_prohibitions:
         raise ValueError("managed task is missing required prohibitions: " + ", ".join(missing_prohibitions))
 
-    task_gates = {
-        item["action"]
-        for item in task["human_gates"]
-        if item.get("requires_authority_resolution") is True
-        or item.get("requires_owner_approval") is True
-    }
-    missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
+    task_gates = _task_transition_actions(task)
+    missing_gates = sorted(_policy_transition_actions(effect_policy) - task_gates)
     if missing_gates:
         raise ValueError("managed task is missing required consequential transition controls: " + ", ".join(missing_gates))
 
