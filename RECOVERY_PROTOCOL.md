@@ -12,7 +12,7 @@ This protocol is used automatically by Project Leader and is also the operating 
 2. **Ambiguous write** — a mutation may have completed but the client response was lost or errored.
 3. **Permanent/configuration** — invalid input, missing permission, missing resource, policy denial, unsupported operation.
 4. **Loop/no-progress** — the same intended action and observed result repeat without durable progress.
-5. **Human-gated** — recovery would require merge, deploy, release, destructive data change, secret change, irreversible infrastructure work, or spending.
+5. **Authority/manual boundary** — the next irreducible step is either `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`. An action name or effect class alone does not create this boundary.
 
 ## Recovery state machine
 
@@ -50,7 +50,7 @@ Fingerprint repeated work as:
 - After 2 identical failures, switch from retry to reconstruction/replan.
 - After 3 no-progress iterations overall, stop that strategy.
 - Never recurse indefinitely between Builder and Recovery Guardian.
-- Return to Supervisor with a changed plan, `BLOCKED`, or `HUMAN_GATE`.
+- Return to Supervisor with a changed plan or `BLOCKED`; use `HUMAN_GATE` only after the standing-authority resolver proves `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
 ## Durable recovery checkpoint (legacy v1)
 
@@ -77,7 +77,8 @@ On a new turn after an interrupted response:
 5. Determine the last durable completed step.
 6. Verify whether any write that lacked a response already occurred.
 7. Compare durable authorization evidence with any current Owner instruction. A task record may preserve authority but can never widen or override a newer instruction.
-8. Continue from the first incomplete step only when the bounded mutation authority is established.
+8. Re-read and validate `projects/standing-authority.json` when the next step is consequential.
+9. Continue from the first incomplete step when the bounded task authority remains valid. If the next step is a consequential transition, return it to Supervisor for standing-authority resolution rather than asking the Owner by action name.
 
 GitHub history without a compatible task authorization record can prove effects, but not the full original authorization envelope. If the current conversation also does not establish mutation authority, recover read-only and identify the exact authorization gap instead of guessing.
 
@@ -87,7 +88,19 @@ Do not require the Owner to remember exact SHAs or re-copy old role prompts when
 
 Minor transcription errors may be resolved from context for read-only or easily reversible actions when intent is unambiguous.
 
-Never infer merge, deploy, release, destructive data operations, repository/history deletion, production-secret changes, irreversible infrastructure operations, paid-service activation, or a materially expanded scope from ambiguous dictation. Ask for confirmation.
+Never infer a materially expanded scope, architecture/strategy change, trust/environment change, irreversible-risk choice, or other new material decision from ambiguous dictation. For a consequential action already resolved by canonical project state, use the standing-authority resolver and exact Supervisor evidence instead of asking again merely because of the action name.
+
+## Standing authority during recovery
+
+Recovery Guardian never creates authority, but it must preserve and reuse authority that already exists.
+
+When a failure occurs inside a covered task:
+- technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded retries are recovery/remediation work, not Owner authorization requests;
+- after recovery makes the transition controls satisfiable, return to Supervisor, which resolves the exact next action through `projects/standing-authority.json`;
+- if canonical project state covers the effect and the system can execute it, Supervisor may issue an exact `STANDING_OWNER_GRANT` transition authorization and the flow continues autonomously;
+- use `HUMAN_GATE` only when the next irreducible step is `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
+
+Recovery must not widen project scope or cross into another mutable repository. One mutable target repository per task remains mandatory.
 
 ## Platform outage limitation
 

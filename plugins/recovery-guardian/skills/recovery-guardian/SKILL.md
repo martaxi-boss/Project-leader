@@ -1,11 +1,11 @@
 ---
 name: recovery-guardian
-description: Recovery controller for interrupted or failing software-project workflows. Use when the user explicitly selects or invokes Recovery Guardian, asks to recover a project after an error, loop, timeout, server-busy response, ambiguous write, interrupted execution, or wants Project Leader recovery diagnostics. Reconstruct durable state from GitHub, verify side effects before retrying writes, break no-progress loops, resume only within existing authorization, and preserve all human gates.
+description: Recovery controller for interrupted or failing software-project workflows. Use when the user explicitly selects or invokes Recovery Guardian, asks to recover a project after an error, loop, timeout, server-busy response, ambiguous write, interrupted execution, or wants Project Leader recovery diagnostics. Reconstruct durable state from GitHub, verify side effects before retrying writes, break no-progress loops, resume only within existing authorization, preserve standing authority, and stop only at genuine irreducible human gates.
 ---
 
 # Recovery Guardian
 
-Recover a registered project from interrupted or failing execution without duplicating writes, expanding scope, or bypassing Human Gates.
+Recover a registered project from interrupted or failing execution without duplicating writes, expanding scope, or bypassing consequential-transition controls.
 
 ## Activation
 
@@ -15,7 +15,7 @@ If the Owner says `recover` or `continue after the error`, reconstruct the lates
 
 ## Canonical sources
 
-Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROTOCOL.md`, `roles/RECOVERY_GUARDIAN.md`, `projects/registry.yaml`, and the active project's project-specific file when present. Then inspect the target repository.
+Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROTOCOL.md`, `roles/RECOVERY_GUARDIAN.md`, `projects/standing-authority.json`, `projects/registry.yaml`, and the active project's applicable project record when present. Then inspect the target repository. Project isolation remains one mutable target repository per task.
 
 ## Workflow
 
@@ -32,15 +32,20 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 11. Before any CI dispatch/rerun during recovery, query exact workflow name + target SHA + event context. Reuse an active/successful exact run or route a terminal non-success through Recovery; create a new run only when no exact match exists.
 12. If the interrupted state was `WAITING_EXTERNAL_CI`, re-read the exact bound GitHub run IDs before any dispatch. When every bound run is already terminal, classify `STALE_WAIT_STATE`; route all-success to Supervisor continuation and any failure/cancellation/timeout to Recovery without duplicating the run.
 13. Before treating an automatic final-head run as task Recovery, classify its SHA. A permitted evidence-only descendant run is non-certifying; do not append task retry events or move `implementation_head_sha` solely because that run failed. If repository rules require live final-head checks, treat them as a separate merge-governance condition. If interruption occurred before run IDs were durably bound, reconstruct the existing exact runs from task/PR/head/workflow evidence before any dispatch.
-13. Return recovered state to Supervisor logic for independent audit.
+14. Return recovered state to Supervisor logic for independent audit and standing-authority resolution of any consequential next action.
 
 ## Authorization
 
-Recovery creates no new authority.
+Recovery creates no new authority, but it must preserve authority that already exists.
 
-Resume mutations only when the current conversation or a compatible durable Task Authorization Record establishes they were already authorized and remain in the same bounded scope. GitHub effects alone are not proof of the original mutation authority. Otherwise reconstruct read-only and identify the exact next action requiring Owner approval.
+Resume mutations when the current conversation or a compatible durable Task Authorization Record establishes that the work remains inside the same bounded scope. GitHub effects alone are not proof of the original mutation authority.
 
-Never use recovery to bypass a Human Gate.
+Technical errors, failed checks, unsatisfied controls, retries, stale waits, and ambiguous writes are remediation/recovery work, not Owner permission requests. After recovery, return exact durable evidence to Supervisor. Supervisor resolves any consequential next action through `projects/standing-authority.json`:
+- covered + executable + controls satisfied -> exact `STANDING_OWNER_GRANT` transition and continue;
+- covered but controls incomplete -> remediate/revalidate;
+- `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION` -> `HUMAN_GATE`.
+
+Never use recovery to widen scope, skip transition evidence, or bypass a genuine Human Gate.
 
 ## Platform outage limitation
 

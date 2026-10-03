@@ -1,6 +1,6 @@
 # Recovery protocol
 
-Classify failures as transient, ambiguous-write, permanent/configuration, loop/no-progress, or human-gated.
+Classify failures as transient, ambiguous-write, permanent/configuration, loop/no-progress, or authority/manual-boundary. An action name is not a Human Gate by itself.
 
 Transient: retry at most 3 total attempts for the same action fingerprint and re-read durable state whenever a mutation may have occurred.
 
@@ -14,8 +14,10 @@ Checkpoint: persist `.project-leader/checkpoints/<task-id>.json` when retry/no-p
 
 Resume: reconstruct default branch, task branch, PRs, task-related commits, checkpoint state, and CI/workflow state; determine the last durable completed step; verify ambiguous writes; continue from the first incomplete step.
 
-Never automatically cross merge-to-main, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates without explicit authorization.
+Never self-authorize a consequential transition. After recovery, return exact evidence to Supervisor. If canonical project state covers the effect, current tools can execute it, and controls pass, Supervisor may issue an exact `STANDING_OWNER_GRANT` transition authorization without a new Owner prompt. Use `HUMAN_GATE` only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
+
+Standing authority: technical failures, retries, stale waits, unsatisfied controls, and ambiguous writes remain autonomous recovery/remediation work inside the existing task. Recovery never widens scope and keeps one mutable target repository per task. Read `projects/standing-authority.json` when routing the recovered next step back to Supervisor.
 
 V2 recovery: use the append-only hash-chained journal under `.project-leader/recovery-events/<task-id>/` as the authoritative retry history. Commit `FAILURE_OBSERVED` and matching `RETRY_AUTHORIZED` before the next certifying execution, then run required CI on a descendant SHA containing those events. An old-SHA GitHub rerun cannot provide terminal structural certification. Commit `RECOVERED` after success as a descendant of the certified implementation SHA. Retroactive or structurally disconnected retry authorization is invalid, and an event file must never be rewritten. A checkpoint cannot reset the retry budget.
 

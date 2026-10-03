@@ -53,7 +53,7 @@ Key requirements:
 - on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response;
 - for v2 tasks, persist/re-read append-only `.project-leader/recovery-events/<task-id>/`; use mutable checkpoints only for legacy v1 continuity. A certifiable retry must run on an implementation SHA that descends from the committed `FAILURE_OBSERVED` and `RETRY_AUTHORIZED` events; terminal `RECOVERED` is committed afterward. Do not use an old-SHA workflow rerun as final Recovery proof;
 - never treat a legacy v1 checkpoint with stored `status=ACTIVE` as a live task by itself. Corroborate it with a current branch, open PR, or active CI. If a terminal result exists or no live workstream exists, classify `STALE_LEGACY_CHECKPOINT`, preserve the snapshot, and continue without reviving it;
-- never certify a consumed Human Gate without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
+- never certify a consequential transition without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
 
 ## Platform outage
 
@@ -63,11 +63,25 @@ If ChatGPT itself is unavailable, no ChatGPT agent can continue at that instant.
 
 Use `.github/workflows/repository-hygiene.yml` for branch cleanup. A non-`main` branch may be deleted automatically only when GitHub proves one of three bounded cases: (a) its tip is fully contained in canonical `main`; (b) it has no open pull request and every branch-specific final file state is byte-identical to canonical `main` (including removals that are also absent from `main`); or (c) canonical `main` contains a durable `CURRENT_OWNER_INSTRUCTION` transition authorization for action `delete_owner_authorized_superseded_non_main_branch_refs` whose target branch name and exact revision both match the live ref. Owner-authorized revision mismatches, renames, unsupported states, oversized/unavailable deltas, open-PR heads, and any unlisted/divergent content are preserved for explicit audit. The bounded sweep runs after same-repository merges, on manual dispatch, and after pushes to `main`, so temporary control/authorization refs disappear automatically once their evidence is canonical. Branch-ref deletion never rewrites commit history and must never target `main`.
 
-## Human Gates
+## Standing authority and Human Gates
 
-A development-branch integration is not a main Human Gate, but it is still an explicit action: the task must include `merge_development_branch`, the live PR base must not be `main`, and no other gated effect may be triggered. If that action is absent from the task, do not merge and do not infer it from generic implementation authority.
+Load and validate `projects/standing-authority.json` before consequential transitions and again after session recovery when authority routing matters.
 
-Owner approval is required by default for merge to main, release, production deployment, destructive data changes, repository/history deletion, production secret changes, irreversible infrastructure mutation, and paid service activation.
+A development-branch integration remains explicitly task-bounded: the task must include `merge_development_branch`, the live PR base must not be `main`, and no unrelated effect may be introduced.
+
+For an action listed in a task/policy `human_gates` array, do not jump directly to an Owner prompt. First resolve the action:
+
+1. canonical project state already covers the exact effect;
+2. the current system/tools can execute it;
+3. exact target, scope, required CI/validation/evidence, and Supervisor controls pass.
+
+When all three hold, record an exact transition authorization with source `STANDING_OWNER_GRANT`, execute the transition, verify the durable result, record the transition result, and continue automatically. If controls do not yet pass, remediate/recover and revalidate instead of asking the Owner.
+
+Use `HUMAN_GATE` only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
+
+Action names such as merge to `main`, release, deploy, governance change, secret/infrastructure/data transition, or paid/commercial activation do not create Human Gates by themselves.
+
+Project isolation remains strict: one mutable target repository per task. The Project Leader project is not a container for other project implementations; its skill may operate on another project only when that project is the active target context.
 
 ## Trust boundary
 
@@ -81,7 +95,7 @@ For a v2 Project Leader task:
 2. For Project Leader-local work, bind policy with `LOCAL_BASE_V1`. For a registered managed project, read its executable central policy from the canonical Project Leader revision and bind it with `CENTRAL_CONTROL_V1`.
 3. Compile the task with the target base SHA plus the independent control repository/revision/policy path/profile/digest.
 4. Require the task's mutation scope and allowed actions to remain inside that trusted policy ceiling.
-5. Require policy-minimum Human Gates, validation, and CI.
+5. Require policy-minimum gated effects, validation, and CI. A gated effect still requires transition authority/evidence, but the standing grant may satisfy the authority without a new Owner prompt.
 6. Use append-only recovery events when retry/replan history exists.
 7. Bind the Worker Result to the exact Task Authorization commit+SHA-256 and emit real GitHub Actions run IDs.
 8. Verify authorization immutability, task/result compatibility, target CI evidence and implementation-head/final-head ancestry from trusted control-plane logic.

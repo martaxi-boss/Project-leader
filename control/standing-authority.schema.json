@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/martaxi-boss/Project-leader/control/standing-authority.schema.json",
+  "title": "Project Leader Standing Owner Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "authority_id",
+    "source",
+    "binding_mode",
+    "runtime_scope",
+    "autonomy_rule",
+    "human_gate_conditions",
+    "required_controls",
+    "project_isolation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "authority_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "const": "STANDING_OWNER_GRANT"
+    },
+    "binding_mode": {
+      "const": "OBJECTIVE_SCOPE_BOUND"
+    },
+    "runtime_scope": {
+      "const": "PROJECT_LEADER_SKILL_RUNTIME"
+    },
+    "autonomy_rule": {
+      "const": "ALL_CANONICALLY_COVERED_EXECUTABLE_ACTIONS"
+    },
+    "human_gate_conditions": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "EXCLUSIVE_HUMAN_INTERVENTION",
+          "NEW_UNCOVERED_MATERIAL_DECISION"
+        ]
+      }
+    },
+    "required_controls": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "project_isolation": {
+      "const": "ONE_MUTABLE_TARGET_REPOSITORY_PER_TASK"
+    }
+  }
+}
