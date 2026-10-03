@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "authority_id": "owner-standing-autonomy-v1",
+  "source": "STANDING_OWNER_GRANT",
+  "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+  "scope": "REGISTERED_PROJECTS_AND_PROJECT_LEADER",
+  "autonomous_actions": [
+    "inspect_analyze_reconstruct",
+    "implement_remediate_reconcile",
+    "run_ci_and_recover",
+    "create_update_branches_commits_prs",
+    "merge_development_branch",
+    "merge_to_main",
+    "execute_canonically_defined_release_publish_deploy",
+    "execute_canonically_defined_repository_governance_change",
+    "execute_canonically_defined_infrastructure_secret_data_or_commercial_transition"
+  ],
+  "human_gate_conditions": [
+    "EXCLUSIVE_HUMAN_INTERVENTION",
+    "NEW_UNCOVERED_MATERIAL_DECISION"
+  ],
+  "required_controls": [
+    "registered_project_or_project_leader_scope",
+    "canonical_project_objective_or_decision_already_covers_effect",
+    "no_silent_scope_architecture_strategy_or_trust_boundary_expansion",
+    "supervisor_exact_state_audit_before_consequential_transition",
+    "required_ci_validation_and_evidence_satisfied",
+    "recovery_guardian_bounded_retry_replan_and_anti_loop",
+    "verify_ambiguous_writes_before_retry",
+    "persist_exact_transition_evidence_for_consequential_effects",
+    "one_mutable_target_repository_per_task"
+  ]
+}
