@@ -35,14 +35,8 @@
         "paid_service_activation"
       ],
       "required_human_gates": [
-        "merge_to_main",
-        "branch_protection_or_ruleset_change",
-        "release_or_publish",
-        "production_deploy",
-        "destructive_data_change",
-        "production_secret_change",
-        "irreversible_infrastructure_change",
-        "paid_service_activation"
+        "EXCLUSIVE_HUMAN_INTERVENTION",
+        "NEW_UNCOVERED_MATERIAL_DECISION"
       ],
       "required_ci": [],
       "allowed_ci": [
