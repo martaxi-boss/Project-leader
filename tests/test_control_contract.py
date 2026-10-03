@@ -405,6 +405,17 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("If the PR base is not `main`, do not classify the merge itself as `merge_to_main`", skill)
         self.assertIn("continue automatically", skill)
 
+    def test_project_leader_converges_before_human_gate(self):
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        self.assertIn("DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE", skill)
+        self.assertIn("convergence preflight", skill)
+        self.assertIn("The mere existence of a gated PR", skill)
+        self.assertIn("no covered corrective/preparatory work remains", skill)
+        self.assertIn("An audit finding is an input to remediation", project)
+        self.assertIn("Do not stop merely to report a covered problem", runbook)
+
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
         recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
@@ -413,6 +424,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("RECOVERED", skill)
         self.assertIn("run_attempt > 1", recovery)
         self.assertIn("Terminal certification must fail", recovery)
+        self.assertIn("retroactive event is invalid", recovery)
 
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")

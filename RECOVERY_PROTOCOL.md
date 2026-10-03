@@ -104,12 +104,14 @@ Each event is validated against `control/recovery-event.schema.json` and hash-ch
 This makes deleting/resetting a mutable checkpoint insufficient to erase retry history. The legacy checkpoint may still summarize current state, but v2 anti-loop decisions must be reconstructible from the journal when recovery events exist.
 
 For v2 recovery, persistence is part of the recovery transition itself:
-- append `FAILURE_OBSERVED` immediately after a retryable failure is classified;
-- append `RETRY_AUTHORIZED` before the next dispatch/rerun;
-- append `REPLAN` before switching strategy generation;
-- append `RECOVERED` after the retry/replan succeeds.
+- append and durably commit `FAILURE_OBSERVED` immediately after a retryable failure is classified;
+- append and durably commit `RETRY_AUTHORIZED` before the next dispatch/rerun;
+- append and durably commit `REPLAN` before switching strategy generation;
+- append and durably commit `RECOVERED` after the retry/replan succeeds.
 
-Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. For GitHub Actions evidence, any certified run whose live `run_attempt` is greater than 1 requires a valid current-head journal containing `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and, for terminal success, `RECOVERED`.
+The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZED` record persisted after the retry started is invalid for that retry and must not be accepted as authorization. Recovery-event files are append-only: each event file must be created once and never rewritten.
+
+Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. For GitHub Actions evidence, any certified run whose live `run_attempt` is greater than 1 requires a valid current-head journal containing `FAILURE_OBSERVED`, a matching `RETRY_AUTHORIZED` for that attempt durably persisted no later than the retry start, and, for terminal success, `RECOVERED`.
 
 
 ## Waiting on external CI

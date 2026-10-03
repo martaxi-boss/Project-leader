@@ -27,7 +27,9 @@ Calling `@Project Leader` only activates it. It does not automatically authorize
 5. If remediation is local and within scope, loop to Builder.
 6. If a transient failure, ambiguous write, interrupted response, or no-progress loop occurs, route automatically to Recovery Guardian.
 7. Recovery Guardian verifies durable state, retries/replans within bounds, then returns to Supervisor.
-8. Stop only when the requested task is complete, a Human Gate is reached, access/evidence is missing, or the Owner changes direction.
+8. If audit finds an in-scope defect, drift, stale evidence, overlap, or incomplete preparation, route it immediately to Builder/Recovery, correct it, validate it, and return to Supervisor. Do not stop merely to report a covered problem.
+9. Before any Human Gate, exhaust convergence work: reconcile active workstreams, final-head scope/evidence/CI, durable recovery state, and every covered remediation.
+10. Stop only when the requested task is complete, access/evidence is missing, the Owner changes direction, or no covered work remains and the next required action itself is a genuine Human Gate.
 
 ## Recovery rules
 

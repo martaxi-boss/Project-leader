@@ -33,7 +33,7 @@ Supervisor reconstructs live state, binds the task to repository/base/scope/proh
 
 Builder mutates only when authorized, uses one target repository per task, works on a dedicated branch unless otherwise authorized, persists the Task Authorization Record at `.project-leader/tasks/<task-id>.json` before substantive implementation, tests, commits, and opens/updates a PR when appropriate. At completion it emits a machine-readable Worker Result using the canonical schema and persists it under `.project-leader/results/<task-id>.json` when repository policy permits.
 
-Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`. For v2 tasks, persist `FAILURE_OBSERVED` before authorizing a retry, `RETRY_AUTHORIZED` before redispatch/rerun, `REPLAN` before switching strategy, and `RECOVERED` after recovery; mutable checkpoints are legacy summaries only. Do not claim successful recovery if the required append-only journal is absent.
+Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`. For v2 tasks, durably persist `FAILURE_OBSERVED` before authorizing a retry, durably persist `RETRY_AUTHORIZED` before redispatch/rerun, persist `REPLAN` before switching strategy, and persist `RECOVERED` after recovery; mutable checkpoints are legacy summaries only. A retry authorization written only after the retry is retroactive evidence and must not satisfy recovery certification. Do not claim successful recovery if the required append-only journal or causal ordering is absent.
 
 ## Routing
 
@@ -46,7 +46,13 @@ Implementation request:
 Recoverable failure:
 `FAILURE -> RECOVERY GUARDIAN -> VERIFY EFFECT -> RETRY or REPLAN -> SUPERVISOR AUDIT -> CONTINUE`
 
-Continue automatically inside existing authorization until complete, a Human Gate is reached, or essential access/evidence is unavailable.
+Continue automatically inside existing authorization until complete, the next irreducible action is a genuine Human Gate, or essential access/evidence is unavailable.
+
+The control loop is:
+
+`DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`
+
+When audit discovers an in-scope defect, drift, stale evidence, incomplete reconciliation, or recoverable failure, do not stop at the finding and do not merely report it. Route immediately to Builder or Recovery Guardian as appropriate, correct it inside existing authority, revalidate, return to Supervisor audit, and continue.
 
 ## Recovery requirements
 
@@ -62,6 +68,10 @@ Continue automatically inside existing authorization until complete, a Human Gat
 Require explicit Owner approval before any action not already explicitly authorized that would merge to main, release/publish, deploy to production, destructively mutate data, delete repository/history, change production secrets, irreversibly change infrastructure, or spend money.
 
 Before classifying a PR merge as the `merge_to_main` Human Gate, inspect the live PR base branch. Only a PR whose base branch is exactly `main` is a merge-to-main transition. If the PR base is not `main`, do not classify the merge itself as `merge_to_main`; when that development-branch integration is otherwise inside the existing authorization and triggers no other Human Gate, continue automatically.
+
+Before emitting any Human Gate, run a **convergence preflight**. The Supervisor must first exhaust all independent work already covered by existing authority: audit active workstreams; remediate discovered defects and drift; reconcile overlapping branches/PRs and stale durable state; verify final-head scope and evidence; wait for or resolve required CI; and re-audit the exact state that would cross the gate. The mere existence of a gated PR or future gated transition is not enough to stop while covered corrective or preparatory work remains.
+
+Emit `HUMAN_GATE` only when no covered corrective/preparatory work remains and the next required action itself crosses an uncovered gated effect. Ask only for that exact irreducible authorization.
 
 Do not infer a gated action from ambiguous dictation.
 

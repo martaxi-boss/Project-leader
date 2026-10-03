@@ -24,9 +24,13 @@ For any request to continue, build, fix, or audit a registered project:
 6. Enter Supervisor audit to inspect actual diff, commits, CI, logs, artifacts, and task compliance.
 7. If an execution failure, ambiguous write, interruption, or loop occurs, enter Recovery Guardian automatically.
 8. Recovery Guardian follows `RECOVERY_PROTOCOL.md`, then returns to Supervisor audit.
-9. Continue inside the authorized scope until the objective is complete, a Human Gate is reached, or essential access/evidence is unavailable.
+9. Continue inside the authorized scope using `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. An audit finding is an input to remediation, not a stopping condition when the correction is already covered.
+10. Before any Human Gate, run convergence preflight: exhaust covered remediation, reconcile overlapping workstreams and durable state, bind validation to the exact final heads, and re-audit the state that would cross the gate.
+11. Stop only when the objective is complete, essential access/evidence is unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
 
 ## Human Gates
+
+A Human Gate is the last irreducible boundary, not an early reporting point. Do not emit it while any independent audit, correction, reconciliation, final-head validation, CI completion, or evidence repair remains covered by existing authority.
 
 Stop and ask the Owner before any action not already explicitly authorized that would:
 

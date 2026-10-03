@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import sys
+from datetime import datetime
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -36,6 +37,78 @@ def ci_run_requires_recovery_journal(payload):
     return isinstance(attempt, int) and not isinstance(attempt, bool) and attempt > 1
 
 
+def _parse_github_time(value):
+    if not value:
+        raise ValueError("GitHub evidence is missing a required timestamp")
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def verify_recovery_retry_causality(result, records, persistence, run_payloads):
+    if len(records) != len(persistence):
+        raise ValueError("recovery journal persistence metadata is incomplete")
+
+    for payload in run_payloads:
+        attempt = payload.get("run_attempt", 1)
+        if not isinstance(attempt, int) or isinstance(attempt, bool) or attempt <= 1:
+            continue
+
+        retry_started_at = _parse_github_time(
+            payload.get("run_started_at") or payload.get("created_at")
+        )
+        retry_indexes = [
+            index
+            for index, record in enumerate(records)
+            if record.get("event") == "RETRY_AUTHORIZED"
+            and record.get("attempt_count") == attempt
+        ]
+        if not retry_indexes:
+            raise ValueError(
+                f"recovery journal is missing RETRY_AUTHORIZED for run attempt {attempt}"
+            )
+        if not any(
+            _parse_github_time(persistence[index]["persisted_at"]) <= retry_started_at
+            for index in retry_indexes
+        ):
+            raise ValueError(
+                f"RETRY_AUTHORIZED for run attempt {attempt} was persisted after the retry started"
+            )
+
+        failure_indexes = [
+            index
+            for index, record in enumerate(records)
+            if record.get("event") == "FAILURE_OBSERVED"
+            and record.get("attempt_count") < attempt
+        ]
+        if not failure_indexes or not any(
+            _parse_github_time(persistence[index]["persisted_at"]) <= retry_started_at
+            for index in failure_indexes
+        ):
+            raise ValueError(
+                f"FAILURE_OBSERVED evidence was not durably persisted before run attempt {attempt}"
+            )
+
+        if result.get("terminal_status") == "TERMINAL_SUCCESS":
+            completed_at = _parse_github_time(payload.get("updated_at"))
+            recovered_indexes = [
+                index
+                for index, record in enumerate(records)
+                if record.get("event") == "RECOVERED"
+                and record.get("attempt_count") == attempt
+            ]
+            if not recovered_indexes:
+                raise ValueError(
+                    f"recovery journal is missing RECOVERED for run attempt {attempt}"
+                )
+            if not any(
+                _parse_github_time(persistence[index]["persisted_at"]) >= completed_at
+                for index in recovered_indexes
+            ):
+                raise ValueError(
+                    f"RECOVERED for run attempt {attempt} was persisted before the retry completed"
+                )
+    return True
+
+
 def verify_recovery_journal_records(result, records):
     if not records:
         raise ValueError("CI retry requires a durable append-only recovery journal")
@@ -55,7 +128,7 @@ def verify_recovery_journal_records(result, records):
     return True
 
 
-def load_recovery_journal(result, repository, token, current_head_sha, api_base):
+def load_recovery_journal(result, repository, token, current_head_sha, api_base, run_payloads):
     directory = f".project-leader/recovery-events/{result['task_id']}"
     quoted_directory = urllib.parse.quote(directory, safe="/")
     try:
@@ -70,11 +143,14 @@ def load_recovery_journal(result, repository, token, current_head_sha, api_base)
         raise ValueError("recovery journal path is not a directory")
 
     records = []
+    persistence = []
     for item in sorted(listing, key=lambda entry: entry.get("name", "")):
         name = item.get("name", "")
         if item.get("type") != "file" or not name.endswith(".json"):
             continue
         quoted_name = urllib.parse.quote(name, safe="")
+        full_path = f"{directory}/{name}"
+        quoted_full_path = urllib.parse.quote(full_path, safe="/")
         payload = api_get(
             f"{api_base}/repos/{repository}/contents/{quoted_directory}/{quoted_name}?ref={current_head_sha}",
             token,
@@ -84,7 +160,28 @@ def load_recovery_journal(result, repository, token, current_head_sha, api_base)
         raw = base64.b64decode(payload.get("content", "").encode("ascii"))
         records.append(json.loads(raw.decode("utf-8")))
 
+        commits = api_get(
+            f"{api_base}/repos/{repository}/commits?path={quoted_full_path}&sha={current_head_sha}&per_page=2",
+            token,
+        )
+        if not isinstance(commits, list) or len(commits) != 1:
+            raise ValueError(
+                f"recovery event file must be created once and never rewritten: {name}"
+            )
+        commit = commits[0]
+        persisted_at = ((commit.get("commit") or {}).get("committer") or {}).get("date")
+        if not persisted_at:
+            raise ValueError(f"recovery event commit timestamp is missing: {name}")
+        persistence.append(
+            {
+                "name": name,
+                "commit_sha": commit.get("sha"),
+                "persisted_at": persisted_at,
+            }
+        )
+
     verify_recovery_journal_records(result, records)
+    verify_recovery_retry_causality(result, records, persistence, run_payloads)
     return True
 
 def verify_run_payload(ci_item, result, payload, repository):
@@ -183,7 +280,14 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         run_payloads.append(payload)
 
     if any(ci_run_requires_recovery_journal(payload) for payload in run_payloads):
-        load_recovery_journal(result, repository, token, current_head_sha, api_base)
+        load_recovery_journal(
+            result,
+            repository,
+            token,
+            current_head_sha,
+            api_base,
+            run_payloads,
+        )
 
     compare = api_get(
         f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{current_head_sha}",
