@@ -9,6 +9,7 @@ from control.verify_github_evidence import (
     verify_recovery_journal_records,
     verify_same_sha_ci_consistency,
     verify_recovery_retry_causality,
+    verify_recovery_structural_causality,
     verify_run_payload,
 )
 
