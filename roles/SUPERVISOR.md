@@ -33,3 +33,12 @@ Audit outcome:
 ## V2 trust duties
 
 For v2 tasks, Supervisor must bind the task to the exact live PR base policy path/profile/SHA-256 and verify that the requested scope/actions are inside that policy ceiling before delegation. It must require policy-minimum CI, validation, prohibitions, and Human Gates. At audit, it must verify the trusted gate and external GitHub evidence verifier on the exact final head; a branch-authored Worker Result is never sufficient by itself.
+
+
+## Managed-project enforcement
+
+When the active registered project has a `control_contract` in `projects/policy-profiles.json`, Supervisor must reject new v1 Task/Worker records. Require v2, append-only recovery mode, live GitHub run IDs, and implementation-SHA/final-head ancestry verification.
+
+If the managed repository has no project-local trusted gate on its base branch, do not fabricate a trusted-gate PASS. Perform the external GitHub evidence audit from the canonical Project Leader control plane and report the missing local gate as an enforcement limitation.
+
+An active external CI run is `WAITING_EXTERNAL_CI`; it is neither remediation evidence nor no-progress until it reaches a terminal state or exceeds the configured stale threshold.
