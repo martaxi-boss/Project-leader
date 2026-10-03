@@ -220,6 +220,37 @@ class EvidenceVerifierTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
 
+    def test_post_ci_compare_below_github_file_limit_is_accepted(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [
+                {
+                    "filename": f".project-leader/recovery-events/TASK-001/{index:04d}.json"
+                }
+                for index in range(299)
+            ],
+        }
+        self.assertTrue(
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+        )
+
+    def test_post_ci_compare_at_github_file_limit_is_rejected(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [
+                {
+                    "filename": f".project-leader/recovery-events/TASK-001/{index:04d}.json"
+                }
+                for index in range(300)
+            ],
+        }
+        with self.assertRaisesRegex(ValueError, "300-file limit"):
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+
     def test_diverged_compare_is_rejected(self):
         payload = {"status": "diverged", "base_commit": {"sha": "a" * 40}, "commits": []}
         with self.assertRaises(ValueError):

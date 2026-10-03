@@ -18,6 +18,9 @@ if str(ROOT) not in sys.path:
 from control.validate_records import validate_recovery_journal, validate_result
 
 
+GITHUB_COMPARE_FILES_LIMIT = 300
+
+
 def api_get(url, token):
     request = urllib.request.Request(
         url,
@@ -405,6 +408,11 @@ def verify_compare_payload(payload, implementation_head_sha, current_head_sha, t
         files = payload.get("files")
         if not isinstance(files, list):
             raise ValueError("post-implementation compare is missing changed-file evidence")
+        if len(files) >= GITHUB_COMPARE_FILES_LIMIT:
+            raise ValueError(
+                "post-implementation compare changed-file evidence reached GitHub's "
+                f"{GITHUB_COMPARE_FILES_LIMIT}-file limit and may be truncated"
+            )
         material = sorted(
             item.get("filename")
             for item in files
