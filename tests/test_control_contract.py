@@ -427,7 +427,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("STALE_WAIT_STATE", recovery)
         self.assertIn("STALE_WAIT_STATE", skill)
         self.assertIn("STALE_WAIT_STATE", guardian)
-        self.assertIn("exact run IDs", project)
+        self.assertIn("exact live run IDs", project)
         self.assertIn("all-success routes to Supervisor audit/validate/continue", recovery)
         self.assertIn("chat/UI spinner", recovery)
 
