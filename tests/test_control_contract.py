@@ -441,6 +441,18 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Terminal certification must fail", recovery)
         self.assertIn("retroactive event is invalid", recovery)
 
+    def test_legacy_active_checkpoint_requires_live_corroboration(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("STALE_LEGACY_CHECKPOINT", project)
+        self.assertIn("STALE_LEGACY_CHECKPOINT", recovery)
+        self.assertIn("STALE_LEGACY_CHECKPOINT", skill)
+        self.assertIn("STALE_LEGACY_CHECKPOINT", guardian)
+        self.assertIn("live branch", recovery)
+        self.assertIn("open PR", recovery)
+
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
