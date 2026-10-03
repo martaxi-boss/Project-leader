@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 TASK_SCHEMA = ROOT / "task-authorization.schema.json"
 TASK_SCHEMA_V1 = ROOT / "task-authorization.v1.schema.json"
+TASK_SCHEMA_V2_LEGACY = ROOT / "task-authorization.v2.schema.json"
 RESULT_SCHEMA = ROOT / "worker-result.schema.json"
 RESULT_SCHEMA_V1 = ROOT / "worker-result.v1.schema.json"
 CHECKPOINT_SCHEMA = ROOT / "recovery-checkpoint.schema.json"
@@ -144,6 +145,10 @@ def validate_task(record):
     version = record.get("schema_version")
     if version == "1.0":
         schema = TASK_SCHEMA_V1
+    elif version == "2.0" and "transition_controls" in record:
+        schema = TASK_SCHEMA
+    elif version == "2.0" and "human_gates" in record:
+        schema = TASK_SCHEMA_V2_LEGACY
     elif version == "2.0":
         schema = TASK_SCHEMA
     else:
@@ -173,12 +178,6 @@ def validate_task(record):
         else:
             raise ValueError(f"unsupported v2 policy binding_mode: {mode!r}")
 
-        has_transition_controls = bool(record.get("transition_controls"))
-        has_legacy_gates = bool(record.get("human_gates"))
-        if has_transition_controls == has_legacy_gates:
-            raise ValueError(
-                "v2 task must declare exactly one of transition_controls or legacy human_gates"
-            )
     return True
 
 def validate_result(record):
