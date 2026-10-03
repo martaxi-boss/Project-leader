@@ -404,7 +404,47 @@ def _parse_registry_projects(registry_text):
             continue
         if current is None:
             continue
-        match_field = re.match(r'^    ([A-Za-z0-9_]+):\s*"?([^"]*)"?\s*    if not value:
+        match_field = re.match(r'^    ([A-Za-z0-9_]+):\s*"?([^"]*)"?\s*$', raw)
+        if match_field:
+            projects[current][match_field.group(1)] = match_field.group(2)
+    return projects
+
+
+def validate_registry_profile_consistency(registry_text, profiles, policies):
+    """Legacy-only validator retained until the old main validation workflow is removed."""
+    registry_projects = _parse_registry_projects(registry_text)
+    profile_projects = profiles.get("profiles") or {}
+    if set(registry_projects) != set(profile_projects):
+        raise ValueError("registry and policy profile project sets differ")
+    for project_id, entry in registry_projects.items():
+        profile = profile_projects[project_id]
+        if entry.get("repository") != profile.get("repository"):
+            raise ValueError(f"{project_id}: registry/profile repository mismatch")
+        if entry.get("default_branch") != profile.get("default_branch"):
+            raise ValueError(f"{project_id}: registry/profile default_branch mismatch")
+        policy_path = entry.get("policy")
+        if not policy_path:
+            raise ValueError(f"{project_id}: registry is missing executable central policy path")
+        if profile.get("central_policy_path") != policy_path:
+            raise ValueError(f"{project_id}: registry/profile central policy path mismatch")
+        policy = policies.get(policy_path)
+        if not policy:
+            raise ValueError(f"{project_id}: central policy file is missing: {policy_path}")
+        validate_project_policy(policy)
+        if policy.get("repository") != entry.get("repository"):
+            raise ValueError(f"{project_id}: registry/policy repository mismatch")
+        if policy.get("default_branch") != entry.get("default_branch"):
+            raise ValueError(f"{project_id}: registry/policy default_branch mismatch")
+        allowed_ci = (policy.get("effect_policies") or {}).get(
+            "E1_RECOVERABLE_PROJECT_LOCAL", {}
+        ).get("allowed_ci", [])
+        if set(profile.get("allowed_ci_names") or []) != set(allowed_ci):
+            raise ValueError(f"{project_id}: profile/policy allowed CI mismatch")
+    return True
+
+
+def _parse_time(value):
+    if not value:
         return None
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
