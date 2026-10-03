@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
 from control.validate_records import validate_project_policy, validate_result, validate_scope, validate_task
+from control.scope_policy import scope_pattern_is_within
 
 NEW_TASK_SCHEMA_VERSION = "2.0"
 WORKER_RESULT_SCHEMA_VERSION = "2.0"
@@ -108,8 +109,12 @@ def verify_managed_task_against_control_policy(
             + ", ".join(sorted(protected))
         )
 
-    allowed_patterns = set(effect_policy["allowed_scope_patterns"])
-    widened_patterns = sorted(set(task["mutation_scope"]) - allowed_patterns)
+    allowed_patterns = effect_policy["allowed_scope_patterns"]
+    widened_patterns = sorted(
+        pattern
+        for pattern in task["mutation_scope"]
+        if not any(scope_pattern_is_within(pattern, allowed) for allowed in allowed_patterns)
+    )
     if widened_patterns:
         raise ValueError("managed task mutation_scope exceeds central policy ceiling: " + ", ".join(widened_patterns))
 

@@ -19,6 +19,8 @@ Never use recovery to bypass merge, release, production deploy, destructive data
 A ChatGPT-wide outage cannot be repaired from inside another ChatGPT agent while the platform itself is unavailable. Resume from GitHub when service returns.
 
 
-For Task Authorization v2, the append-only journal under `.project-leader/recovery-events/<task-id>/` is authoritative. Mutable checkpoints are legacy summaries only and cannot reset attempt/no-progress counters.
+For Task Authorization v2, the append-only journal under `.project-leader/recovery-events/<task-id>/` is authoritative. Mutable checkpoints are legacy summaries only and cannot reset attempt/no-progress counters. Persist `FAILURE_OBSERVED` after classifying a retryable failure, `RETRY_AUTHORIZED` before the next dispatch/rerun, `REPLAN` before changing strategy generation, and `RECOVERED` after success. Do not certify a retry from chat memory alone when these durable events are missing.
+
+A required GitHub Actions run with live `run_attempt > 1` is objective evidence that retry recovery occurred. Terminal certification must fail unless the current head contains a valid append-only journal for that task with failure, retry authorization, and recovered evidence.
 
 An external GitHub Actions run that remains queued/waiting/pending/requested/in_progress is `WAITING_EXTERNAL_CI`, not a retryable failure. Do not redispatch it while active. Re-read at a bounded cadence; investigate the existing run first if it exceeds the canonical stale threshold.

@@ -405,6 +405,15 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("If the PR base is not `main`, do not classify the merge itself as `merge_to_main`", skill)
         self.assertIn("continue automatically", skill)
 
+    def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+        self.assertIn("FAILURE_OBSERVED", skill)
+        self.assertIn("RETRY_AUTHORIZED", skill)
+        self.assertIn("RECOVERED", skill)
+        self.assertIn("run_attempt > 1", recovery)
+        self.assertIn("Terminal certification must fail", recovery)
+
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
