@@ -26,6 +26,8 @@ Before accepting CI for an implementation head, reject cherry-picked evidence: f
 
 A CI-certified implementation head is the last material mutation point for that certification. Final evidence commits may follow only when they are task-local `.project-leader` result/recovery/transition-result metadata. Any other file change after `implementation_head_sha` is material drift: invalidate the old certification, choose the new implementation head, and run the required CI again before terminal acceptance.
 
+Automatic CI triggered only because an allowed evidence-only descendant was pushed is not task-certifying CI. Do not reopen task Recovery or move `implementation_head_sha` solely because such an incidental descendant run is active or fails. If the repository's branch protection/ruleset explicitly requires checks on the current PR head, handle those runs as a separate merge-governance condition. They may delay Human-Gate readiness, but recovery must not create another evidence commit merely to satisfy a check on the prior evidence commit.
+
 External CI waits are transient control states, not stopping points. When Project Leader enters `WAITING_EXTERNAL_CI`, bind the exact run IDs and re-read them at the bounded cadence. If live GitHub state becomes terminal while the stored state still says waiting, classify `STALE_WAIT_STATE`: all-success returns immediately to Supervisor audit/validation/continuation; failure/cancellation/timeout routes to Recovery. After any interrupted/resumed Work session, re-read the bound runs before dispatching anything so completed work is never repeated merely because the UI remained on “processing”.
 
 1. Consultant when analysis is needed.
