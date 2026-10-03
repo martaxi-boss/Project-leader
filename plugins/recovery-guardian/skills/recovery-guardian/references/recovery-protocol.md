@@ -15,3 +15,8 @@ Checkpoint: persist `.project-leader/checkpoints/<task-id>.json` when retry/no-p
 Resume: reconstruct default branch, task branch, PRs, task-related commits, checkpoint state, and CI/workflow state; determine the last durable completed step; verify ambiguous writes; continue from the first incomplete step.
 
 Never automatically cross merge-to-main, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates without explicit authorization.
+
+
+V2 recovery: use the append-only hash-chained journal under `.project-leader/recovery-events/<task-id>/` as the authoritative retry history. A checkpoint cannot reset the retry budget.
+
+External CI wait: queued/waiting/pending/requested/in_progress GitHub Actions are `WAITING_EXTERNAL_CI`, not failures. Do not dispatch a duplicate run while the current run is active; investigate the existing run first if it becomes stale.
