@@ -467,6 +467,8 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("merge_base_commit", workflow)
         self.assertIn("mergeBase !== branch.commit.sha", workflow)
         self.assertIn("github.rest.git.deleteRef", workflow)
+        self.assertIn("github.event_name == 'workflow_dispatch' ||", workflow)
+        self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
         self.assertIn("fully contained in canonical `main`", runbook)
         self.assertIn("never target `main`", runbook)
 
