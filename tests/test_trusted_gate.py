@@ -115,6 +115,16 @@ class TrustedGateTests(unittest.TestCase):
         self.task["allowed_actions"].append("merge_development_branch")
         self.assertTrue(self.verify())
 
+    def test_project_leader_policy_allows_only_bounded_repository_hygiene_actions_under_e3(self):
+        policy = json.loads((ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8"))
+        e3 = policy["effect_policies"]["E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"]
+        self.assertIn("delete_fully_merged_non_main_branch_refs", e3["allowed_actions"])
+        self.assertIn("install_automatic_merged_pr_branch_hygiene", e3["allowed_actions"])
+        self.assertNotIn(
+            "delete_fully_merged_non_main_branch_refs",
+            policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_actions"],
+        )
+
     def test_action_cannot_self_widen(self):
         self.task["allowed_actions"].append("merge_to_main")
         with self.assertRaises(ValueError):
