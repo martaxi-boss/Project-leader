@@ -454,6 +454,21 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("live branch", recovery)
         self.assertIn("open PR", recovery)
 
+    def test_evidence_only_descendant_ci_does_not_reopen_task_recovery(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        skill_recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        guardian_recovery = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md").read_text(encoding="utf-8")
+        for text in (project, runbook, recovery, skill, skill_recovery, guardian, guardian_recovery):
+            self.assertIn("evidence-only descendant", text)
+        self.assertIn("non-certifying", project)
+        self.assertIn("merge-governance condition", runbook)
+        self.assertIn("Loss of chat state never authorizes replacement CI", skill)
+        self.assertIn("reconstruct the existing run set", guardian_recovery)
+
     def test_repository_hygiene_is_bounded_to_safe_branch_cleanup(self):
         workflow = (ROOT / ".github/workflows/repository-hygiene.yml").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")

@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from control.managed_project_contract import (
     classify_external_ci,
+    classify_post_implementation_descendant,
     decide_ci_dispatch,
     reconcile_external_ci_wait,
     reconcile_legacy_checkpoint_liveness,
@@ -180,6 +181,42 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_legacy_checkpoint_liveness(legacy_checkpoint("COMPLETE"))
         self.assertEqual(state["state"], "LEGACY_CHECKPOINT_TERMINAL")
         self.assertFalse(state["actionable"])
+
+    def test_evidence_only_descendant_does_not_reopen_certification_recovery(self):
+        state = classify_post_implementation_descendant(
+            [
+                ".project-leader/results/TASK-001.json",
+                ".project-leader/recovery-events/TASK-001/0001.json",
+            ],
+            "TASK-001",
+        )
+        self.assertEqual(state["state"], "EVIDENCE_ONLY_DESCENDANT")
+        self.assertEqual(state["route"], "CERTIFICATION_UNCHANGED")
+        self.assertFalse(state["certification_ci_required"])
+
+    def test_evidence_only_descendant_can_require_separate_final_head_governance_checks(self):
+        state = classify_post_implementation_descendant(
+            [".project-leader/results/TASK-001.json"],
+            "TASK-001",
+            final_head_checks_required=True,
+        )
+        self.assertEqual(state["state"], "EVIDENCE_ONLY_DESCENDANT")
+        self.assertEqual(state["route"], "FINAL_HEAD_GOVERNANCE_CHECK")
+        self.assertFalse(state["certification_ci_required"])
+        self.assertTrue(state["final_head_checks_required"])
+
+    def test_material_descendant_requires_new_implementation_ci(self):
+        state = classify_post_implementation_descendant(
+            [
+                ".project-leader/results/TASK-001.json",
+                "docs/AUDIT.md",
+            ],
+            "TASK-001",
+        )
+        self.assertEqual(state["state"], "MATERIAL_DESCENDANT")
+        self.assertEqual(state["route"], "FRESH_IMPLEMENTATION_CI")
+        self.assertTrue(state["certification_ci_required"])
+        self.assertEqual(state["material_files"], ["docs/AUDIT.md"])
 
     def test_ci_dispatch_is_required_when_no_exact_run_exists(self):
         decision = decide_ci_dispatch(

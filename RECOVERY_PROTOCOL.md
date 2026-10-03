@@ -117,6 +117,8 @@ Causality is structural as well as temporal. For any v2 task whose journal conta
 
 Therefore an old-SHA GitHub `rerun` cannot be the terminal Recovery certificate: its `head_sha` predates the committed retry authorization. After `RETRY_AUTHORIZED`, create/retain a descendant task SHA containing the pre-retry journal and obtain a fresh required CI run on that descendant SHA (for example via the normal push trigger or an authorized workflow dispatch). Then append `RECOVERED` only after success.
 
+Before treating any later GitHub Actions failure as a task Recovery failure, classify the run SHA against the task's `implementation_head_sha`. A run on a permitted evidence-only descendant is non-certifying and must not reopen the task's recovery journal merely because an automatic `push`/`pull_request` workflow ran there. If branch protection/rulesets require checks on the live PR head, that run is a merge-governance condition; resolve it without moving the certifying implementation head or creating a recursive evidence-commit/CI loop. A material descendant remains different: it becomes the new implementation head candidate and requires fresh task CI.
+
 Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. A live `run_attempt > 1` still requires its current-head recovery journal and timestamp checks, but structural ancestry may additionally reject that rerun as unsuitable for terminal certification.
 
 
@@ -134,6 +136,7 @@ For every registered managed project:
 6. if an active run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
 7. if every bound run is terminal but the stored/control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE`; all-success routes immediately to Supervisor audit/validate/continue, while any failure/cancellation/timeout routes to Recovery;
 8. on session resume after interruption, re-read the bound run IDs before any new dispatch. Never use a stale chat/UI spinner as proof that CI is still active.
+9. if the session ended before the exact wait binding was durably captured, reconstruct the candidate run set from the live task, current certifying SHA, required workflow names, PR/head state, and GitHub run contexts; bind the existing runs before any dispatch. Missing chat state is never permission to create replacement CI.
 
 Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop. A completed external CI run must never leave the control plane parked indefinitely in `WAITING_EXTERNAL_CI`.
 
