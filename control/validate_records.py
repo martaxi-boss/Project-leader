@@ -20,7 +20,7 @@ TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
 SUPPORTED_SCHEMA_KEYS = {
-    "$schema", "$id", "title", "type", "additionalProperties", "required",
+    "$schema", "$id", "title", "description", "type", "additionalProperties", "required",
     "properties", "const", "enum", "pattern", "minLength", "maxLength",
     "minimum", "minItems", "uniqueItems", "items", "format"
 }
