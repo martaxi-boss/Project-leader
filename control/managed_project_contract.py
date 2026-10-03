@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
-from control.validate_records import validate_project_policy, validate_scope, validate_task
+from control.validate_records import validate_project_policy, validate_result, validate_scope, validate_task
 
 NEW_TASK_SCHEMA_VERSION = "2.0"
 WORKER_RESULT_SCHEMA_VERSION = "2.0"
@@ -41,6 +41,7 @@ def validate_managed_task(task, repository, control_repository=None):
 
 def validate_managed_result(task, result, repository, control_repository=None):
     validate_managed_task(task, repository, control_repository)
+    validate_result(result)
     if result.get("schema_version") != WORKER_RESULT_SCHEMA_VERSION:
         raise ValueError("managed-project Worker Result must use schema v2")
     if result.get("task_id") != task.get("task_id"):
