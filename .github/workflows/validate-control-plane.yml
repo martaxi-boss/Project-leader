@@ -27,6 +27,9 @@ jobs:
           test -f control/project-policy.schema.json
           test -f control/trusted_gate.py
           test -f control/verify_github_evidence.py
+          test -f control/managed_project_contract.py
+          grep -q 'NEW_TASK_SCHEMA_VERSION = "2.0"' control/managed_project_contract.py
+          grep -q 'CI_WAIT_STATE = "WAITING_EXTERNAL_CI"' control/managed_project_contract.py
           test -f control/transition-authorization.schema.json
           test -f control/transition-result.schema.json
           test -f roles/CONSULTANT.md

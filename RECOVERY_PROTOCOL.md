@@ -102,3 +102,20 @@ For Task Authorization v2, durable retry state is append-only:
 Each event is validated against `control/recovery-event.schema.json` and hash-chains to the canonical SHA-256 of the previous event. Sequences are contiguous. Attempt, identical-failure, and no-progress counters cannot decrease within the same strategy generation; a strategy generation may increase only on a `REPLAN` event.
 
 This makes deleting/resetting a mutable checkpoint insufficient to erase retry history. The legacy checkpoint may still summarize current state, but v2 anti-loop decisions must be reconstructible from the journal when recovery events exist.
+
+
+## Waiting on external CI
+
+An existing GitHub Actions run in `queued`, `waiting`, `pending`, `requested`, or `in_progress` state is not itself a failure.
+
+For every registered managed project:
+
+1. classify the state as `WAITING_EXTERNAL_CI`;
+2. do not dispatch or retry the same workflow while that run is still active;
+3. re-read GitHub no more frequently than the profile's bounded polling cadence unless new evidence arrives;
+4. if the run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
+5. only failure/cancellation/timeout or verified stale/permanent state enters Recovery retry/replan logic.
+
+Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop.
+
+For registered managed-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
