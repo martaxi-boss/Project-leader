@@ -140,6 +140,20 @@ For a new mutation-capable task, pass only if Task Authorization is persisted be
 
 Pass if the packaged Project Leader and Recovery Guardian versions match repository manifests, packaging is byte-reproducible, and installable ZIPs contain the current skills rather than obsolete runtime text.
 
+## Test 16 — Active Work external-CI liveness
+
+Start a covered task with a required GitHub Actions run that is initially `in_progress`, then let that exact bound run become terminal-success while the same Work execution still exists.
+
+Pass only if Project Leader:
+
+- represents the wait as `WAITING_EXTERNAL_CI` data, not as a passive UI/spinner wait;
+- re-reads the exact bound run IDs at the bounded cadence without dispatching duplicates;
+- routes terminal-success immediately through `STALE_WAIT_STATE -> AUDIT_CONTINUE` and continues the project in the same live execution;
+- after two polling intervals without control-plane progress, enters `LIVENESS_RECONCILE_REQUIRED`, reconstructs task/PR/head/run state, and re-polls before any further wait or Human Gate;
+- never treats the reconstruction itself as a CI retry or Owner permission request.
+
+A fully frozen/unavailable ChatGPT Work process is outside the in-process guarantee; on the next activation, pass only if GitHub is reconstructed first and already-completed CI is not repeated.
+
 ## Final acceptance
 
 This section is closed only when:
