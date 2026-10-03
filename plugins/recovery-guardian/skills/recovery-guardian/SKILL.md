@@ -31,6 +31,7 @@ Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROT
 10. Replan after repeated no-progress instead of looping.
 11. Before any CI dispatch/rerun during recovery, query exact workflow name + target SHA + event context. Reuse an active/successful exact run or route a terminal non-success through Recovery; create a new run only when no exact match exists.
 12. If the interrupted state was `WAITING_EXTERNAL_CI`, re-read the exact bound GitHub run IDs before any dispatch. When every bound run is already terminal, classify `STALE_WAIT_STATE`; route all-success to Supervisor continuation and any failure/cancellation/timeout to Recovery without duplicating the run.
+13. Before treating an automatic final-head run as task Recovery, classify its SHA. A permitted evidence-only descendant run is non-certifying; do not append task retry events or move `implementation_head_sha` solely because that run failed. If repository rules require live final-head checks, treat them as a separate merge-governance condition. If interruption occurred before run IDs were durably bound, reconstruct the existing exact runs from task/PR/head/workflow evidence before any dispatch.
 13. Return recovered state to Supervisor logic for independent audit.
 
 ## Authorization
