@@ -141,6 +141,48 @@ class ManagedCrossRepositoryTests(unittest.TestCase):
                 CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
             )
 
+    def test_exact_file_scope_can_narrow_managed_policy_pattern(self):
+        t, p, raw = self.make()
+        t["mutation_scope"] = ["src/app.py", ".project-leader/tasks/TASK-001.json"]
+        self.assertTrue(
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+        )
+
+    def test_nested_subpattern_can_narrow_managed_policy_pattern(self):
+        t, p, raw = self.make()
+        t["mutation_scope"] = ["src/feature/**", ".project-leader/tasks/**"]
+        self.assertTrue(
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src/feature/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+        )
+
+    def test_managed_scope_prefix_collision_fails_closed(self):
+        t, p, raw = self.make()
+        t["mutation_scope"] = ["src-escape/**", ".project-leader/tasks/**"]
+        with self.assertRaises(ValueError):
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src-escape/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+
+    def test_managed_parent_traversal_scope_fails_closed(self):
+        t, p, raw = self.make()
+        t["mutation_scope"] = ["src/../secrets/**", ".project-leader/tasks/**"]
+        with self.assertRaises(ValueError):
+            verify_managed_task_against_control_policy(
+                t, p, raw, "a" * 40,
+                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
+                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
+            )
+
     def test_real_registry_profiles_and_policies_are_consistent(self):
         registry = (ROOT / "projects/registry.yaml").read_text(encoding="utf-8")
         profiles = json.loads((ROOT / "projects/policy-profiles.json").read_text(encoding="utf-8"))
