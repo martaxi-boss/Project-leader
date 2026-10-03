@@ -61,14 +61,15 @@ Prefer concise status updates. Continue automatically inside existing authorizat
 
 ## V2 enforcement requirements
 
-For registered managed projects whose central profile declares a control contract:
+For every repository registered in `projects/registry.yaml`:
 - use Task Authorization v2 for every new mutation task; v1 is historical only;
-- bind the task to the exact base policy bytes and base SHA;
+- use `CENTRAL_CONTROL_V1`: bind the target repository to its own exact base SHA and independently bind policy to the exact canonical `martaxi-boss/Project-leader` revision + central policy bytes; never require those two SHAs to be equal;
+- set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the Task Authorization in an authorization-only commit before substantive implementation, and bind the Worker Result to that exact commit + SHA-256;
 - do not widen scope or actions beyond the policy ceiling;
 - keep required CI/validation and Human Gates at least as strong as policy;
 - use append-only recovery events for retry/replan history;
 - treat active external CI as WAITING_EXTERNAL_CI and never redispatch the same run while it is still active;
 - emit Worker Result v2 with actual GitHub Actions run IDs;
-- treat the trusted `pull_request_target` gate as authoritative PR enforcement because it runs verifier code from the base and handles PR-head records only as data.
+- when a project-local trusted gate exists, treat its base-controlled `pull_request_target` verifier as PR enforcement; when it does not, perform the external Supervisor audit from the canonical Project Leader revision and state that limitation honestly.
 
 Never claim that this replaces GitHub branch protection. Direct-push prevention still requires repository governance outside the plugin contract.
