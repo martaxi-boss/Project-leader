@@ -140,6 +140,12 @@ class GenericManagedProjectTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.verify(task_record=task_record)
 
+    def test_generic_task_cannot_claim_whole_repository_scope(self):
+        task_record = json.loads(json.dumps(self.task))
+        task_record["mutation_scope"] = ["**"]
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
     def test_task_scope_must_narrow_generic_ceiling_without_path_escape(self):
         task_record = json.loads(json.dumps(self.task))
         task_record["mutation_scope"] = ["src/../secrets/**", ".project-leader/tasks/**"]
