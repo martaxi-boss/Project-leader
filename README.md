@@ -1,74 +1,59 @@
 # Project Leader
 
-GitHub-backed control plane packaged as two ChatGPT plugins:
+GitHub-backed software-project coordination, packaged as two ChatGPT plugins:
 
-- **Project Leader** — the primary single entry point for software-project work.
-- **Recovery Guardian** — an independent recovery controller for interrupted or failing execution.
+- **Project Leader** — the single entry point for project work.
+- **Recovery Guardian** — recovery after interrupted or failing execution.
 
-## Intended use
+Project Leader is an independent control project. External projects keep their architecture, implementation, credentials, CI and durable state in their own repositories. Every mutable task targets one repository.
 
-`Open a ChatGPT Project -> New chat -> @Project Leader`
+## Use
 
-A bare invocation activates Project Leader and waits for the Owner's next instruction.
+`Open the relevant ChatGPT Project -> New chat -> @Project Leader`
 
-Project Leader internally routes work through four phases:
+Invocation activates the controller. The Owner then gives the concrete instruction to audit, build, fix, recover or continue.
 
-1. Consultant
-2. Supervisor
-3. Builder
-4. Recovery Guardian
+Project Leader reconstructs live GitHub state, routes through Consultant, Supervisor and Builder, and independently audits actual evidence. Recovery Guardian enters when execution fails or a write has an uncertain outcome.
 
-After Builder work, Supervisor independently audits evidence. If execution fails transiently, a write outcome is ambiguous, the response is interrupted, or progress loops, Recovery Guardian automatically enters, verifies durable GitHub state, retries/replans safely, and returns to Supervisor.
+Covered work follows `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. A failed check routes to bounded remediation, rather than a routine request for permission.
 
-The standalone `@Recovery Guardian` plugin is available for explicit recovery after an interrupted session.
+## Authority and transitions
 
-## Durable recovery
+`projects/standing-authority.json` defines the standing Owner autonomy rule. Consequential effects require exact-target Supervisor audit, successful required validation and CI, and durable transition authorization and result records.
 
-GitHub is the durable source of truth for branches, commits, PRs, CI, and artifacts. A possibly-completed write is always verified before retrying. Repeated no-progress attempts are bounded by `RECOVERY_PROTOCOL.md`.
+A covered, executable and validated transition uses `STANDING_OWNER_GRANT` and continues automatically. Human interruption is reserved for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`. Recovery preserves existing authority and never expands it.
 
-A ChatGPT-wide outage cannot be repaired by another ChatGPT agent while the service itself is unavailable. When service returns, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
+External targets bootstrap from their own architecture and live repository state. Use an explicitly selected target policy when applicable; otherwise bind `control/generic-project-policy.json` and narrow each task to the authorized objective.
 
-## Installation
+## Canonical contracts
 
-The direct plugin-upload path has been verified in the current workspace:
+- `PROJECT_LEADER.md` — operational contract.
+- `RUNBOOK.md` — execution and validation flow.
+- `RECOVERY_PROTOCOL.md` — bounded recovery and CI waiting.
+- `roles/` — Consultant, Supervisor, Builder and Recovery Guardian responsibilities.
+- `projects/standing-authority.json` — standing Owner authority.
+- `projects/policies/project-leader.json` — this repository's policy ceiling.
+- `control/generic-project-policy.json` — architecture-first external-target policy.
+- `control/` — executable authorization, scope, integrity and evidence checks.
+- `SMOKE_TESTS.md` — acceptance scenarios.
 
-`Plugins -> + -> Upload plugin -> select ZIP -> View plugin -> Install plugin`
+New tasks use v2 records, immutable authorization before implementation, exact policy binding and concrete CI evidence whenever required. Recovery events are append-only. Archived schemas remain available because durable historical audit records still require validation.
 
-Use `.github/workflows/package-plugins.yml` to build fresh installable artifacts from repository source.
+## Installation and packaging
 
-See `PLUGIN_SETUP.md` for the full installation and verification procedure.
+See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-## Control-plane source of truth
+- Project Leader: **0.6.0**.
+- Recovery Guardian: **0.5.0**.
+- Marketplace: `.agents/plugins/marketplace.json`.
+- Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
-- `PROJECT_LEADER.md`
-- `RUNBOOK.md`
-- `RECOVERY_PROTOCOL.md`
-- `roles/CONSULTANT.md`
-- `roles/SUPERVISOR.md`
-- `roles/BUILDER.md`
-- `roles/RECOVERY_GUARDIAN.md`
-- `projects/registry.yaml`
-- project-specific files under `projects/`
+Both plugins use the OpenAI GitHub connector, limited to the repositories and actions authorized for the signed-in account.
 
-## Plugin packaging
+## Continuity and repository hygiene
 
-Marketplace:
-`.agents/plugins/marketplace.json`
+GitHub stores task authority, commits, PRs, CI, results and transition evidence. Verify a potentially completed write before repeating it. Reconstruct from the last verified durable state after an interruption.
 
-Plugins:
-- `plugins/project-leader/`
-- `plugins/recovery-guardian/`
+Repository hygiene removes obsolete runtime/configuration dependencies and audited obsolete branch refs. Preserve useful audit evidence before deleting refs; never delete unique valuable history merely because a branch is old.
 
-Both require the OpenAI GitHub connector.
-
-## Registered test projects
-
-- `martaxi-boss/pink-iptv`
-- `martaxi-boss/fadego`
-- `martaxi-boss/VCAM-PRO`
-
-## Safety
-
-Automatic inside an authorized bounded task: repository reads, analysis, branch/commit/PR work, CI inspection, in-scope remediation, and bounded recovery.
-
-Human-gated by default unless explicitly authorized: merge to main, release/publication, production deployment, destructive data operations, repository/history deletion, production secret changes, irreversible infrastructure changes, and paid-service activation.
+A ChatGPT-wide outage prevents execution while the service is unavailable. Resume by reconstructing GitHub state after service returns.

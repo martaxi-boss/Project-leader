@@ -557,6 +557,8 @@ class ControlContractTests(unittest.TestCase):
             "RECOVERY_PROTOCOL.md",
             "AGENT_BUILDER_PROMPT.md",
             "projects/README.md",
+            "README.md",
+            "PLUGIN_SETUP.md",
             "roles/CONSULTANT.md",
             "roles/SUPERVISOR.md",
             "roles/BUILDER.md",
