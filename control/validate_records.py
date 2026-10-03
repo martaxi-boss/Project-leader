@@ -118,6 +118,20 @@ def _reject_duplicate_names(items, label):
 
 def validate_project_policy(record):
     _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
+    fixed_target = bool(record.get("repository")) and bool(record.get("default_branch"))
+    dynamic_target = (
+        record.get("repository_mode") == "ACTIVE_TARGET"
+        and record.get("default_branch_mode") == "ACTIVE_TARGET"
+    )
+    if fixed_target == dynamic_target:
+        raise ValueError("project policy must declare exactly one target mode: fixed repository/default_branch or ACTIVE_TARGET")
+    for effect_name, effect_policy in (record.get("effect_policies") or {}).items():
+        legacy = effect_policy.get("required_human_gates")
+        current = effect_policy.get("required_transition_controls")
+        if bool(legacy) == bool(current):
+            raise ValueError(
+                f"{effect_name}: project policy must declare exactly one of required_transition_controls or legacy required_human_gates"
+            )
     return True
 
 
@@ -158,6 +172,13 @@ def validate_task(record):
                 raise ValueError("CENTRAL_CONTROL_V1 requires repository+revision and forbids base_sha")
         else:
             raise ValueError(f"unsupported v2 policy binding_mode: {mode!r}")
+
+        has_transition_controls = bool(record.get("transition_controls"))
+        has_legacy_gates = bool(record.get("human_gates"))
+        if has_transition_controls == has_legacy_gates:
+            raise ValueError(
+                "v2 task must declare exactly one of transition_controls or legacy human_gates"
+            )
     return True
 
 def validate_result(record):
