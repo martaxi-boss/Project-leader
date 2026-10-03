@@ -556,7 +556,8 @@ class ControlContractTests(unittest.TestCase):
             "RUNBOOK.md",
             "RECOVERY_PROTOCOL.md",
             "AGENT_BUILDER_PROMPT.md",
-            "README.md",
+            "projects/README.md",
+            ".github/workflows/validate-control-plane.yml",
             "plugins/project-leader/skills/project-leader/SKILL.md",
             "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
         ):
