@@ -37,4 +37,6 @@ Default forbidden actions without explicit authorization:
 
 ## V2 executor constraints
 
-For v2 work, Builder treats the base policy as a ceiling it cannot edit for the purpose of authorizing the same PR. It may modify a policy file only when separately in scope, but that modification does not widen the current task because the trusted gate evaluates the policy bytes from the PR base. Recovery history uses append-only events, and Worker Result v2 must contain the real run IDs that external verification can resolve to the implementation SHA.
+For v2 Project Leader-local work, Builder treats the local base policy as a ceiling. For registered managed-project work, Builder treats the centrally bound Project Leader policy revision as the ceiling and never substitutes the target repository base SHA for the control-policy revision. It may modify a policy file only when separately in scope, but that modification does not widen the current task because the trusted gate evaluates the policy bytes from the PR base. Recovery history uses append-only events, and Worker Result v2 must contain the real run IDs that external verification can resolve to the implementation SHA.
+
+For every new v2 task using `IMMUTABLE_AUTHORIZATION_V1`, persist the Task Authorization as an authorization-only commit before substantive implementation. Do not modify that task record afterwards. Worker Result must carry the exact authorization commit SHA and SHA-256.
