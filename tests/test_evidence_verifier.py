@@ -7,6 +7,7 @@ from control.verify_github_evidence import (
     verify_authorization_payloads,
     verify_compare_payload,
     verify_recovery_journal_records,
+    verify_same_sha_ci_consistency,
     verify_recovery_retry_causality,
     verify_run_payload,
 )
@@ -44,6 +45,121 @@ class EvidenceVerifierTests(unittest.TestCase):
         self.run["name"] = "Other"
         with self.assertRaises(ValueError):
             verify_run_payload(self.ci, self.result, self.run, self.repository)
+
+    def test_same_sha_push_green_and_pr_red_is_rejected(self):
+        selected = {
+            "id": 10,
+            "name": "Control contract tests",
+            "head_sha": "a" * 40,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }
+        runs = [
+            selected,
+            {
+                "id": 11,
+                "name": "Control contract tests",
+                "head_sha": "a" * 40,
+                "event": "pull_request",
+                "status": "completed",
+                "conclusion": "failure",
+                "created_at": "2026-10-03T01:01:00Z",
+            },
+        ]
+        with self.assertRaises(ValueError):
+            verify_same_sha_ci_consistency(self.ci, self.result, selected, runs)
+
+    def test_later_success_supersedes_older_failure_in_same_context(self):
+        selected = {
+            "id": 12,
+            "name": "Control contract tests",
+            "head_sha": "a" * 40,
+            "event": "pull_request",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:02:00Z",
+        }
+        runs = [
+            {
+                "id": 11,
+                "name": "Control contract tests",
+                "head_sha": "a" * 40,
+                "event": "pull_request",
+                "status": "completed",
+                "conclusion": "failure",
+                "created_at": "2026-10-03T01:01:00Z",
+            },
+            selected,
+        ]
+        self.assertTrue(
+            verify_same_sha_ci_consistency(self.ci, self.result, selected, runs)
+        )
+
+    def test_latest_active_same_sha_context_is_rejected(self):
+        selected = {
+            "id": 10,
+            "name": "Control contract tests",
+            "head_sha": "a" * 40,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }
+        runs = [
+            selected,
+            {
+                "id": 13,
+                "name": "Control contract tests",
+                "head_sha": "a" * 40,
+                "event": "pull_request",
+                "status": "in_progress",
+                "conclusion": None,
+                "created_at": "2026-10-03T01:03:00Z",
+            },
+        ]
+        with self.assertRaises(ValueError):
+            verify_same_sha_ci_consistency(self.ci, self.result, selected, runs)
+
+    def test_unrelated_workflow_failure_does_not_block_required_workflow(self):
+        selected = {
+            "id": 10,
+            "name": "Control contract tests",
+            "head_sha": "a" * 40,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }
+        runs = [
+            selected,
+            {
+                "id": 20,
+                "name": "Unrelated workflow",
+                "head_sha": "a" * 40,
+                "event": "pull_request",
+                "status": "completed",
+                "conclusion": "failure",
+                "created_at": "2026-10-03T01:04:00Z",
+            },
+        ]
+        self.assertTrue(
+            verify_same_sha_ci_consistency(self.ci, self.result, selected, runs)
+        )
+
+    def test_selected_run_must_exist_in_same_sha_listing(self):
+        selected = {
+            "id": 10,
+            "name": "Control contract tests",
+            "head_sha": "a" * 40,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }
+        with self.assertRaises(ValueError):
+            verify_same_sha_ci_consistency(self.ci, self.result, selected, [])
 
     def test_ancestor_compare_with_task_local_result_only_is_accepted(self):
         payload = {
