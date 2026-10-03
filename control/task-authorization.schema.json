@@ -16,7 +16,6 @@
     "mutation_scope",
     "allowed_actions",
     "prohibited_actions",
-    "human_gates",
     "required_validation",
     "required_ci",
     "policy",
@@ -186,7 +185,7 @@
           }
         ]
       },
-      "description": "Compatibility list of consequential/gated effects. New records use requires_authority_resolution=true; legacy records with requires_owner_approval=true remain valid historical evidence. Runtime Human Gate decisions are resolved by standing authority and are not implied by this list alone."
+      "description": "Legacy compatibility field for historical v2 records. New records must use transition_controls."
     },
     "required_validation": {
       "type": "array",
@@ -277,6 +276,27 @@
     },
     "integrity_mode": {
       "const": "IMMUTABLE_AUTHORIZATION_V1"
+    },
+    "transition_controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "requires_authority_resolution"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requires_authority_resolution": {
+            "const": true
+          }
+        }
+      }
     }
   }
 }
