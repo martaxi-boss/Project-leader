@@ -39,7 +39,7 @@ def task(version="2.0"):
         "mutation_scope": ["src/**", ".project-leader/tasks/**", ".project-leader/results/**"],
         "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
         "prohibited_actions": ["merge_to_main"],
-        "human_gates": [{"action": "merge_to_main", "requires_authority_resolution": True}],
+        "transition_controls": [{"action": "merge_to_main", "requires_authority_resolution": True}],
         "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
         "required_ci": ["Project CI"],
         "policy": {
@@ -124,9 +124,14 @@ class ManagedProjectContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_managed_task(item, REPOSITORY, CONTROL_REPOSITORY)
 
-    def test_managed_task_requires_ci(self):
+    def test_managed_task_allows_empty_ci_when_selected_policy_does_not_require_workflows(self):
         item = task()
         item["required_ci"] = []
+        self.assertTrue(validate_managed_task(item, REPOSITORY, CONTROL_REPOSITORY))
+
+    def test_managed_task_rejects_malformed_ci_entries(self):
+        item = task()
+        item["required_ci"] = [""]
         with self.assertRaises(ValueError):
             validate_managed_task(item, REPOSITORY, CONTROL_REPOSITORY)
 
