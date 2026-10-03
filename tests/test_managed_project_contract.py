@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from control.managed_project_contract import (
     classify_external_ci,
+    decide_ci_dispatch,
     reconcile_external_ci_wait,
     reconcile_legacy_checkpoint_liveness,
     validate_managed_result,
@@ -179,6 +180,100 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_legacy_checkpoint_liveness(legacy_checkpoint("COMPLETE"))
         self.assertEqual(state["state"], "LEGACY_CHECKPOINT_TERMINAL")
         self.assertFalse(state["actionable"])
+
+    def test_ci_dispatch_is_required_when_no_exact_run_exists(self):
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", []
+        )
+        self.assertEqual(decision["decision"], "DISPATCH_REQUIRED")
+
+    def test_ci_dispatch_reuses_exact_active_run(self):
+        runs = [{
+            "id": 101,
+            "name": "Project CI",
+            "head_sha": "a" * 40,
+            "event": "workflow_dispatch",
+            "status": "in_progress",
+            "conclusion": None,
+            "created_at": "2026-10-03T01:00:00Z",
+        }]
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", runs
+        )
+        self.assertEqual(decision["decision"], "REUSE_ACTIVE_RUN")
+        self.assertEqual(decision["run_id"], 101)
+
+    def test_ci_dispatch_reuses_exact_successful_run(self):
+        runs = [{
+            "id": 101,
+            "name": "Project CI",
+            "head_sha": "a" * 40,
+            "event": "workflow_dispatch",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }]
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", runs
+        )
+        self.assertEqual(decision["decision"], "REUSE_SUCCESSFUL_RUN")
+
+    def test_ci_dispatch_routes_exact_failure_to_recovery(self):
+        runs = [{
+            "id": 101,
+            "name": "Project CI",
+            "head_sha": "a" * 40,
+            "event": "workflow_dispatch",
+            "status": "completed",
+            "conclusion": "failure",
+            "created_at": "2026-10-03T01:00:00Z",
+        }]
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", runs
+        )
+        self.assertEqual(decision["decision"], "ROUTE_RECOVERY")
+
+    def test_ci_dispatch_uses_latest_exact_context_run(self):
+        runs = [
+            {
+                "id": 101,
+                "name": "Project CI",
+                "head_sha": "a" * 40,
+                "event": "workflow_dispatch",
+                "status": "completed",
+                "conclusion": "failure",
+                "created_at": "2026-10-03T01:00:00Z",
+            },
+            {
+                "id": 102,
+                "name": "Project CI",
+                "head_sha": "a" * 40,
+                "event": "workflow_dispatch",
+                "status": "completed",
+                "conclusion": "success",
+                "created_at": "2026-10-03T01:01:00Z",
+            },
+        ]
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", runs
+        )
+        self.assertEqual(decision["decision"], "REUSE_SUCCESSFUL_RUN")
+        self.assertEqual(decision["run_id"], 102)
+
+    def test_ci_dispatch_does_not_reuse_different_event_context(self):
+        runs = [{
+            "id": 101,
+            "name": "Project CI",
+            "head_sha": "a" * 40,
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-10-03T01:00:00Z",
+        }]
+        decision = decide_ci_dispatch(
+            "Project CI", "a" * 40, "workflow_dispatch", runs
+        )
+        self.assertEqual(decision["decision"], "DISPATCH_REQUIRED")
 
     def test_recent_in_progress_ci_is_wait_not_failure(self):
         run = {"status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:25:12Z"}
