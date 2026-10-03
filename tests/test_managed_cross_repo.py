@@ -209,7 +209,11 @@ class ManagedCrossRepositoryTests(unittest.TestCase):
                 CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
             )
 
-    def test_real_managed_policies_separate_development_merge_from_main_gate(self):
+    def test_real_managed_policies_keep_builder_merge_separation_without_action_named_human_gate(self):
+        expected_gates = {
+            "EXCLUSIVE_HUMAN_INTERVENTION",
+            "NEW_UNCOVERED_MATERIAL_DECISION",
+        }
         for path in (
             "projects/policies/pink-iptv.json",
             "projects/policies/fadego.json",
@@ -220,7 +224,8 @@ class ManagedCrossRepositoryTests(unittest.TestCase):
             self.assertIn("merge_development_branch", e1["allowed_actions"], path)
             self.assertNotIn("merge_to_main", e1["allowed_actions"], path)
             self.assertIn("merge_to_main", e1["required_prohibited_actions"], path)
-            self.assertIn("merge_to_main", e1["required_human_gates"], path)
+            self.assertNotIn("merge_to_main", e1["required_human_gates"], path)
+            self.assertEqual(set(e1["required_human_gates"]), expected_gates, path)
 
     def test_real_registry_profiles_and_policies_are_consistent(self):
         registry = (ROOT / "projects/registry.yaml").read_text(encoding="utf-8")
