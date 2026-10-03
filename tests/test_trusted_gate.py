@@ -33,11 +33,11 @@ def make_task(policy_raw):
             "production_secret_change", "paid_service_activation",
         ],
         "human_gates": [
-            {"action": "merge_to_main", "requires_owner_approval": True},
-            {"action": "branch_protection_or_ruleset_change", "requires_owner_approval": True},
-            {"action": "release_or_publish", "requires_owner_approval": True},
-            {"action": "license_selection", "requires_owner_approval": True},
-            {"action": "managed_project_mutation", "requires_owner_approval": True},
+            {"action": "merge_to_main", "requires_authority_resolution": True},
+            {"action": "branch_protection_or_ruleset_change", "requires_authority_resolution": True},
+            {"action": "release_or_publish", "requires_authority_resolution": True},
+            {"action": "license_selection", "requires_authority_resolution": True},
+            {"action": "managed_project_mutation", "requires_authority_resolution": True},
         ],
         "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
         "required_ci": ["Control contract tests", "Validate control plane", "Package ChatGPT plugins"],
@@ -167,7 +167,7 @@ class TrustedGateTests(unittest.TestCase):
     def test_explicit_e3_governance_task_can_change_trust_root(self):
         self.task["effect_class"] = "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"
         self.task["mutation_scope"] = ["control/**", ".project-leader/tasks/**"]
-        self.task["human_gates"].append({"action": "trust_root_mutation", "requires_owner_approval": True})
+        self.task["human_gates"].append({"action": "trust_root_mutation", "requires_authority_resolution": True})
         self.task["required_validation"].append("Trust-root governance path")
         self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
         self.assertTrue(self.verify())
