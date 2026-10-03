@@ -25,15 +25,21 @@ Default allowed actions:
 - trigger/read GitHub Actions;
 - create/update a PR.
 
-Default forbidden actions without explicit authorization:
+Consequential actions are outside the ordinary implementation step unless Supervisor binds a separate exact transition:
 - merge to main;
-- release;
+- release/publish;
 - production deploy;
 - destructive data operations;
-- delete repository;
-- rotate/change production secrets;
+- repository/history deletion;
+- production secret rotation/change;
 - irreversible infrastructure changes;
-- expand task scope merely because another issue is noticed.
+- paid/commercial activation.
+
+These are not automatically Human Gates. When `projects/standing-authority.json` covers the canonical project effect, Supervisor must persist an exact `STANDING_OWNER_GRANT` transition authorization and Builder may execute that bounded transition, after which Supervisor verifies the durable result. Builder must never self-promote an implementation task into a consequential transition.
+
+Always forbidden without a new canonical decision:
+- expand task scope merely because another issue is noticed;
+- bypass required tests, evidence, audit, or recovery controls.
 
 ## V2 executor constraints
 
