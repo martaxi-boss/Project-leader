@@ -52,9 +52,9 @@ Fingerprint repeated work as:
 - Never recurse indefinitely between Builder and Recovery Guardian.
 - Return to Supervisor with a changed plan, `BLOCKED`, or `HUMAN_GATE`.
 
-## Durable recovery checkpoint
+## Durable recovery checkpoint (legacy v1)
 
-When retry state, loop counters, or strategy changes must survive a chat/session interruption, persist:
+For legacy v1 tasks only, when retry state, loop counters, or strategy changes must survive a chat/session interruption, persist:
 
 `.project-leader/checkpoints/<task-id>.json`
 
@@ -70,7 +70,7 @@ On a new turn after an interrupted response:
 
 1. Identify the active project and last bounded task from current Project context plus GitHub evidence.
 2. Look for `.project-leader/tasks/<task-id>.json` in the target repository and validate it against `control/task-authorization.schema.json` when present.
-3. Look for `.project-leader/checkpoints/<task-id>.json`; when present, validate it and restore bounded retry/no-progress state.
+3. For v2 tasks, read and validate `.project-leader/recovery-events/<task-id>/` and restore retry/no-progress state from the append-only journal. For legacy v1 tasks, read a checkpoint when present.
 4. Re-read default branch, task branch, open PRs, task-related commits, and CI/workflow state.
 5. Determine the last durable completed step.
 6. Verify whether any write that lacked a response already occurred.
@@ -112,7 +112,7 @@ For every registered managed project:
 
 1. classify the state as `WAITING_EXTERNAL_CI`;
 2. do not dispatch or retry the same workflow while that run is still active;
-3. re-read GitHub no more frequently than the profile's bounded polling cadence unless new evidence arrives;
+3. re-read GitHub no more frequently than the canonical bounded polling cadence unless new evidence arrives;
 4. if the run has not updated beyond the profile's stale threshold, classify it as `INVESTIGATE_STALE_CI` and inspect the existing run/jobs first;
 5. only failure/cancellation/timeout or verified stale/permanent state enters Recovery retry/replan logic.
 
