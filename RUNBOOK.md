@@ -26,7 +26,7 @@ Before accepting CI for an implementation head, reject cherry-picked evidence: f
 
 A CI-certified implementation head is the last material mutation point for that certification. Final evidence commits may follow only when they are task-local `.project-leader` result/recovery/transition-result metadata. Any other file change after `implementation_head_sha` is material drift: invalidate the old certification, choose the new implementation head, and run the required CI again before terminal acceptance.
 
-Automatic CI triggered only because an allowed evidence-only descendant was pushed is not task-certifying CI. Do not reopen task Recovery or move `implementation_head_sha` solely because such an incidental descendant run is active or fails. If the repository's branch protection/ruleset explicitly requires checks on the current PR head, handle those runs as a separate merge-governance condition. They may delay Human-Gate readiness, but recovery must not create another evidence commit merely to satisfy a check on the prior evidence commit.
+Automatic CI triggered only because an allowed evidence-only descendant was pushed is not task-certifying CI. Do not reopen task Recovery or move `implementation_head_sha` solely because such an incidental descendant run is active or fails. If the repository's branch protection/ruleset explicitly requires checks on the current PR head, handle those runs as a separate merge-governance condition. They may delay consequential-transition readiness, but recovery must not create another evidence commit merely to satisfy a check on the prior evidence commit.
 
 External CI waits are transient control states, not stopping points. When Project Leader enters `WAITING_EXTERNAL_CI`, bind the exact run IDs and re-read them at the bounded cadence. If live GitHub state becomes terminal while the stored state still says waiting, classify `STALE_WAIT_STATE`: all-success returns immediately to Supervisor audit/validation/continuation; failure/cancellation/timeout routes to Recovery. After any interrupted/resumed Work session, re-read the bound runs before dispatching anything so completed work is never repeated merely because the UI remained on “processing”.
 
@@ -69,7 +69,7 @@ Load and validate `projects/standing-authority.json` before consequential transi
 
 A development-branch integration remains explicitly task-bounded: the task must include `merge_development_branch`, the live PR base must not be `main`, and no unrelated effect may be introduced.
 
-For an action listed in a task/policy `human_gates` array, do not jump directly to an Owner prompt. First resolve the action:
+For an action listed in current `transition_controls` / `required_transition_controls`, do not jump directly to an Owner prompt. Historical `human_gates` names are compatibility-only evidence. First resolve the action:
 
 1. canonical project state already covers the exact effect;
 2. the current system/tools can execute it;
@@ -92,7 +92,7 @@ The roles are logical operating modes, not independent security principals. Cons
 For a v2 Project Leader task:
 
 1. Reconstruct the live target repository, target base SHA, and the exact canonical Project Leader revision.
-2. For Project Leader-local work, bind policy with `LOCAL_BASE_V1`. For a registered managed project, read its executable central policy from the canonical Project Leader revision and bind it with `CENTRAL_CONTROL_V1`.
+2. For Project Leader-local work, bind policy with `LOCAL_BASE_V1`. For an external target project, bind with `CENTRAL_CONTROL_V1` to the exact canonical Project Leader revision. Use an explicitly selected target-specific central policy when one exists; otherwise use `control/generic-project-policy.json`. No central registry enrollment is required.
 3. Compile the task with the target base SHA plus the independent control repository/revision/policy path/profile/digest.
 4. Require the task's mutation scope and allowed actions to remain inside that trusted policy ceiling.
 5. Require policy-minimum gated effects, validation, and CI. A gated effect still requires transition authority/evidence, but the standing grant may satisfy the authority without a new Owner prompt.
