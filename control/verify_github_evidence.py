@@ -184,6 +184,64 @@ def load_recovery_journal(result, repository, token, current_head_sha, api_base,
     verify_recovery_retry_causality(result, records, persistence, run_payloads)
     return True
 
+def _run_order_key(payload):
+    created = payload.get("created_at") or ""
+    run_id = payload.get("id")
+    return (created, run_id if isinstance(run_id, int) else -1)
+
+
+def verify_same_sha_ci_consistency(ci_item, result, selected_payload, workflow_runs):
+    """Reject cherry-picked green CI when another relevant context disagrees.
+
+    For the required workflow name on the exact implementation SHA, inspect the
+    latest observed run for push, pull_request, and the selected evidence event.
+    Older failures may be superseded by a later successful run in the same
+    context, but a latest active or non-success run blocks certification.
+    """
+    if not isinstance(workflow_runs, list):
+        raise ValueError("same-SHA CI listing is not a workflow run list")
+
+    selected_event = selected_payload.get("event")
+    relevant_events = {"push", "pull_request"}
+    if isinstance(selected_event, str) and selected_event:
+        relevant_events.add(selected_event)
+
+    matching = [
+        run for run in workflow_runs
+        if isinstance(run, dict)
+        and run.get("name") == ci_item.get("name")
+        and run.get("head_sha") == result.get("implementation_head_sha")
+        and run.get("event") in relevant_events
+    ]
+
+    by_event = {}
+    for run in matching:
+        event = run.get("event")
+        current = by_event.get(event)
+        if current is None or _run_order_key(run) > _run_order_key(current):
+            by_event[event] = run
+
+    # The selected run itself must be represented in the same-SHA listing.
+    selected_id = selected_payload.get("id")
+    if isinstance(selected_id, int) and not any(run.get("id") == selected_id for run in matching):
+        raise ValueError(
+            f"selected CI run {selected_id} is absent from same-SHA workflow evidence"
+        )
+
+    for event, run in sorted(by_event.items()):
+        if run.get("status") != "completed":
+            raise ValueError(
+                f"required workflow {ci_item['name']} has an active latest {event} run "
+                f"on implementation SHA: {run.get('id')}"
+            )
+        if run.get("conclusion") != "success":
+            raise ValueError(
+                f"required workflow {ci_item['name']} has a conflicting latest {event} run "
+                f"on implementation SHA: {run.get('id')} conclusion={run.get('conclusion')}"
+            )
+    return True
+
+
 def verify_run_payload(ci_item, result, payload, repository):
     if ci_item["status"] != "SUCCESS":
         raise ValueError(f"required CI evidence is not SUCCESS: {ci_item['name']}")
@@ -308,6 +366,17 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         payload = api_get(f"{api_base}/repos/{repository}/actions/runs/{run_id}", token)
         verify_run_payload(ci_item, result, payload, repository)
         run_payloads.append(payload)
+
+    same_sha_listing = api_get(
+        f"{api_base}/repos/{repository}/actions/runs"
+        f"?head_sha={result['implementation_head_sha']}&per_page=100",
+        token,
+    )
+    same_sha_runs = same_sha_listing.get("workflow_runs")
+    if not isinstance(same_sha_runs, list):
+        raise ValueError("GitHub same-SHA workflow listing is missing workflow_runs")
+    for ci_item, payload in zip(result["ci"], run_payloads):
+        verify_same_sha_ci_consistency(ci_item, result, payload, same_sha_runs)
 
     if any(ci_run_requires_recovery_journal(payload) for payload in run_payloads):
         load_recovery_journal(
