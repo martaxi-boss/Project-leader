@@ -443,6 +443,14 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("exact live run IDs", project)
         self.assertIn("all-success routes immediately to Supervisor audit/validate/continue", recovery)
         self.assertIn("chat/UI spinner", recovery)
+        self.assertIn("LIVENESS_RECONCILE_REQUIRED", project)
+        self.assertIn("LIVENESS_RECONCILE_REQUIRED", runbook)
+        self.assertIn("LIVENESS_RECONCILE_REQUIRED", recovery)
+        self.assertIn("LIVENESS_RECONCILE_REQUIRED", skill)
+        self.assertIn("LIVENESS_RECONCILE_REQUIRED", guardian)
+        self.assertIn("passive Work/UI blocking primitive", project)
+        self.assertIn("Active Work liveness guard", recovery)
+        self.assertIn("Active Work external-CI liveness", (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8"))
 
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")

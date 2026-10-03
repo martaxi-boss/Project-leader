@@ -6,6 +6,7 @@ from control.managed_project_contract import (
     classify_post_implementation_descendant,
     decide_ci_dispatch,
     reconcile_external_ci_wait,
+    reconcile_external_ci_liveness,
     reconcile_legacy_checkpoint_liveness,
     validate_managed_result,
     validate_managed_task,
@@ -368,6 +369,51 @@ class ManagedProjectContractTests(unittest.TestCase):
         self.assertEqual(state["state"], "INVESTIGATE_CI_STATE")
         self.assertEqual(state["route"], "INVESTIGATE")
         self.assertEqual(state["missing_run_ids"], [102])
+
+    def test_observed_stale_spinner_sequence_routes_immediately_after_ci_success(self):
+        started = datetime(2026, 10, 3, 0, 30, 0, tzinfo=timezone.utc)
+        waiting = reconcile_external_ci_liveness(
+            [101],
+            [{"id": 101, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:30:00Z"}],
+            last_progress_at=started,
+            now=datetime(2026, 10, 3, 0, 34, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(waiting["state"], "WAITING_EXTERNAL_CI")
+        self.assertEqual(waiting["liveness_action"], "POLL_AGAIN")
+
+        completed = reconcile_external_ci_liveness(
+            [101],
+            [{"id": 101, "status": "completed", "conclusion": "success", "updated_at": "2026-10-03T00:36:00Z"}],
+            previous_state=waiting["state"],
+            last_progress_at=started,
+            now=datetime(2026, 10, 3, 0, 36, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(completed["state"], "STALE_WAIT_STATE")
+        self.assertEqual(completed["route"], "AUDIT_CONTINUE")
+        self.assertEqual(completed["liveness_action"], "ROUTE_IMMEDIATELY")
+
+    def test_live_work_forces_reconstruction_after_two_poll_intervals_without_progress(self):
+        state = reconcile_external_ci_liveness(
+            [101],
+            [{"id": 101, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:39:00Z"}],
+            last_progress_at="2026-10-03T00:30:00Z",
+            now=datetime(2026, 10, 3, 0, 40, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(state["state"], "LIVENESS_RECONCILE_REQUIRED")
+        self.assertEqual(state["route"], "INVESTIGATE")
+        self.assertEqual(state["liveness_action"], "RECONSTRUCT_AND_REPOLL")
+
+    def test_terminal_ci_wins_over_liveness_timeout(self):
+        state = reconcile_external_ci_liveness(
+            [101],
+            [{"id": 101, "status": "completed", "conclusion": "success"}],
+            previous_state="WAITING_EXTERNAL_CI",
+            last_progress_at="2026-10-03T00:00:00Z",
+            now=datetime(2026, 10, 3, 1, 0, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(state["state"], "STALE_WAIT_STATE")
+        self.assertEqual(state["route"], "AUDIT_CONTINUE")
+        self.assertEqual(state["liveness_action"], "ROUTE_IMMEDIATELY")
 
     def test_duplicate_wait_run_ids_are_rejected(self):
         with self.assertRaises(ValueError):
