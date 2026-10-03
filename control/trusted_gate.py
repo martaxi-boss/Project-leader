@@ -80,10 +80,9 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     if missing_prohibitions:
         raise ValueError("task is missing required prohibitions: " + ", ".join(missing_prohibitions))
 
-    task_gates = {item["action"] for item in task["human_gates"] if item["requires_owner_approval"] is True}
-    missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
+    task_gates = {\n        item["action"]\n        for item in task["human_gates"]\n        if item.get("requires_authority_resolution") is True\n        or item.get("requires_owner_approval") is True\n    }\n    missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
     if missing_gates:
-        raise ValueError("task is missing required Human Gates: " + ", ".join(missing_gates))
+        raise ValueError("task is missing required consequential transition controls: " + ", ".join(missing_gates))
 
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
