@@ -353,7 +353,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn(".project-leader/tasks/<task-id>.json", project)
         self.assertIn("Task Authorization Record", skill)
         self.assertIn(".project-leader/checkpoints/<task-id>.json", recovery)
-        self.assertIn("Human-Gate Transition", control)
+        self.assertIn("Consequential transition authorization/result", control)
 
 
     def test_v2_central_policy_revision_can_differ_from_target_base(self):
