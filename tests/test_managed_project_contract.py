@@ -7,6 +7,7 @@ from control.managed_project_contract import (
     decide_ci_dispatch,
     reconcile_external_ci_wait,
     reconcile_external_ci_liveness,
+    reconcile_operational_access_discovery,
     reconcile_legacy_checkpoint_liveness,
     validate_managed_result,
     validate_managed_task,
@@ -414,6 +415,90 @@ class ManagedProjectContractTests(unittest.TestCase):
         self.assertEqual(state["state"], "STALE_WAIT_STATE")
         self.assertEqual(state["route"], "AUDIT_CONTINUE")
         self.assertEqual(state["liveness_action"], "ROUTE_IMMEDIATELY")
+
+    def test_access_discovery_does_not_stop_when_required_surfaces_are_unsearched(self):
+        state = reconcile_operational_access_discovery(
+            ["direct_session_capabilities"],
+            [],
+            direct_access_available=False,
+        )
+        self.assertEqual(state["state"], "ACCESS_DISCOVERY_INCOMPLETE")
+        self.assertEqual(state["route"], "CONTINUE_DISCOVERY")
+        self.assertIn("operational_repository_discovery", state["missing_surfaces"])
+
+    def test_access_discovery_accepts_read_only_cross_repository_channel(self):
+        state = reconcile_operational_access_discovery(
+            [
+                "direct_session_capabilities",
+                "target_repository_automation",
+                "operational_repository_discovery",
+                "existing_access_history",
+            ],
+            [
+                {
+                    "name": "github-actions-to-vps",
+                    "usable": True,
+                    "requires_mutation": False,
+                    "authority_covered": False,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "ACCESS_PATH_FOUND")
+        self.assertEqual(state["route"], "CONTINUE")
+        self.assertEqual(state["selected_channel"], "github-actions-to-vps")
+
+    def test_access_discovery_routes_cross_repository_write_to_separate_task(self):
+        state = reconcile_operational_access_discovery(
+            [
+                "direct_session_capabilities",
+                "target_repository_automation",
+                "operational_repository_discovery",
+                "existing_access_history",
+            ],
+            [
+                {
+                    "name": "ops-repository-pr-trigger",
+                    "usable": True,
+                    "requires_mutation": True,
+                    "authority_covered": True,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "ACCESS_PATH_REQUIRES_SEPARATE_TASK")
+        self.assertEqual(state["route"], "BOUND_OPERATIONS_TASK")
+
+    def test_access_discovery_resolves_authority_before_human_gate(self):
+        state = reconcile_operational_access_discovery(
+            [
+                "direct_session_capabilities",
+                "target_repository_automation",
+                "operational_repository_discovery",
+                "existing_access_history",
+            ],
+            [
+                {
+                    "name": "ops-repository-pr-trigger",
+                    "usable": True,
+                    "requires_mutation": True,
+                    "authority_covered": False,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION")
+        self.assertEqual(state["route"], "SUPERVISOR_AUTHORITY_RESOLUTION")
+
+    def test_access_human_gate_is_only_candidate_after_discovery_exhaustion(self):
+        state = reconcile_operational_access_discovery(
+            [
+                "direct_session_capabilities",
+                "target_repository_automation",
+                "operational_repository_discovery",
+                "existing_access_history",
+            ],
+            [],
+        )
+        self.assertEqual(state["state"], "ACCESS_PATH_UNAVAILABLE")
+        self.assertEqual(state["route"], "HUMAN_GATE_CANDIDATE")
 
     def test_duplicate_wait_run_ids_are_rejected(self):
         with self.assertRaises(ValueError):
