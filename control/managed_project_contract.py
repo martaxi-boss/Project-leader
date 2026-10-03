@@ -147,11 +147,14 @@ def verify_managed_task_against_control_policy(
         raise ValueError("managed task is missing required prohibitions: " + ", ".join(missing_prohibitions))
 
     task_gates = {
-        item["action"] for item in task["human_gates"] if item["requires_owner_approval"] is True
+        item["action"]
+        for item in task["human_gates"]
+        if item.get("requires_authority_resolution") is True
+        or item.get("requires_owner_approval") is True
     }
     missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
     if missing_gates:
-        raise ValueError("managed task is missing required Human Gates: " + ", ".join(missing_gates))
+        raise ValueError("managed task is missing required consequential transition controls: " + ", ".join(missing_gates))
 
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
