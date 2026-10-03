@@ -97,7 +97,7 @@ Never mix mutable work across projects in one Builder task. One task -> one targ
 
 ## Trust hardening v2
 
-New mutation-capable tasks should use Task Authorization schema v2 after the bootstrap hardening is integrated.
+For a registered managed project whose central policy profile declares a `control_contract`, every new mutation-capable task MUST use Task Authorization v2. V1 records are historical/legacy only and must not be created for new managed-project work.
 
 V2 binds each task to an exact base policy:
 - the Task Authorization carries the exact PR base SHA, policy path, policy profile, and SHA-256 of the policy bytes;
@@ -112,3 +112,17 @@ Worker Result v2 requires concrete CI run IDs. `control/verify_github_evidence.p
 For v2 tasks, append-only recovery events under `.project-leader/recovery-events/<task-id>/` are the authoritative retry/anti-loop history. Mutable checkpoints remain a convenience summary for legacy/v1 continuity, not the source of truth for v2 retry counters.
 
 Registered managed projects also have central policy profiles in `projects/policy-profiles.json`; live repository state must still be refreshed before execution.
+
+
+## Managed-project runtime enforcement
+
+For a registered project with a `control_contract` in `projects/policy-profiles.json`:
+
+- new E1+ tasks use Task Authorization v2 and Worker Result v2;
+- recovery uses append-only events as the authoritative retry/no-progress history;
+- terminal CI claims use concrete GitHub Actions run IDs and are re-read from GitHub against the implementation SHA;
+- the implementation SHA must equal or be an ancestor of the final PR head before Supervisor accepts the result;
+- when the managed repository does not yet have a project-local trusted gate on its base branch, Supervisor must perform the external v2 audit itself and record that absence honestly; it must not claim that a trusted PR gate ran;
+- a GitHub Actions run that is still queued/in-progress is `WAITING_EXTERNAL_CI`, not a failure. Do not redispatch/retry it while it is active. Re-read it at the bounded cadence from the active profile; if it becomes stale, investigate the existing run before any new dispatch.
+
+This rule prevents a long emulator/device-proof job from being mistaken for a Recovery loop while preserving bounded anti-loop behavior.
