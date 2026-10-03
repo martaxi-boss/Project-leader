@@ -62,6 +62,8 @@ using `control/recovery-checkpoint.schema.json`.
 
 The checkpoint records the last durable step, current action fingerprint, attempt count, identical-failure count, no-progress iterations, strategy generation, last error, and next step. It must not contain secrets or private conversation text and never grants authority.
 
+Legacy checkpoint liveness must be reconstructed, not trusted from the stored `status` field. `ACTIVE` is actionable only when current GitHub state independently corroborates a live workstream (for example a live branch, open PR, or active CI). If a terminal result exists, or no such live workstream exists, classify `STALE_LEGACY_CHECKPOINT`, preserve the historical checkpoint unchanged, and do not use its old `next_step` or counters to resume work.
+
 Update the checkpoint after a material failure/replan and before relying on a retry counter that must survive interruption. On resume, read and validate it before deciding whether another attempt is allowed.
 
 ## Resume after interruption
