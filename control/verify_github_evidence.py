@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import base64
+import hashlib
 import json
 import os
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -42,6 +45,33 @@ def verify_run_payload(ci_item, result, payload, repository):
     return True
 
 
+def verify_authorization_payloads(result, authorization_payload, current_payload, ancestry_payload):
+    expected_digest = result.get("authorization_sha256")
+    authorization_commit_sha = result.get("authorization_commit_sha")
+    if not expected_digest or not authorization_commit_sha:
+        return True
+
+    def decode(payload):
+        if payload.get("encoding") != "base64":
+            raise ValueError("authorization contents payload is not base64")
+        return base64.b64decode(payload.get("content", "").encode("ascii"))
+
+    authorization_bytes = decode(authorization_payload)
+    current_bytes = decode(current_payload)
+    if hashlib.sha256(authorization_bytes).hexdigest() != expected_digest:
+        raise ValueError("authorization_sha256 does not match Task Authorization at authorization_commit_sha")
+    if hashlib.sha256(current_bytes).hexdigest() != expected_digest:
+        raise ValueError("Task Authorization changed after the bound authorization commit")
+
+    if ancestry_payload.get("status") not in {"ahead", "identical"}:
+        raise ValueError("authorization_commit_sha is not an ancestor of implementation_head_sha")
+    if (ancestry_payload.get("base_commit") or {}).get("sha") != authorization_commit_sha:
+        raise ValueError("authorization ancestry base_commit mismatch")
+    if result.get("terminal_status") == "TERMINAL_SUCCESS" and ancestry_payload.get("status") != "ahead":
+        raise ValueError("terminal success requires implementation after the authorization-only commit")
+    return True
+
+
 def verify_compare_payload(payload, implementation_head_sha, current_head_sha):
     if payload.get("status") not in {"ahead", "identical"}:
         raise ValueError("implementation_head_sha is not an ancestor of the current PR head")
@@ -62,6 +92,29 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         raise ValueError("external GitHub evidence verification requires Worker Result schema_version 2.0")
     if result["repository"] != repository:
         raise ValueError("Worker Result repository does not match verifier repository")
+
+    authorization_commit_sha = result.get("authorization_commit_sha")
+    authorization_sha256 = result.get("authorization_sha256")
+    if bool(authorization_commit_sha) != bool(authorization_sha256):
+        raise ValueError("authorization_commit_sha and authorization_sha256 must be provided together")
+    if authorization_commit_sha:
+        path = result["authorization_record"]
+        if path.startswith("/") or ".." in Path(path).parts:
+            raise ValueError("authorization_record is not a safe repository-relative path")
+        quoted_path = urllib.parse.quote(path, safe="/")
+        authorization_payload = api_get(
+            f"{api_base}/repos/{repository}/contents/{quoted_path}?ref={authorization_commit_sha}",
+            token,
+        )
+        current_payload = api_get(
+            f"{api_base}/repos/{repository}/contents/{quoted_path}?ref={current_head_sha}",
+            token,
+        )
+        ancestry_payload = api_get(
+            f"{api_base}/repos/{repository}/compare/{authorization_commit_sha}...{result['implementation_head_sha']}",
+            token,
+        )
+        verify_authorization_payloads(result, authorization_payload, current_payload, ancestry_payload)
 
     for ci_item in result["ci"]:
         run_id = ci_item.get("run_id")

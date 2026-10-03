@@ -39,6 +39,9 @@ jobs:
           test -f projects/registry.yaml
           test -f projects/policy-profiles.json
           test -f projects/policies/project-leader.json
+          test -f projects/policies/pink-iptv.json
+          test -f projects/policies/fadego.json
+          test -f projects/policies/vcam-pro.json
           test -f projects/pink-iptv.md
           test -f projects/fadego.md
           test -f projects/vcam-pro.md
@@ -61,7 +64,30 @@ jobs:
           grep -q 'policy_profile: "projects/policy-profiles.json#pink-iptv"' projects/registry.yaml
           grep -q 'policy_profile: "projects/policy-profiles.json#fadego"' projects/registry.yaml
           grep -q 'policy_profile: "projects/policy-profiles.json#vcam-pro"' projects/registry.yaml
+          grep -q 'policy: "projects/policies/pink-iptv.json"' projects/registry.yaml
+          grep -q 'policy: "projects/policies/fadego.json"' projects/registry.yaml
+          grep -q 'policy: "projects/policies/vcam-pro.json"' projects/registry.yaml
           python control/validate_records.py policy projects/policies/project-leader.json
+          python control/validate_records.py policy projects/policies/pink-iptv.json
+          python control/validate_records.py policy projects/policies/fadego.json
+          python control/validate_records.py policy projects/policies/vcam-pro.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from control.managed_project_contract import validate_registry_profile_consistency
+
+          registry = Path("projects/registry.yaml").read_text(encoding="utf-8")
+          profiles = json.loads(Path("projects/policy-profiles.json").read_text(encoding="utf-8"))
+          policies = {
+              path: json.loads(Path(path).read_text(encoding="utf-8"))
+              for path in (
+                  "projects/policies/pink-iptv.json",
+                  "projects/policies/fadego.json",
+                  "projects/policies/vcam-pro.json",
+              )
+          }
+          validate_registry_profile_consistency(registry, profiles, policies)
+          PY
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
           grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml

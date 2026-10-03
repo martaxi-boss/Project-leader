@@ -25,7 +25,7 @@ def make_task(policy_raw):
         },
         "starting_state": {"default_branch": "main", "base_sha": base, "task_branch": "builder/test", "pr_number": None},
         "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
-        "mutation_scope": ["control/**", ".project-leader/tasks/**"],
+        "mutation_scope": ["tests/**", ".project-leader/tasks/**"],
         "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
         "prohibited_actions": [
             "merge_to_main", "branch_protection_or_ruleset_change", "release_or_publish",
@@ -58,7 +58,7 @@ class TrustedGateTests(unittest.TestCase):
         self.raw = POLICY_PATH.read_bytes()
         self.policy = json.loads(self.raw)
         self.task = make_task(self.raw)
-        self.changed = ["control/README.md", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        self.changed = ["tests/fixture.txt", ".project-leader/tasks/TEST-TRUSTED-001.json"]
 
     def verify(self, task=None):
         return verify_task_against_base_policy(
@@ -100,6 +100,23 @@ class TrustedGateTests(unittest.TestCase):
             self.verify()
 
     def test_trust_root_mutation_is_not_ordinary_e1(self):
+        self.task["mutation_scope"] = ["control/**", ".project-leader/tasks/**"]
+        self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        with self.assertRaises(ValueError):
+            self.verify()
+
+    def test_explicit_e3_governance_task_can_change_trust_root(self):
+        self.task["effect_class"] = "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"
+        self.task["mutation_scope"] = ["control/**", ".project-leader/tasks/**"]
+        self.task["human_gates"].append({"action": "trust_root_mutation", "requires_owner_approval": True})
+        self.task["required_validation"].append("Trust-root governance path")
+        self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
+        self.assertTrue(self.verify())
+
+    def test_e3_governance_task_without_trust_root_gate_fails(self):
+        self.task["effect_class"] = "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"
+        self.task["mutation_scope"] = ["control/**", ".project-leader/tasks/**"]
+        self.task["required_validation"].append("Trust-root governance path")
         self.changed = ["control/trusted_gate.py", ".project-leader/tasks/TEST-TRUSTED-001.json"]
         with self.assertRaises(ValueError):
             self.verify()

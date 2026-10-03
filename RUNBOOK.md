@@ -39,7 +39,7 @@ Key requirements:
 - after 2 identical failures, reconstruct/replan;
 - after 3 no-progress iterations, stop that strategy;
 - on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response;
-- persist/re-read `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters matter across interruptions;
+- for v2 tasks, persist/re-read append-only `.project-leader/recovery-events/<task-id>/`; use mutable checkpoints only for legacy v1 continuity;
 - never certify a consumed Human Gate without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
 
 ## Platform outage
@@ -58,13 +58,13 @@ The roles are logical operating modes, not independent security principals. Cons
 
 For a v2 Project Leader task:
 
-1. Reconstruct the live PR base and target repository.
-2. Read the applicable policy profile from the base state.
-3. Compile the task with exact base SHA + policy path/profile/digest.
-4. Require the task's mutation scope and allowed actions to remain inside the base policy ceiling.
+1. Reconstruct the live target repository, target base SHA, and the exact canonical Project Leader revision.
+2. For Project Leader-local work, bind policy with `LOCAL_BASE_V1`. For a registered managed project, read its executable central policy from the canonical Project Leader revision and bind it with `CENTRAL_CONTROL_V1`.
+3. Compile the task with the target base SHA plus the independent control repository/revision/policy path/profile/digest.
+4. Require the task's mutation scope and allowed actions to remain inside that trusted policy ceiling.
 5. Require policy-minimum Human Gates, validation, and CI.
 6. Use append-only recovery events when retry/replan history exists.
-7. Emit Worker Result v2 with real GitHub Actions run IDs.
-8. Let the trusted base workflow verify authorization, task/result compatibility, and GitHub CI evidence without executing PR-head code.
+7. Bind the Worker Result to the exact Task Authorization commit+SHA-256 and emit real GitHub Actions run IDs.
+8. Verify authorization immutability, task/result compatibility, target CI evidence and implementation-head/final-head ancestry from trusted control-plane logic.
 
 Repository branch protection/rulesets remain an external GitHub governance layer. The trusted workflow strengthens PR enforcement but does not make an unprotected `main` equivalent to a protected branch.

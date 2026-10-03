@@ -93,7 +93,7 @@
                 "minLength": 1
               },
               "uniqueItems": true,
-              "minItems": 1
+              "minItems": 0
             },
             "required_validation": {
               "type": "array",
@@ -103,6 +103,90 @@
               },
               "uniqueItems": true,
               "minItems": 1
+            },
+            "allowed_ci": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allowed_scope_patterns",
+            "allowed_actions",
+            "required_prohibited_actions",
+            "required_human_gates",
+            "required_ci",
+            "required_validation"
+          ],
+          "properties": {
+            "allowed_scope_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "allowed_actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "required_prohibited_actions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "required_human_gates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "required_ci": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 0
+            },
+            "required_validation": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "allowed_ci": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
             }
           }
         }

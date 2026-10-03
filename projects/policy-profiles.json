@@ -19,7 +19,12 @@
         ".github/workflows/**",
         ".env.example"
       ],
-      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution"
+      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution",
+      "central_policy_path": "projects/policies/pink-iptv.json",
+      "allowed_ci_names": [
+        "Android CI",
+        "Backend CI"
+      ]
     },
     "fadego": {
       "repository": "martaxi-boss/fadego",
@@ -41,7 +46,11 @@
         ".github/workflows/**",
         ".env*"
       ],
-      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution"
+      "deployment_policy": "production deploy remains an Owner Human Gate; refresh runtime state before execution",
+      "central_policy_path": "projects/policies/fadego.json",
+      "allowed_ci_names": [
+        "CI"
+      ]
     },
     "vcam-pro": {
       "repository": "martaxi-boss/VCAM-PRO",
@@ -65,7 +74,16 @@
         "Makefile",
         "control"
       ],
-      "deployment_policy": "device install, release and production-like effects remain explicit Owner Human Gates"
+      "deployment_policy": "device install, release and production-like effects remain explicit Owner Human Gates",
+      "central_policy_path": "projects/policies/vcam-pro.json",
+      "allowed_ci_names": [
+        "Frame Engine Stage A CI",
+        "Frame Engine Stage B CI",
+        "Frame Engine Stage C1 CI",
+        "Frame Engine Stage D1 CI",
+        "Frame Engine Stage D2 CI",
+        "mediaserverd load probe build"
+      ]
     }
   }
 }

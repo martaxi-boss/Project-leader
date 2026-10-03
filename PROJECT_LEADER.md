@@ -99,9 +99,12 @@ Never mix mutable work across projects in one Builder task. One task -> one targ
 
 For every repository registered in `projects/registry.yaml`, every new mutation-capable task MUST use Task Authorization v2. V1 records are historical/legacy only and must not be created for new managed-project work.
 
-V2 binds each task to an exact base policy:
-- the Task Authorization carries the exact PR base SHA, policy path, policy profile, and SHA-256 of the policy bytes;
-- the trusted gate reads the policy and verifier code from the PR base, while reading the task/result from the PR head only as untrusted data;
+V2 binds each task to two independently identified states:
+- `starting_state.base_sha` identifies the exact target-repository base being changed;
+- local Project Leader work may use `LOCAL_BASE_V1`, where policy bytes come from that same base;
+- registered managed projects use `CENTRAL_CONTROL_V1`, where the Task Authorization carries the canonical control repository, exact control-plane revision, central policy path/profile, and SHA-256 of those policy bytes;
+- target base SHA and control-policy revision are intentionally independent and must never be forced to match;
+- verifier code/policy come from trusted control-plane state, while task/result records from the target branch are treated as untrusted data;
 - task mutation patterns and allowed actions must be subsets of the base policy ceiling;
 - policy-required prohibitions, Human Gates, validation names, and CI names cannot be removed by the executor branch.
 
@@ -122,7 +125,19 @@ For every registered managed project:
 - recovery uses append-only events as the authoritative retry/no-progress history;
 - terminal CI claims use concrete GitHub Actions run IDs and are re-read from GitHub against the implementation SHA;
 - the implementation SHA must equal or be an ancestor of the final PR head before Supervisor accepts the result;
+- every new managed task sets `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`; its Worker Result binds the exact Task Authorization commit and SHA-256, and the verifier proves that authorization existed before implementation and was not changed afterwards;
 - when the managed repository does not yet have a project-local trusted gate on its base branch, Supervisor must perform the external v2 audit itself and record that absence honestly; it must not claim that a trusted PR gate ran;
 - a GitHub Actions run that is still queued/in-progress is `WAITING_EXTERNAL_CI`, not a failure. Do not redispatch/retry it while it is active. Re-read it at a bounded cadence; if it remains unchanged beyond the generic stale threshold, investigate the existing run before any new dispatch.
 
 This rule prevents a long emulator/device-proof job from being mistaken for a Recovery loop while preserving bounded anti-loop behavior.
+
+
+## Terminal-result semantics
+
+`TERMINAL_SUCCESS` requires positive validation and all task-required CI. `BLOCKED`, `HUMAN_GATE`, and `STALE_EXECUTION_PACKET` may truthfully contain empty change/validation/CI arrays when execution stopped before those effects existed, but they must contain a concrete residual blocker.
+
+## Trust-root governance
+
+Ordinary E1 work cannot modify the Project Leader trust root. Trust-root files include the executable control code, schemas, policies/registry, control workflows, plugin/role contracts, packaging control, and canonical operating documents. A trust-root edit is an explicit E3 governance task and still stops before merge to `main` unless the Owner separately authorizes that exact merge.
+
+Branch protection/rulesets remain an external GitHub governance layer and are never implied by these repository-local controls.

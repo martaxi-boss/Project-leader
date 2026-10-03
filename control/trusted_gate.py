@@ -46,20 +46,20 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     if binding["sha256"] != actual_digest:
         raise ValueError("task policy.sha256 does not match the exact base policy bytes")
 
-    protected = [
-        path for path in changed_files
-        if any(fnmatchcase(path, pattern) for pattern in policy["protected_paths"])
-    ]
-    if protected:
-        raise ValueError(
-            "E1 trusted gate forbids trust-root mutation; requires a separate governance/Human-Gate path: "
-            + ", ".join(sorted(protected))
-        )
-
     effect = task["effect_class"]
     effect_policy = policy["effect_policies"].get(effect)
     if not effect_policy:
         raise ValueError(f"base policy does not authorize effect class {effect}")
+
+    protected = [
+        path for path in changed_files
+        if any(fnmatchcase(path, pattern) for pattern in policy["protected_paths"])
+    ]
+    if protected and effect != "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED":
+        raise ValueError(
+            "trusted gate forbids trust-root mutation outside an explicit E3 governance task: "
+            + ", ".join(sorted(protected))
+        )
 
     allowed_patterns = set(effect_policy["allowed_scope_patterns"])
     widened_patterns = sorted(set(task["mutation_scope"]) - allowed_patterns)
@@ -83,6 +83,11 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:
         raise ValueError("task required_ci is weaker than base policy: " + ", ".join(missing_ci))
+    allowed_ci = effect_policy.get("allowed_ci")
+    if allowed_ci is not None:
+        unknown_ci = sorted(set(task["required_ci"]) - set(allowed_ci))
+        if unknown_ci:
+            raise ValueError("task required_ci contains workflows outside base policy: " + ", ".join(unknown_ci))
 
     missing_validation = sorted(set(effect_policy["required_validation"]) - set(task["required_validation"]))
     if missing_validation:

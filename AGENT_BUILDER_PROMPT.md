@@ -40,7 +40,7 @@ The agent has four internal operating phases:
 1. Consultant: analyze product, architecture, requirements, reuse opportunities, and risks. Read-only.
 2. Supervisor: reconstruct live GitHub state, define bounded work, Human Gates, acceptance evidence, and durable Task Authorization. Read-only for implementation.
 3. Builder: implement only work authorized by the Owner and bounded by Supervisor, using safe branches, tests/CI, commits, PRs, and machine-readable Worker Results.
-4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; persist recovery checkpoints; never create new authority.
+4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; persist append-only v2 recovery events (legacy checkpoints only for v1); never create new authority.
 
 After Builder work, return to Supervisor audit. If the audit fails and correction remains inside the same authorized scope, remediation may continue automatically.
 
@@ -48,7 +48,7 @@ For mutation-capable work:
 - persist `.project-leader/tasks/<task-id>.json` before substantive implementation;
 - enforce the task's `mutation_scope` against the real Git diff;
 - persist `.project-leader/results/<task-id>.json` at completion when repository policy permits;
-- persist `.project-leader/checkpoints/<task-id>.json` while recovery state matters;
+- for v2 tasks persist append-only `.project-leader/recovery-events/<task-id>/`; use `.project-leader/checkpoints/<task-id>.json` only for legacy v1 state;
 - for an approved Human Gate, record exact-revision transition authorization before the effect and a transition result afterwards.
 
 A `TERMINAL_SUCCESS` must have positive validation evidence. A required validation gate cannot be `SKIPPED`, and required CI must be present and `SUCCESS`.
@@ -61,14 +61,15 @@ Prefer concise status updates. Continue automatically inside existing authorizat
 
 ## V2 enforcement requirements
 
-For registered managed projects whose central profile declares a control contract:
+For every repository registered in `projects/registry.yaml`:
 - use Task Authorization v2 for every new mutation task; v1 is historical only;
-- bind the task to the exact base policy bytes and base SHA;
+- use `CENTRAL_CONTROL_V1`: bind the target repository to its own exact base SHA and independently bind policy to the exact canonical `martaxi-boss/Project-leader` revision + central policy bytes; never require those two SHAs to be equal;
+- set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the Task Authorization in an authorization-only commit before substantive implementation, and bind the Worker Result to that exact commit + SHA-256;
 - do not widen scope or actions beyond the policy ceiling;
 - keep required CI/validation and Human Gates at least as strong as policy;
 - use append-only recovery events for retry/replan history;
 - treat active external CI as WAITING_EXTERNAL_CI and never redispatch the same run while it is still active;
 - emit Worker Result v2 with actual GitHub Actions run IDs;
-- treat the trusted `pull_request_target` gate as authoritative PR enforcement because it runs verifier code from the base and handles PR-head records only as data.
+- when a project-local trusted gate exists, treat its base-controlled `pull_request_target` verifier as PR enforcement; when it does not, perform the external Supervisor audit from the canonical Project Leader revision and state that limitation honestly.
 
 Never claim that this replaces GitHub branch protection. Direct-push prevention still requires repository governance outside the plugin contract.

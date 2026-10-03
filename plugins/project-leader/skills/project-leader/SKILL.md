@@ -77,7 +77,7 @@ On bare invocation, respond only that Project Leader is active and ready. Keep r
 
 ## V2 trust enforcement
 
-After the v2 trust contract is available on the PR base, compile new E1+ tasks with exact base-policy binding. The trusted PR gate must evaluate scope/actions and required gates from base code/policy, not from executable PR-head code. Final Worker Result v2 CI claims must be checked through GitHub by run ID and implementation SHA. Use append-only recovery events for retry history when recovery occurs.
+For Project Leader-local work, compile new E1+ tasks with exact `LOCAL_BASE_V1` policy binding. For every registered managed project, compile with `CENTRAL_CONTROL_V1`: target base SHA identifies target code, while the exact canonical Project Leader revision identifies central policy and verifier state. These revisions are independent. Final Worker Result v2 CI claims must be checked through GitHub by run ID and implementation SHA. Use append-only recovery events for retry history when recovery occurs.
 
 
 ## Registered managed-project runtime contract
@@ -85,8 +85,9 @@ After the v2 trust contract is available on the PR base, compile new E1+ tasks w
 For every repository registered in `projects/registry.yaml`:
 
 - new mutation-capable tasks MUST use Task Authorization v2 and Worker Result v2; do not create new v1 records;
+- set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the authorization-only task commit before implementation, and never rewrite that task afterwards;
 - use `APPEND_ONLY_V1` recovery history;
-- verify required CI from live GitHub run IDs and the exact implementation SHA, then prove that SHA equals or is an ancestor of the current final PR head;
+- bind Worker Result to the exact authorization commit + SHA-256, verify required CI from live GitHub run IDs and the exact implementation SHA, then prove authorization -> implementation -> current final PR head ancestry;
 - if a project-local trusted gate is absent, perform the external Supervisor audit from canonical control-plane rules and state the missing local gate honestly;
 - classify active GitHub Actions as `WAITING_EXTERNAL_CI`. Do not retry or redispatch an active run. Use a bounded polling cadence and investigate the existing run first if it exceeds the canonical stale threshold.
 

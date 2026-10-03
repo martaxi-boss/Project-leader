@@ -69,6 +69,29 @@ def valid_result():
         "residual_blockers": [],
     }
 
+def valid_v2_task():
+    record = valid_task()
+    record["schema_version"] = "2.0"
+    record["integrity_mode"] = "IMMUTABLE_AUTHORIZATION_V1"
+    record["recovery"] = {"mode": "APPEND_ONLY_V1"}
+    record["policy"] = {
+        "binding_mode": "LOCAL_BASE_V1",
+        "profile": "project-leader-v1",
+        "path": "projects/policies/project-leader.json",
+        "base_sha": record["starting_state"]["base_sha"],
+        "sha256": "d" * 64,
+    }
+    return record
+
+
+def valid_v2_result():
+    record = valid_result()
+    record["schema_version"] = "2.0"
+    record["authorization_commit_sha"] = "c" * 40
+    record["authorization_sha256"] = "e" * 64
+    return record
+
+
 def valid_checkpoint():
     return {
         "schema_version": "1.0",
@@ -320,6 +343,75 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Task Authorization Record", skill)
         self.assertIn(".project-leader/checkpoints/<task-id>.json", recovery)
         self.assertIn("Human-Gate Transition", control)
+
+
+    def test_v2_central_policy_revision_can_differ_from_target_base(self):
+        task = valid_v2_task()
+        task["policy"] = {
+            "binding_mode": "CENTRAL_CONTROL_V1",
+            "profile": "managed-v1",
+            "path": "projects/policies/managed.json",
+            "repository": "owner/control",
+            "revision": "c" * 40,
+            "sha256": "d" * 64,
+        }
+        self.assertNotEqual(task["starting_state"]["base_sha"], task["policy"]["revision"])
+        self.assertTrue(validate_task(task))
+
+    def test_v2_central_policy_requires_repository_and_revision(self):
+        task = valid_v2_task()
+        task["policy"] = {
+            "binding_mode": "CENTRAL_CONTROL_V1",
+            "profile": "managed-v1",
+            "path": "projects/policies/managed.json",
+            "repository": "owner/control",
+            "sha256": "d" * 64,
+        }
+        with self.assertRaises(ValueError):
+            validate_task(task)
+
+    def test_blocked_v2_result_can_truthfully_have_no_changes_or_ci(self):
+        result = valid_v2_result()
+        result["terminal_status"] = "BLOCKED"
+        result["changes"] = []
+        result["validation"] = []
+        result["ci"] = []
+        result["residual_blockers"] = ["Central policy binding is unavailable."]
+        self.assertTrue(validate_result(result))
+
+    def test_blocked_v2_result_requires_a_residual_blocker(self):
+        result = valid_v2_result()
+        result["terminal_status"] = "BLOCKED"
+        result["changes"] = []
+        result["validation"] = []
+        result["ci"] = []
+        result["residual_blockers"] = []
+        with self.assertRaises(ValueError):
+            validate_result(result)
+
+    def test_immutable_v2_pair_requires_authorization_digest_and_commit(self):
+        task = valid_v2_task()
+        result = valid_v2_result()
+        del result["authorization_sha256"]
+        with self.assertRaises(ValueError):
+            validate_pair(task, result)
+
+
+
+    def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        builder = (ROOT / "AGENT_BUILDER_PROMPT.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+        self.assertIn("CENTRAL_CONTROL_V1", project)
+        self.assertIn("CENTRAL_CONTROL_V1", runbook)
+        self.assertIn("CENTRAL_CONTROL_V1", builder)
+        self.assertIn("CENTRAL_CONTROL_V1", skill)
+        self.assertIn("IMMUTABLE_AUTHORIZATION_V1", project)
+        self.assertIn("IMMUTABLE_AUTHORIZATION_V1", builder)
+        self.assertIn("WAITING_EXTERNAL_CI", recovery)
+        self.assertNotIn("whose central profile declares a control contract", builder)
 
 if __name__ == "__main__":
     unittest.main()
