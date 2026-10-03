@@ -147,45 +147,24 @@
     "human_gates": {
       "type": "array",
       "minItems": 1,
+      "description": "Legacy compatibility field for historical v2 records. New records use transition_controls.",
       "items": {
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "action",
-              "requires_authority_resolution"
-            ],
-            "properties": {
-              "action": {
-                "type": "string",
-                "minLength": 1
-              },
-              "requires_authority_resolution": {
-                "const": true
-              }
-            }
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "requires_owner_approval"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "minLength": 1
           },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "action",
-              "requires_owner_approval"
-            ],
-            "properties": {
-              "action": {
-                "type": "string",
-                "minLength": 1
-              },
-              "requires_owner_approval": {
-                "const": true
-              }
-            }
+          "requires_owner_approval": {
+            "const": true
           }
-        ]
-      },
-      "description": "Legacy compatibility field for historical v2 records. New records must use transition_controls."
+        }
+      }
     },
     "required_validation": {
       "type": "array",
