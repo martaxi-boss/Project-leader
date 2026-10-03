@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from control.validate_records import validate_result
+from control.validate_records import validate_recovery_journal, validate_result
 
 
 def api_get(url, token):
@@ -29,6 +29,63 @@ def api_get(url, token):
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
 
+
+
+def ci_run_requires_recovery_journal(payload):
+    attempt = payload.get("run_attempt", 1)
+    return isinstance(attempt, int) and not isinstance(attempt, bool) and attempt > 1
+
+
+def verify_recovery_journal_records(result, records):
+    if not records:
+        raise ValueError("CI retry requires a durable append-only recovery journal")
+    validate_recovery_journal(records)
+    for record in records:
+        if record.get("task_id") != result.get("task_id"):
+            raise ValueError("recovery journal task_id does not match Worker Result")
+        if record.get("repository") != result.get("repository"):
+            raise ValueError("recovery journal repository does not match Worker Result")
+
+    events = {record.get("event") for record in records}
+    for required in ("FAILURE_OBSERVED", "RETRY_AUTHORIZED"):
+        if required not in events:
+            raise ValueError(f"recovery journal is missing required event: {required}")
+    if result.get("terminal_status") == "TERMINAL_SUCCESS" and "RECOVERED" not in events:
+        raise ValueError("successful retry requires a RECOVERED recovery event")
+    return True
+
+
+def load_recovery_journal(result, repository, token, current_head_sha, api_base):
+    directory = f".project-leader/recovery-events/{result['task_id']}"
+    quoted_directory = urllib.parse.quote(directory, safe="/")
+    try:
+        listing = api_get(
+            f"{api_base}/repos/{repository}/contents/{quoted_directory}?ref={current_head_sha}",
+            token,
+        )
+    except Exception as exc:
+        raise ValueError("CI retry requires a durable append-only recovery journal") from exc
+
+    if not isinstance(listing, list):
+        raise ValueError("recovery journal path is not a directory")
+
+    records = []
+    for item in sorted(listing, key=lambda entry: entry.get("name", "")):
+        name = item.get("name", "")
+        if item.get("type") != "file" or not name.endswith(".json"):
+            continue
+        quoted_name = urllib.parse.quote(name, safe="")
+        payload = api_get(
+            f"{api_base}/repos/{repository}/contents/{quoted_directory}/{quoted_name}?ref={current_head_sha}",
+            token,
+        )
+        if payload.get("encoding") != "base64":
+            raise ValueError("recovery journal contents payload is not base64")
+        raw = base64.b64decode(payload.get("content", "").encode("ascii"))
+        records.append(json.loads(raw.decode("utf-8")))
+
+    verify_recovery_journal_records(result, records)
+    return True
 
 def verify_run_payload(ci_item, result, payload, repository):
     if ci_item["status"] != "SUCCESS":
@@ -116,12 +173,17 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         )
         verify_authorization_payloads(result, authorization_payload, current_payload, ancestry_payload)
 
+    run_payloads = []
     for ci_item in result["ci"]:
         run_id = ci_item.get("run_id")
         if not isinstance(run_id, int):
             raise ValueError(f"CI run_id missing for {ci_item['name']}")
         payload = api_get(f"{api_base}/repos/{repository}/actions/runs/{run_id}", token)
         verify_run_payload(ci_item, result, payload, repository)
+        run_payloads.append(payload)
+
+    if any(ci_run_requires_recovery_journal(payload) for payload in run_payloads):
+        load_recovery_journal(result, repository, token, current_head_sha, api_base)
 
     compare = api_get(
         f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{current_head_sha}",
