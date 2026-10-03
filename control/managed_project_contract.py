@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import hashlib
-import re
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
@@ -381,71 +380,6 @@ def classify_post_implementation_descendant(
         "final_head_checks_required": final_head_checks_required,
         "evidence_only_files": sorted(changed_files),
     }
-
-
-# Legacy validation compatibility for the pre-hygiene main workflow.
-# Current Project Leader runtime does not consult the central project registry.
-def _parse_registry_projects(registry_text):
-    projects = {}
-    current = None
-    in_projects = False
-    for raw in registry_text.splitlines():
-        if not raw.strip() or raw.lstrip().startswith("#"):
-            continue
-        if raw == "projects:":
-            in_projects = True
-            current = None
-            continue
-        if raw and not raw.startswith(" "):
-            in_projects = False
-            current = None
-            continue
-        if not in_projects:
-            continue
-        match_project = re.match(r"^  ([A-Za-z0-9._-]+):\s*$", raw)
-        if match_project:
-            current = match_project.group(1)
-            projects[current] = {}
-            continue
-        if current is None:
-            continue
-        match_field = re.match(r'^    ([A-Za-z0-9_]+):\s*"?([^"]*)"?\s*$', raw)
-        if match_field:
-            projects[current][match_field.group(1)] = match_field.group(2)
-    return projects
-
-
-def validate_registry_profile_consistency(registry_text, profiles, policies):
-    """Legacy-only validator retained until the old main validation workflow is removed."""
-    registry_projects = _parse_registry_projects(registry_text)
-    profile_projects = profiles.get("profiles") or {}
-    if set(registry_projects) != set(profile_projects):
-        raise ValueError("registry and policy profile project sets differ")
-    for project_id, entry in registry_projects.items():
-        profile = profile_projects[project_id]
-        if entry.get("repository") != profile.get("repository"):
-            raise ValueError(f"{project_id}: registry/profile repository mismatch")
-        if entry.get("default_branch") != profile.get("default_branch"):
-            raise ValueError(f"{project_id}: registry/profile default_branch mismatch")
-        policy_path = entry.get("policy")
-        if not policy_path:
-            raise ValueError(f"{project_id}: registry is missing executable central policy path")
-        if profile.get("central_policy_path") != policy_path:
-            raise ValueError(f"{project_id}: registry/profile central policy path mismatch")
-        policy = policies.get(policy_path)
-        if not policy:
-            raise ValueError(f"{project_id}: central policy file is missing: {policy_path}")
-        validate_project_policy(policy)
-        if policy.get("repository") != entry.get("repository"):
-            raise ValueError(f"{project_id}: registry/policy repository mismatch")
-        if policy.get("default_branch") != entry.get("default_branch"):
-            raise ValueError(f"{project_id}: registry/policy default_branch mismatch")
-        allowed_ci = (policy.get("effect_policies") or {}).get(
-            "E1_RECOVERABLE_PROJECT_LOCAL", {}
-        ).get("allowed_ci", [])
-        if set(profile.get("allowed_ci_names") or []) != set(allowed_ci):
-            raise ValueError(f"{project_id}: profile/policy allowed CI mismatch")
-    return True
 
 
 def _parse_time(value):
