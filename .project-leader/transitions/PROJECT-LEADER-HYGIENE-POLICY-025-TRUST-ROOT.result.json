@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-HYGIENE-POLICY-025-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-HYGIENE-POLICY-025",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-HYGIENE-POLICY-025-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/hygiene-policy-025",
+    "revision": "3633805b0319c585d16fdfe7f6efcbe5cab5af59",
+    "base_revision": "aa39702a3d2fb7d5c211cc088c1badc06663b9f3",
+    "environment": null
+  },
+  "observed_at": "2026-10-03T12:35:33.445Z",
+  "final_state": {
+    "status": "MUTATED",
+    "revision": "7890a257d7672f7af67b09e675eb13d8ac9c8194"
+  },
+  "evidence": [
+    "Owner authorization was persisted before policy changes.",
+    "Control contract tests run 37123337508 completed SUCCESS on implementation head 7890a257d7672f7af67b09e675eb13d8ac9c8194.",
+    "Validate control plane run 37123337513 completed SUCCESS on the same implementation head.",
+    "Package ChatGPT plugins run 37123337512 completed SUCCESS on the same implementation head."
+  ],
+  "residual_blockers": []
+}
