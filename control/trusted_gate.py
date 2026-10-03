@@ -21,6 +21,54 @@ def policy_sha256(raw_bytes):
     return hashlib.sha256(raw_bytes).hexdigest()
 
 
+_GLOB_MAGIC = "*?["
+
+
+def _normalize_scope_pattern(pattern):
+    normalized = pattern.replace("\\", "/").strip()
+    if not normalized or normalized.startswith("/"):
+        raise ValueError(f"invalid mutation_scope pattern: {pattern!r}")
+    parts = normalized.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ValueError(f"invalid mutation_scope pattern: {pattern!r}")
+    return normalized
+
+
+def _has_glob(pattern):
+    return any(char in pattern for char in _GLOB_MAGIC)
+
+
+def _literal_prefix(pattern):
+    positions = [pattern.find(char) for char in _GLOB_MAGIC if char in pattern]
+    return pattern[: min(positions)] if positions else pattern
+
+
+def _scope_pattern_is_within(requested_pattern, allowed_pattern):
+    requested = _normalize_scope_pattern(requested_pattern)
+    allowed = _normalize_scope_pattern(allowed_pattern)
+
+    if requested == allowed:
+        return True
+
+    if not _has_glob(requested):
+        return fnmatchcase(requested, allowed)
+
+    if not _has_glob(allowed):
+        return False
+
+    # Trusted policies currently use exact paths, directory ceilings ending in
+    # "/**", and simple suffix-star ceilings such as ".env*". For these forms,
+    # a requested glob is safe only when its literal prefix remains inside the
+    # trusted ceiling. More complex wildcard ceilings are accepted only by exact
+    # equality above rather than guessed at.
+    requested_prefix = _literal_prefix(requested)
+    if allowed.endswith("/**") and not _has_glob(allowed[:-3]):
+        return requested_prefix.startswith(allowed[:-2])
+    if allowed.endswith("*") and not _has_glob(allowed[:-1]):
+        return requested_prefix.startswith(allowed[:-1])
+    return False
+
+
 def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, changed_files, expected_policy_path):
     validate_task(task)
     validate_project_policy(policy)
@@ -61,8 +109,12 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
             + ", ".join(sorted(protected))
         )
 
-    allowed_patterns = set(effect_policy["allowed_scope_patterns"])
-    widened_patterns = sorted(set(task["mutation_scope"]) - allowed_patterns)
+    allowed_patterns = effect_policy["allowed_scope_patterns"]
+    widened_patterns = sorted(
+        pattern
+        for pattern in task["mutation_scope"]
+        if not any(_scope_pattern_is_within(pattern, allowed) for allowed in allowed_patterns)
+    )
     if widened_patterns:
         raise ValueError("task mutation_scope exceeds base policy ceiling: " + ", ".join(widened_patterns))
 
