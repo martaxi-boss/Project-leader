@@ -199,7 +199,7 @@
         },
         "path": {
           "type": "string",
-          "pattern": "^projects/policies/[A-Za-z0-9._-]+\\.json$"
+          "pattern": "^(projects/policies/[A-Za-z0-9._-]+\\.json|control/generic-project-policy\\.json)$"
         },
         "base_sha": {
           "type": "string",
