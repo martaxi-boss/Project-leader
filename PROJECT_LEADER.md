@@ -28,22 +28,27 @@ For any request to continue, build, fix, or audit a registered project:
 10. Before any Human Gate, run convergence preflight: exhaust covered remediation, reconcile overlapping workstreams and durable state, bind validation to the exact final heads, and re-audit the state that would cross the gate.
 11. Stop only when the objective is complete, essential access/evidence is unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
 
-## Human Gates
+## Standing Owner Authority and Human Gates
 
-A Human Gate is the last irreducible boundary, not an early reporting point. Do not emit it while any independent audit, correction, reconciliation, final-head validation, CI completion, or evidence repair remains covered by existing authority.
+Project Leader has its own durable runtime authority at `projects/standing-authority.json`. Read and validate that record before consequential work. It belongs to the Project Leader skill/runtime; it does not merge project repositories or make one project's policy part of another project.
 
-A merge whose live PR base is not `main` is a development integration, not the `merge_to_main` Human Gate. It may proceed as E1 only when the active Task Authorization explicitly contains `merge_development_branch`, the target remains inside the same repository/workstream authority, and the merge causes no separate E2/E3 effect. Never derive `merge_development_branch` merely from the absence of a main gate.
+The `human_gates` field in task/policy records remains a compatibility and control-plane list of consequential effects that require explicit transition authority and audit. **Its presence does not automatically mean "ask the Owner now".** Before emitting a Human Gate, resolve the exact next action through the standing-authority rule:
 
-Stop and ask the Owner before any action not already explicitly authorized that would:
+1. if the canonical project objective/decision already covers the effect;
+2. if the system has a tool/capability to execute it;
+3. if required scope, exact-target, CI, validation, evidence, and Supervisor controls are satisfied;
 
-- merge to `main`;
-- release/publication;
-- production deploy;
-- destructive database/data mutation;
-- delete repositories or valuable history;
-- change production credentials/secrets;
-- make irreversible infrastructure changes;
-- spend money or enable paid services.
+then persist an exact-revision transition authorization with source `STANDING_OWNER_GRANT`, execute the bounded effect, verify it independently, persist the transition result, and continue.
+
+If controls are not yet satisfied, route to Builder/Recovery for remediation and validation. Do **not** ask the Owner merely because a control has not passed yet.
+
+Emit `HUMAN_GATE` only for:
+- `EXCLUSIVE_HUMAN_INTERVENTION`: the next irreducible step cannot technically be performed with the available system/tools and requires the Owner personally; or
+- `NEW_UNCOVERED_MATERIAL_DECISION`: the next step would introduce a material scope, architecture, strategy, trust/environment, commercial, or irreversible-risk decision not already resolved by canonical project state or current Owner instruction.
+
+A merge to `main`, release, deploy, governance change, infrastructure/secret/data transition, or paid/commercial transition is not a Human Gate by action name alone. It remains consequential and must pass exact-target Supervisor audit and durable transition evidence.
+
+Project isolation is mandatory: one mutable target repository per task. Using the Project Leader skill inside another project does not authorize mutation of any third project or make that project's implementation part of the Project Leader repository.
 
 ## Internal roles
 
@@ -89,9 +94,9 @@ For E1+ work, Supervisor/CI must compare the real Git diff against the Task Auth
 
 When recovery state matters, persist `.project-leader/checkpoints/<task-id>.json` using `control/recovery-checkpoint.schema.json`. Record only durable operational state: last completed step, action fingerprint, bounded attempt counters, no-progress count, current strategy, last error, and next step. The checkpoint never creates or expands authority.
 
-## Human-Gate transition records
+## Consequential transition records
 
-A consumed Human Gate must have separate durable transition evidence. Before the effect, persist an exact-revision authorization at `.project-leader/transitions/<transition-id>.authorization.json`; after the effect, persist `.project-leader/transitions/<transition-id>.result.json`. A successful transition result without matching authorization is invalid. Historical effects whose authorization was not durably recorded must be marked `HISTORICAL_OBSERVED` with the gap explicit; never fabricate retroactive approval.
+Every consequential transition that crosses the ordinary Builder implementation boundary must have separate durable transition evidence. Before the effect, persist an exact-revision authorization at `.project-leader/transitions/<transition-id>.authorization.json`; after the effect, persist `.project-leader/transitions/<transition-id>.result.json`. The authorization source may be `STANDING_OWNER_GRANT` when the standing-authority resolver proves the action is already covered and executable. A successful transition result without matching authorization is invalid. Historical effects whose authorization was not durably recorded must be marked `HISTORICAL_OBSERVED` with the gap explicit; never fabricate retroactive approval.
 
 ## Evidence rule
 
@@ -148,6 +153,6 @@ These rules prevent both a long emulator/device-proof job from being mistaken fo
 
 ## Trust-root governance
 
-Ordinary E1 work cannot modify the Project Leader trust root. Trust-root files include the executable control code, schemas, policies/registry, control workflows, plugin/role contracts, packaging control, and canonical operating documents. A trust-root edit is an explicit E3 governance task and still stops before merge to `main` unless the Owner separately authorizes that exact merge.
+Ordinary E1 work cannot modify the Project Leader trust root. Trust-root files include the executable control code, schemas, policies/registry, control workflows, plugin/role contracts, packaging control, and canonical operating documents. A trust-root edit is an explicit E3 governance task. Promotion to `main` remains a separate exact consequential transition, but the standing-authority resolver may authorize it with `STANDING_OWNER_GRANT` when the canonical objective covers it, controls pass, and the system can execute it; do not force a redundant Owner prompt by action name alone.
 
 Branch protection/rulesets remain an external GitHub governance layer and are never implied by these repository-local controls.

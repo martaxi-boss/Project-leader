@@ -19,7 +19,7 @@ Do not replace Project Leader with Project Supervisor. Supervisor and Recovery G
 
 ## Canonical control plane
 
-Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read the relevant live versions of `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, `projects/registry.yaml`, and the active project's file under `projects/`.
+Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read the relevant live versions of `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, `projects/standing-authority.json`, `projects/registry.yaml`, and the active project's applicable project record. Project Leader remains its own project; using the skill in another project does not merge project repositories or authorize mutation of a third project.
 
 Prefer live GitHub state over stale chat summaries.
 
@@ -61,19 +61,27 @@ When audit discovers an in-scope defect, drift, stale evidence, incomplete recon
 - Break loops rather than repeating the same action indefinitely.
 - Reconstruct from GitHub after interruption and resume from the last verified durable step.
 - Return to Supervisor audit after recovery.
+- Recovery preserves the existing standing authority: technical failures and unsatisfied controls stay in remediation/recovery; after recovery, Supervisor resolves any consequential next action through `projects/standing-authority.json` rather than requesting routine permission again.
 - A full ChatGPT/platform outage cannot be repaired while the service itself is unavailable; when service returns, reconstruct and continue without asking the Owner to re-explain repository state.
 
-## Human gates
+## Standing authority and Human gates
 
-Require explicit Owner approval before any action not already explicitly authorized that would merge to main, release/publish, deploy to production, destructively mutate data, delete repository/history, change production secrets, irreversibly change infrastructure, or spend money.
+Read and validate `projects/standing-authority.json` before consequential transitions. The Project Leader skill uses this durable `STANDING_OWNER_GRANT` to avoid repetitive authorization prompts while preserving project scope, role hierarchy, exact-target evidence, and independent Supervisor audit.
 
-Before classifying a PR merge as the `merge_to_main` Human Gate, inspect the live PR base branch. Only a PR whose base branch is exactly `main` is a merge-to-main transition. If the PR base is not `main`, do not classify the merge itself as `merge_to_main`; require the active Task Authorization to include `merge_development_branch`. When that explicit E1 action is inside the same repository/workstream authority and triggers no other Human Gate, continue automatically. If the action is absent, do not infer it from generic build authority.
+A task/policy `human_gates` entry means that the effect is consequential and must be resolved through explicit transition authority/evidence. It does **not** automatically mean that the Owner must be interrupted.
 
-Before emitting any Human Gate, run a **convergence preflight**. The Supervisor must first exhaust all independent work already covered by existing authority: audit active workstreams; remediate discovered defects and drift; reconcile overlapping branches/PRs and stale durable state; verify final-head scope and evidence; wait for or resolve required CI; and re-audit the exact state that would cross the gate. The mere existence of a gated PR or future gated transition is not enough to stop while covered corrective or preparatory work remains.
+Before emitting `HUMAN_GATE`, resolve the exact next action:
+- if canonical project state covers the effect, the current system/tools can execute it, and required scope/CI/validation/evidence controls pass: persist an exact-revision transition authorization with source `STANDING_OWNER_GRANT`, execute the bounded transition, verify the durable result, persist the transition result, and continue;
+- if the effect is covered but controls are not yet satisfied: route to Builder/Recovery for remediation and revalidation, not to the Owner;
+- emit `HUMAN_GATE` only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
-Emit `HUMAN_GATE` only when no covered corrective/preparatory work remains and the next required action itself crosses an uncovered gated effect. Ask only for that exact irreducible authorization.
+Before any merge, inspect the live PR base and exact head. Development-branch merges remain bounded by explicit `merge_development_branch` task authority. A merge to `main` remains a consequential transition and must pass exact-head, scope, CI/evidence, and Supervisor checks, but it is not by itself a Human Gate.
 
-Do not infer a gated action from ambiguous dictation.
+Before any Owner interruption, run a **convergence preflight** and exhaust covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions.
+
+Project isolation is mandatory: one mutable target repository per task. Do not modify another project's repository or project-specific policy merely because the Project Leader skill is being used elsewhere.
+
+Do not infer a gate from an action name, effect class, or ambiguous dictation.
 
 ## Evidence
 
@@ -81,7 +89,7 @@ For a write whose response was interrupted or errored, never assume success or f
 
 Never report PASS, SUCCESS, fixed, merged, deployed, released, or recovered solely from intent.
 
-Enforce the Task Authorization `mutation_scope` against the real Git diff. `TERMINAL_SUCCESS` requires positive validation evidence and every task-required validation/CI gate. A consumed Human Gate requires a separate exact-revision transition authorization/result record; observed historical effects without durable authorization stay explicitly unverified.
+Enforce the Task Authorization `mutation_scope` against the real Git diff. `TERMINAL_SUCCESS` requires positive validation evidence and every task-required validation/CI gate. Every consequential transition requires a separate exact-revision transition authorization/result record; observed historical effects without durable authorization stay explicitly unverified.
 
 ## Output
 

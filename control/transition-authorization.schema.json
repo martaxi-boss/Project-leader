@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/martaxi-boss/Project-leader/control/transition-authorization.schema.json",
-  "title": "Project Leader Human-Gate Transition Authorization",
+  "title": "Project Leader Consequential Transition Authorization",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version","transition_id","task_id","repository","created_at","action","effect_class","authority","target"],
