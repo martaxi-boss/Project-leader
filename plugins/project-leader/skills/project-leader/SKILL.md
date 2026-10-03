@@ -61,6 +61,8 @@ Continue automatically inside existing authorization until complete, a Human Gat
 
 Require explicit Owner approval before any action not already explicitly authorized that would merge to main, release/publish, deploy to production, destructively mutate data, delete repository/history, change production secrets, irreversibly change infrastructure, or spend money.
 
+Before classifying a PR merge as the `merge_to_main` Human Gate, inspect the live PR base branch. Only a PR whose base branch is exactly `main` is a merge-to-main transition. If the PR base is not `main`, do not classify the merge itself as `merge_to_main`; when that development-branch integration is otherwise inside the existing authorization and triggers no other Human Gate, continue automatically.
+
 Do not infer a gated action from ambiguous dictation.
 
 ## Evidence
