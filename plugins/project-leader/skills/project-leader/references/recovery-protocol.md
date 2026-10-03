@@ -10,9 +10,9 @@ For permanent/configuration failures, do not blind-retry. Inspect arguments, per
 
 For loop/no-progress, fingerprint `task + target + intended action + observed result`. After 2 identical failures, reconstruct/replan. After 3 no-progress iterations overall, stop the strategy and report BLOCKED or HUMAN_GATE if a changed plan cannot proceed safely.
 
-Persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters or strategy generation must survive interruption. Validate and restore it before deciding that another retry is allowed.
+For legacy v1 tasks, persist `.project-leader/checkpoints/<task-id>.json` when retry/no-progress counters or strategy generation must survive interruption. For v2, use the append-only recovery journal instead.
 
-After interruption, reconstruct default branch, task branch, PRs, task-related commits, checkpoint state, and CI/workflow state; determine the last durable completed step; verify ambiguous writes; then continue from the first incomplete step.
+After interruption, reconstruct default branch, task branch, PRs, task-related commits, v2 recovery journal (or legacy v1 checkpoint), and CI/workflow state; determine the last durable completed step; verify ambiguous writes; then continue from the first incomplete step.
 
 Never use recovery to bypass merge, release, production deploy, destructive data, repository/history deletion, production-secret, irreversible infrastructure, or paid-service gates.
 
