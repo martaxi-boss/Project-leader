@@ -57,6 +57,8 @@ If ChatGPT itself is unavailable, no ChatGPT agent can continue at that instant.
 
 ## Human Gates
 
+A development-branch integration is not a main Human Gate, but it is still an explicit action: the task must include `merge_development_branch`, the live PR base must not be `main`, and no other gated effect may be triggered. If that action is absent from the task, do not merge and do not infer it from generic implementation authority.
+
 Owner approval is required by default for merge to main, release, production deployment, destructive data changes, repository/history deletion, production secret changes, irreversible infrastructure mutation, and paid service activation.
 
 ## Trust boundary
