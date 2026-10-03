@@ -45,13 +45,63 @@ class EvidenceVerifierTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify_run_payload(self.ci, self.result, self.run, self.repository)
 
-    def test_ancestor_compare_is_accepted(self):
+    def test_ancestor_compare_with_task_local_result_only_is_accepted(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [{"filename": ".project-leader/results/TASK-001.json"}],
+        }
+        self.assertTrue(
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+        )
+
+    def test_post_ci_material_change_is_rejected(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [
+                {"filename": ".project-leader/results/TASK-001.json"},
+                {"filename": "src/app.py"},
+            ],
+        }
+        with self.assertRaises(ValueError):
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+
+    def test_other_task_metadata_after_ci_is_rejected(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [{"filename": ".project-leader/results/OTHER-TASK.json"}],
+        }
+        with self.assertRaises(ValueError):
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+
+    def test_task_local_recovery_and_transition_result_after_ci_are_accepted(self):
+        payload = {
+            "status": "ahead",
+            "base_commit": {"sha": "a" * 40},
+            "commits": [{"sha": "b" * 40}],
+            "files": [
+                {"filename": ".project-leader/recovery-events/TASK-001/0003.json"},
+                {"filename": ".project-leader/transitions/TASK-001-TRUST-ROOT.result.json"},
+                {"filename": ".project-leader/results/TASK-001.json"},
+            ],
+        }
+        self.assertTrue(
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+        )
+
+    def test_post_ci_compare_without_file_evidence_is_rejected(self):
         payload = {
             "status": "ahead",
             "base_commit": {"sha": "a" * 40},
             "commits": [{"sha": "b" * 40}],
         }
-        self.assertTrue(verify_compare_payload(payload, "a" * 40, "b" * 40))
+        with self.assertRaises(ValueError):
+            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
 
     def test_diverged_compare_is_rejected(self):
         payload = {"status": "diverged", "base_commit": {"sha": "a" * 40}, "commits": []}

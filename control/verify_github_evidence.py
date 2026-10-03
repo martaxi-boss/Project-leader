@@ -226,7 +226,20 @@ def verify_authorization_payloads(result, authorization_payload, current_payload
     return True
 
 
-def verify_compare_payload(payload, implementation_head_sha, current_head_sha):
+def _is_task_local_post_ci_evidence_path(path, task_id):
+    if path == f".project-leader/results/{task_id}.json":
+        return True
+    if path.startswith(f".project-leader/recovery-events/{task_id}/") and path.endswith(".json"):
+        return True
+    if (
+        path.startswith(f".project-leader/transitions/{task_id}-")
+        and path.endswith(".result.json")
+    ):
+        return True
+    return False
+
+
+def verify_compare_payload(payload, implementation_head_sha, current_head_sha, task_id=None):
     if payload.get("status") not in {"ahead", "identical"}:
         raise ValueError("implementation_head_sha is not an ancestor of the current PR head")
     base_sha = (payload.get("base_commit") or {}).get("sha")
@@ -237,6 +250,23 @@ def verify_compare_payload(payload, implementation_head_sha, current_head_sha):
         raise ValueError("compare response does not terminate at current PR head")
     if payload.get("status") == "identical" and implementation_head_sha != current_head_sha:
         raise ValueError("identical compare requires implementation head to equal current head")
+
+    if payload.get("status") == "ahead" and task_id:
+        files = payload.get("files")
+        if not isinstance(files, list):
+            raise ValueError("post-implementation compare is missing changed-file evidence")
+        material = sorted(
+            item.get("filename")
+            for item in files
+            if isinstance(item, dict)
+            and isinstance(item.get("filename"), str)
+            and not _is_task_local_post_ci_evidence_path(item["filename"], task_id)
+        )
+        if material:
+            raise ValueError(
+                "material changes exist after CI-certified implementation_head_sha: "
+                + ", ".join(material)
+            )
     return True
 
 
@@ -293,7 +323,7 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{current_head_sha}",
         token,
     )
-    verify_compare_payload(compare, result["implementation_head_sha"], current_head_sha)
+    verify_compare_payload(compare, result["implementation_head_sha"], current_head_sha, result.get("task_id"))
     return True
 
 
