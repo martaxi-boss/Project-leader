@@ -557,12 +557,20 @@ class ControlContractTests(unittest.TestCase):
             "RECOVERY_PROTOCOL.md",
             "AGENT_BUILDER_PROMPT.md",
             "projects/README.md",
-            ".github/workflows/validate-control-plane.yml",
+            "roles/CONSULTANT.md",
+            "roles/SUPERVISOR.md",
+            "roles/BUILDER.md",
+            "roles/RECOVERY_GUARDIAN.md",
             "plugins/project-leader/skills/project-leader/SKILL.md",
             "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
         ):
             text = (ROOT / path).read_text(encoding="utf-8")
             self.assertNotIn("projects/registry.yaml", text, path)
+
+        workflow = (ROOT / ".github/workflows/validate-control-plane.yml").read_text(encoding="utf-8")
+        self.assertNotIn("test -f projects/registry.yaml", workflow)
+        self.assertNotIn("validate_registry_profile_consistency", workflow)
+        self.assertIn("test ! -e projects/registry.yaml", workflow)
 
     def test_active_task_schema_is_transition_controls_only_and_legacy_v2_is_archived(self):
         active = json.loads((ROOT / "control/task-authorization.schema.json").read_text(encoding="utf-8"))

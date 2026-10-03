@@ -39,6 +39,6 @@ For v2 tasks, Recovery Guardian reconstructs retry state from the append-only re
 
 ## External CI wait discipline
 
-Do not treat a still-running GitHub Actions job as a transient failure. For registered managed projects, classify it as `WAITING_EXTERNAL_CI`, respect the canonical polling/stale thresholds, and never trigger a duplicate rerun while the current run is active. If stale, inspect that run and its jobs before deciding whether Recovery may retry.
+Do not treat a still-running GitHub Actions job as a transient failure. For active external target projects, classify it as `WAITING_EXTERNAL_CI`, respect the canonical polling/stale thresholds, and never trigger a duplicate rerun while the current run is active. If stale, inspect that run and its jobs before deciding whether Recovery may retry. Reconstruct the active target from durable task evidence and live repository state; central enrollment is not required.
 
 For new managed-project v2 tasks, recovery history is append-only; v1 mutable checkpoints are legacy summaries only.
