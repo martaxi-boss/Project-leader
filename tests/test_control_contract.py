@@ -590,5 +590,29 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("standing-authority", recovery["description"].lower())
 
 
+
+    def test_obsolete_central_project_registry_artifacts_are_removed(self):
+        for path in (
+            "projects/registry.yaml",
+            "projects/policy-profiles.json",
+            "projects/pink-iptv.md",
+            "projects/fadego.md",
+            "projects/vcam-pro.md",
+            "projects/policies/pink-iptv.json",
+            "projects/policies/fadego.json",
+            "projects/policies/vcam-pro.json",
+        ):
+            self.assertFalse((ROOT / path).exists(), path)
+
+    def test_project_leader_policy_uses_transition_controls_and_allows_final_root_doc_cleanup(self):
+        policy = json.loads((ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8"))
+        for effect in policy["effect_policies"].values():
+            self.assertIn("required_transition_controls", effect)
+            self.assertNotIn("required_human_gates", effect)
+        e1_scope = set(policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_scope_patterns"])
+        self.assertIn("README.md", e1_scope)
+        self.assertIn("PLUGIN_SETUP.md", e1_scope)
+
+
 if __name__ == "__main__":
     unittest.main()
