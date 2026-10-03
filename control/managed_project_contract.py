@@ -11,6 +11,7 @@ WORKER_RESULT_SCHEMA_VERSION = "2.0"
 RECOVERY_MODE = "APPEND_ONLY_V1"
 CI_WAIT_STATE = "WAITING_EXTERNAL_CI"
 CI_STALE_WAIT_STATE = "STALE_WAIT_STATE"
+CI_LIVENESS_RECONCILE_REQUIRED = "LIVENESS_RECONCILE_REQUIRED"
 CI_ROUTE_WAIT = "WAIT"
 CI_ROUTE_CONTINUE = "AUDIT_CONTINUE"
 CI_ROUTE_RECOVERY = "RECOVERY"
@@ -20,6 +21,7 @@ GENERIC_POLICY_PATH = "control/generic-project-policy.json"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
+DEFAULT_LIVENESS_NO_PROGRESS_POLLS = 2
 LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
 STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
 LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
@@ -197,6 +199,67 @@ def verify_managed_task_against_control_policy(
     validate_scope(task, changed_files)
     return True
 
+
+
+def reconcile_external_ci_liveness(
+    bound_run_ids,
+    live_runs,
+    previous_state=CI_WAIT_STATE,
+    last_progress_at=None,
+    now=None,
+    poll_interval_minutes=DEFAULT_POLL_INTERVAL_MINUTES,
+    no_progress_poll_limit=DEFAULT_LIVENESS_NO_PROGRESS_POLLS,
+    stale_after_minutes=DEFAULT_STALE_AFTER_MINUTES,
+):
+    """Apply an active liveness guard around external-CI reconciliation.
+
+    WAITING_EXTERNAL_CI is a data state, never a passive UI/tool wait. Terminal
+    GitHub state always routes immediately. If the Work execution is still live
+    but the control plane has made no progress for two polling intervals, force
+    a reconstruction/re-poll cycle instead of remaining parked on a spinner.
+    """
+    now = now or datetime.now(timezone.utc)
+    state = reconcile_external_ci_wait(
+        bound_run_ids,
+        live_runs,
+        previous_state=previous_state,
+        now=now,
+        stale_after_minutes=stale_after_minutes,
+    )
+    state["poll_interval_minutes"] = poll_interval_minutes
+
+    if state.get("route") != CI_ROUTE_WAIT:
+        state["liveness_action"] = "ROUTE_IMMEDIATELY"
+        return state
+
+    if poll_interval_minutes <= 0:
+        raise ValueError("poll_interval_minutes must be positive")
+    if no_progress_poll_limit < 1:
+        raise ValueError("no_progress_poll_limit must be at least 1")
+
+    if last_progress_at is None:
+        state["liveness_action"] = "POLL_AGAIN"
+        return state
+
+    last_progress = (
+        _parse_time(last_progress_at)
+        if isinstance(last_progress_at, str)
+        else last_progress_at
+    )
+    if last_progress is None or last_progress.tzinfo is None:
+        raise ValueError("last_progress_at must be an offset-aware datetime or ISO timestamp")
+
+    no_progress_minutes = (now - last_progress).total_seconds() / 60
+    state["no_progress_minutes"] = no_progress_minutes
+    threshold = poll_interval_minutes * no_progress_poll_limit
+    if no_progress_minutes >= threshold:
+        state["state"] = CI_LIVENESS_RECONCILE_REQUIRED
+        state["route"] = CI_ROUTE_INVESTIGATE
+        state["liveness_action"] = "RECONSTRUCT_AND_REPOLL"
+        return state
+
+    state["liveness_action"] = "POLL_AGAIN"
+    return state
 
 
 def reconcile_legacy_checkpoint_liveness(
