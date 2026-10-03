@@ -198,6 +198,8 @@ def validate_registry_profile_consistency(registry_text, profiles, policies):
         policy_path = entry.get("policy")
         if not policy_path:
             raise ValueError(f"{project_id}: registry is missing executable central policy path")
+        if profile.get("central_policy_path") != policy_path:
+            raise ValueError(f"{project_id}: registry/profile central policy path mismatch")
         policy = policies.get(policy_path)
         if not policy:
             raise ValueError(f"{project_id}: central policy file is missing: {policy_path}")
@@ -206,6 +208,9 @@ def validate_registry_profile_consistency(registry_text, profiles, policies):
             raise ValueError(f"{project_id}: registry/policy repository mismatch")
         if policy["default_branch"] != entry.get("default_branch"):
             raise ValueError(f"{project_id}: registry/policy default_branch mismatch")
+        allowed_ci = (policy.get("effect_policies") or {}).get("E1_RECOVERABLE_PROJECT_LOCAL", {}).get("allowed_ci", [])
+        if set(profile.get("allowed_ci_names") or []) != set(allowed_ci):
+            raise ValueError(f"{project_id}: profile/policy allowed CI mismatch")
     return True
 
 
