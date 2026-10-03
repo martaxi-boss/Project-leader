@@ -455,6 +455,26 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("live branch", recovery)
         self.assertIn("open PR", recovery)
 
+    def test_recovery_preserves_standing_authority_and_only_emits_real_human_gates(self):
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        role = (ROOT / "roles/RECOVERY_GUARDIAN.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        guardian_ref = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md").read_text(encoding="utf-8")
+        project_ref = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+
+        self.assertIn("technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded retries are recovery/remediation work, not Owner authorization requests", recovery)
+        self.assertIn("must not discard existing standing authority", role)
+        self.assertIn("Recovery preserves the existing standing authority", skill)
+        self.assertIn("not Owner permission requests", guardian)
+        self.assertIn("14. Return recovered state to Supervisor", guardian)
+        for text in (recovery, role, guardian, guardian_ref, project_ref):
+            self.assertIn("EXCLUSIVE_HUMAN_INTERVENTION", text)
+            self.assertIn("NEW_UNCOVERED_MATERIAL_DECISION", text)
+        self.assertIn("STANDING_OWNER_GRANT", guardian_ref)
+        self.assertIn("STANDING_OWNER_GRANT", project_ref)
+        self.assertNotIn("Never automatically cross merge-to-main", guardian_ref)
+
     def test_evidence_only_descendant_ci_does_not_reopen_task_recovery(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
