@@ -1,6 +1,12 @@
+import base64
+import hashlib
 import unittest
 
-from control.verify_github_evidence import verify_compare_payload, verify_run_payload
+from control.verify_github_evidence import (
+    verify_authorization_payloads,
+    verify_compare_payload,
+    verify_run_payload,
+)
 
 
 class EvidenceVerifierTests(unittest.TestCase):
@@ -48,6 +54,74 @@ class EvidenceVerifierTests(unittest.TestCase):
         payload = {"status": "diverged", "base_commit": {"sha": "a" * 40}, "commits": []}
         with self.assertRaises(ValueError):
             verify_compare_payload(payload, "a" * 40, "b" * 40)
+
+    def auth_payload(self, raw):
+        return {
+            "encoding": "base64",
+            "content": base64.b64encode(raw).decode("ascii"),
+        }
+
+    def test_immutable_authorization_binding_is_accepted(self):
+        raw = b'{"task_id":"TASK-001"}\n'
+        result = {
+            "terminal_status": "TERMINAL_SUCCESS",
+            "authorization_commit_sha": "c" * 40,
+            "authorization_sha256": hashlib.sha256(raw).hexdigest(),
+        }
+        ancestry = {
+            "status": "ahead",
+            "base_commit": {"sha": "c" * 40},
+            "commits": [{"sha": "a" * 40}],
+        }
+        self.assertTrue(
+            verify_authorization_payloads(
+                result,
+                self.auth_payload(raw),
+                self.auth_payload(raw),
+                ancestry,
+            )
+        )
+
+    def test_changed_authorization_after_binding_is_rejected(self):
+        raw = b'{"task_id":"TASK-001"}\n'
+        changed = b'{"task_id":"TASK-001","scope":"wider"}\n'
+        result = {
+            "terminal_status": "TERMINAL_SUCCESS",
+            "authorization_commit_sha": "c" * 40,
+            "authorization_sha256": hashlib.sha256(raw).hexdigest(),
+        }
+        ancestry = {
+            "status": "ahead",
+            "base_commit": {"sha": "c" * 40},
+            "commits": [{"sha": "a" * 40}],
+        }
+        with self.assertRaises(ValueError):
+            verify_authorization_payloads(
+                result,
+                self.auth_payload(raw),
+                self.auth_payload(changed),
+                ancestry,
+            )
+
+    def test_terminal_success_requires_work_after_authorization_commit(self):
+        raw = b'{"task_id":"TASK-001"}\n'
+        result = {
+            "terminal_status": "TERMINAL_SUCCESS",
+            "authorization_commit_sha": "c" * 40,
+            "authorization_sha256": hashlib.sha256(raw).hexdigest(),
+        }
+        ancestry = {
+            "status": "identical",
+            "base_commit": {"sha": "c" * 40},
+            "commits": [],
+        }
+        with self.assertRaises(ValueError):
+            verify_authorization_payloads(
+                result,
+                self.auth_payload(raw),
+                self.auth_payload(raw),
+                ancestry,
+            )
 
 
 if __name__ == "__main__":
