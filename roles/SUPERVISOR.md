@@ -37,8 +37,8 @@ For v2 tasks, Supervisor must bind the task to the exact live PR base policy pat
 
 ## Managed-project enforcement
 
-When the active registered project has a `control_contract` in `projects/policy-profiles.json`, Supervisor must reject new v1 Task/Worker records. Require v2, append-only recovery mode, live GitHub run IDs, and implementation-SHA/final-head ancestry verification.
+For every repository registered in `projects/registry.yaml`, Supervisor must reject new v1 Task/Worker records. Require v2, append-only recovery mode, live GitHub run IDs, and implementation-SHA/final-head ancestry verification.
 
 If the managed repository has no project-local trusted gate on its base branch, do not fabricate a trusted-gate PASS. Perform the external GitHub evidence audit from the canonical Project Leader control plane and report the missing local gate as an enforcement limitation.
 
-An active external CI run is `WAITING_EXTERNAL_CI`; it is neither remediation evidence nor no-progress until it reaches a terminal state or exceeds the configured stale threshold.
+An active external CI run is `WAITING_EXTERNAL_CI`; it is neither remediation evidence nor no-progress until it reaches a terminal state or exceeds the canonical stale threshold.
