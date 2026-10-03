@@ -429,6 +429,26 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("An audit finding is an input to remediation", project)
         self.assertIn("If controls do not yet pass, remediate/recover and revalidate instead of asking the Owner.", runbook)
 
+    def test_project_leader_requires_access_discovery_before_access_human_gate(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+
+        for content in (project, runbook, recovery, skill, guardian):
+            self.assertIn("FORCED_OPERATIONAL_ACCESS_DISCOVERY", content)
+        self.assertIn("Missing a direct shell, SSH client", project)
+        self.assertIn("Read-only inspection of an adjacent operational repository does not violate", project)
+        self.assertIn("ACCESS_DISCOVERY_INCOMPLETE", runbook)
+        self.assertIn("ACCESS_PATH_REQUIRES_SEPARATE_TASK", runbook)
+        self.assertIn("ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION", runbook)
+        self.assertIn("ACCESS_PATH_UNAVAILABLE", runbook)
+        self.assertIn("Search for operational paths, not secret values.", runbook)
+        self.assertIn("Test 17 — Forced Operational Access Discovery", smoke)
+        self.assertIn("asks the Owner to copy commands into a VPS", smoke)
+
     def test_project_leader_recovers_stale_external_ci_wait(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
