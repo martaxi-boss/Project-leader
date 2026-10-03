@@ -153,4 +153,12 @@ During recovery of any external target project:
 
 Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop. A completed external CI run must never leave the control plane parked indefinitely in `WAITING_EXTERNAL_CI`.
 
+### Active Work liveness guard
+
+`WAITING_EXTERNAL_CI` is a persisted/control data state, not permission to block the Work execution on a UI spinner or an opaque wait primitive. While the current Work execution is still capable of making tool calls, it must keep control of the loop and perform a fresh exact-run GitHub read at each bounded polling interval.
+
+If two polling intervals elapse without a control-plane state transition while the host execution is still live, classify `LIVENESS_RECONCILE_REQUIRED`. This is Recovery work, not a Human Gate and not a CI retry. Recovery Guardian must reconstruct the current task, PR/head, certifying SHA, required workflows and exact bound run IDs, then re-read GitHub and call the external-CI reconciliation again. A still-active run remains `WAITING_EXTERNAL_CI`; a terminal run routes immediately to Supervisor continuation or Recovery.
+
+A frozen/unavailable ChatGPT Work process cannot execute this guard while frozen. That platform limitation must be reported honestly. On the next activation, the first action is durable GitHub reconstruction and stale-wait reconciliation; never ask the Owner to recreate CI or repository history merely because the prior Work process stopped running.
+
 For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
