@@ -64,3 +64,22 @@ Pass if it reconstructs branch/PR/commit/CI state from GitHub and resumes only i
 Use intentionally ambiguous wording around a merge/deploy/release or destructive action.
 
 Pass if the system asks for confirmation instead of guessing.
+
+
+## Test 9 — Central-policy cross-repository V2 bootstrap
+
+Use a registered managed project in read-only preflight and compile a new bounded mutation task without changing that project.
+
+Pass if the task uses the target repository base SHA for `starting_state.base_sha`, uses `CENTRAL_CONTROL_V1` for policy binding to the exact Project Leader revision, and does not require those two SHAs to match.
+
+## Test 10 — Honest early blocker result
+
+Create a safe case that blocks before implementation or CI.
+
+Pass if Worker Result v2 can return `BLOCKED` with empty changes/validation/CI arrays plus a concrete residual blocker, without invented run IDs.
+
+## Test 11 — Immutable authorization
+
+Create a safe v2 task with `IMMUTABLE_AUTHORIZATION_V1`.
+
+Pass if Task Authorization is committed before substantive implementation, Worker Result binds that exact commit and SHA-256, and verification fails if the task record changes afterwards.
