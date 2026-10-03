@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
   pull_request_target:
     types: [closed]
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   delete-merged-pr-head:
@@ -41,6 +45,7 @@ jobs:
   sweep-safe-obsolete-branches:
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
       (
         github.event_name == 'pull_request_target' &&
         github.event.pull_request.merged == true &&
@@ -85,6 +90,59 @@ jobs:
                 .map((pr) => pr.head.ref),
             );
 
+            const purgeAction =
+              'delete_owner_authorized_superseded_non_main_branch_refs';
+            const authorizedPurges = new Map();
+            const mainTree = await github.rest.git.getTree({
+              owner,
+              repo,
+              tree_sha: mainSha,
+              recursive: 'true',
+            });
+            const authPaths = mainTree.data.tree
+              .filter(
+                (entry) =>
+                  entry.type === 'blob' &&
+                  entry.path?.startsWith('.project-leader/transitions/') &&
+                  entry.path?.endsWith('.authorization.json'),
+              );
+
+            for (const entry of authPaths) {
+              const blob = await github.rest.git.getBlob({
+                owner,
+                repo,
+                file_sha: entry.sha,
+              });
+              let record;
+              try {
+                const raw = Buffer.from(
+                  blob.data.content.replace(/\n/g, ''),
+                  'base64',
+                ).toString('utf8');
+                record = JSON.parse(raw);
+              } catch {
+                continue;
+              }
+
+              if (
+                record?.action !== purgeAction ||
+                record?.repository !== repositoryFullName ||
+                record?.authority?.source !== 'CURRENT_OWNER_INSTRUCTION' ||
+                record?.authority?.binding_mode !== 'EXACT_REVISION_BOUND' ||
+                record?.target?.kind !== 'repository_branch' ||
+                typeof record?.target?.identifier !== 'string' ||
+                typeof record?.target?.revision !== 'string'
+              ) {
+                continue;
+              }
+
+              authorizedPurges.set(
+                record.target.identifier,
+                record.target.revision,
+              );
+            }
+
+            const deletedByOwnerAuthorization = [];
             const deletedByAncestry = [];
             const deletedByEquivalence = [];
             const preserved = [];
@@ -151,6 +209,24 @@ jobs:
                 continue;
               }
 
+              if (authorizedPurges.has(branch.name)) {
+                const authorizedSha = authorizedPurges.get(branch.name);
+                if (authorizedSha === branch.commit.sha) {
+                  await deleteBranch(
+                    branch.name,
+                    deletedByOwnerAuthorization,
+                  );
+                } else {
+                  preserved.push({
+                    name: branch.name,
+                    sha: branch.commit.sha,
+                    reason:
+                      `owner authorization revision mismatch: expected ${authorizedSha}`,
+                  });
+                }
+                continue;
+              }
+
               const comparison = await github.rest.repos.compareCommits({
                 owner,
                 repo,
@@ -185,18 +261,21 @@ jobs:
                 preserved.push({
                   name: branch.name,
                   sha: branch.commit.sha,
-                  reason: 'branch delta is unavailable or too large for safe equivalence proof',
+                  reason:
+                    'branch delta is unavailable or too large for safe equivalence proof',
                 });
                 continue;
               }
 
               let equivalent = true;
-              let reason = 'all branch-specific final file states equal canonical main';
+              let reason =
+                'all branch-specific final file states equal canonical main';
 
               for (const file of files) {
                 if (!['added', 'modified', 'removed'].includes(file.status)) {
                   equivalent = false;
-                  reason = `unsupported file status for safe proof: ${file.status} ${file.filename}`;
+                  reason =
+                    `unsupported file status for safe proof: ${file.status} ${file.filename}`;
                   break;
                 }
 
@@ -205,7 +284,8 @@ jobs:
                 if (file.status === 'removed') {
                   if (mainState.kind !== 'missing') {
                     equivalent = false;
-                    reason = `removed path still exists in main: ${file.filename}`;
+                    reason =
+                      `removed path still exists in main: ${file.filename}`;
                     break;
                   }
                   continue;
@@ -221,7 +301,8 @@ jobs:
                   branchState.sha !== mainState.sha
                 ) {
                   equivalent = false;
-                  reason = `branch content differs from main: ${file.filename}`;
+                  reason =
+                    `branch content differs from main: ${file.filename}`;
                   break;
                 }
               }
@@ -240,6 +321,12 @@ jobs:
             core.summary
               .addHeading('Repository hygiene')
               .addRaw(`Canonical main: ${mainSha}\n\n`)
+              .addHeading('Deleted by exact Owner authorization', 2)
+              .addList(
+                deletedByOwnerAuthorization.length
+                  ? deletedByOwnerAuthorization
+                  : ['None'],
+              )
               .addHeading('Deleted by ancestry', 2)
               .addList(
                 deletedByAncestry.length ? deletedByAncestry : ['None'],
