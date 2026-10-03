@@ -10,8 +10,12 @@
         "android/**",
         "backend/**",
         ".github/workflows/**",
+        ".github/scripts/**",
         ".project-leader/**",
-        ".env.example"
+        ".env.example",
+        "README.md",
+        "PROJECT_STATE.md",
+        "docs/**"
       ],
       "allowed_actions": [
         "create_branch",
@@ -56,6 +60,7 @@
     "android/**",
     "backend/**",
     ".github/workflows/**",
+    ".github/scripts/**",
     ".env.example"
   ],
   "protected_paths": [
