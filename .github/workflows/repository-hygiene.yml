@@ -1,0 +1,114 @@
+name: Repository hygiene
+
+on:
+  workflow_dispatch:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-merged-pr-head:
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete merged same-repository PR branch
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const ref = `heads/${pr.head.ref}`;
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+              });
+              core.notice(`Deleted merged PR branch: ${pr.head.ref}`);
+            } catch (error) {
+              if (error.status === 404 || error.status === 422) {
+                core.notice(`Branch already absent: ${pr.head.ref}`);
+              } else {
+                throw error;
+              }
+            }
+
+  sweep-branches-contained-in-main:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete only branch tips fully contained in main
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const main = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: 'main',
+            });
+            const mainSha = main.data.commit.sha;
+            const branches = await github.paginate(
+              github.rest.repos.listBranches,
+              { owner, repo, per_page: 100 },
+            );
+
+            const deleted = [];
+            const preserved = [];
+
+            for (const branch of branches) {
+              if (branch.name === 'main') continue;
+
+              const comparison = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: branch.commit.sha,
+                head: mainSha,
+              });
+
+              const mergeBase = comparison.data.merge_base_commit?.sha;
+              if (mergeBase !== branch.commit.sha) {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  status: comparison.data.status,
+                });
+                continue;
+              }
+
+              try {
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${branch.name}`,
+                });
+                deleted.push(branch.name);
+              } catch (error) {
+                if (error.status === 404 || error.status === 422) {
+                  deleted.push(`${branch.name} (already absent)`);
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+            core.summary
+              .addHeading('Repository hygiene')
+              .addRaw(`Canonical main: ${mainSha}\n\n`)
+              .addHeading('Deleted branches', 2)
+              .addList(deleted.length ? deleted : ['None'])
+              .addHeading('Preserved branches with unique/divergent history', 2)
+              .addList(
+                preserved.length
+                  ? preserved.map(
+                      (item) =>
+                        `${item.name} @ ${item.sha} (compare status: ${item.status})`,
+                    )
+                  : ['None'],
+              );
+            await core.summary.write();
