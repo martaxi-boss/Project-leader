@@ -454,6 +454,22 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("live branch", recovery)
         self.assertIn("open PR", recovery)
 
+    def test_repository_hygiene_is_bounded_to_safe_branch_cleanup(self):
+        workflow = (ROOT / ".github/workflows/repository-hygiene.yml").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("pull_request_target:", workflow)
+        self.assertIn("contents: write", workflow)
+        self.assertIn("github.event.pull_request.merged == true", workflow)
+        self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
+        self.assertIn("github.event.pull_request.head.ref != 'main'", workflow)
+        self.assertIn("if (branch.name === 'main') continue;", workflow)
+        self.assertIn("merge_base_commit", workflow)
+        self.assertIn("mergeBase !== branch.commit.sha", workflow)
+        self.assertIn("github.rest.git.deleteRef", workflow)
+        self.assertIn("fully contained in canonical `main`", runbook)
+        self.assertIn("never target `main`", runbook)
+
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
