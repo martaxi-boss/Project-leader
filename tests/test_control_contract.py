@@ -73,6 +73,7 @@ def valid_v2_task():
     record = valid_task()
     record["schema_version"] = "2.0"
     record["integrity_mode"] = "IMMUTABLE_AUTHORIZATION_V1"
+    record["recovery"] = {"mode": "APPEND_ONLY_V1"}
     record["policy"] = {
         "binding_mode": "LOCAL_BASE_V1",
         "profile": "project-leader-v1",
