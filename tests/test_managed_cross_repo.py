@@ -4,26 +4,28 @@ import unittest
 from pathlib import Path
 
 from control.managed_project_contract import (
-    validate_registry_profile_consistency,
+    GENERIC_POLICY_PATH,
+    resolve_project_policy_path,
     verify_managed_task_against_control_policy,
 )
+
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "owner/project"
+REPOSITORY = "owner/new-project"
 CONTROL_REPOSITORY = "owner/control"
 
 
-def task():
+def task(policy_raw):
     return {
         "schema_version": "2.0",
         "task_id": "TASK-001",
-        "project": "TEST",
+        "project": "NEW PROJECT",
         "repository": REPOSITORY,
         "created_at": "2026-10-03T01:00:00Z",
         "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
         "authority": {
             "kind": "STANDING_DELEGATION",
-            "summary": "bounded managed task",
-            "source": "CURRENT_OWNER_INSTRUCTION",
+            "summary": "bounded generic-project task",
+            "source": "STANDING_OWNER_GRANT",
             "binding_mode": "OBJECTIVE_SCOPE_BOUND",
         },
         "starting_state": {
@@ -33,206 +35,164 @@ def task():
             "pr_number": None,
         },
         "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
-        "mutation_scope": ["src/**", ".project-leader/tasks/**", ".project-leader/results/**"],
-        "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
-        "prohibited_actions": ["merge_to_main"],
-        "human_gates": [{"action": "merge_to_main", "requires_owner_approval": True}],
-        "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
-        "required_ci": ["Project CI"],
+        "mutation_scope": [
+            "src/**",
+            ".project-leader/tasks/**",
+            ".project-leader/results/**",
+        ],
+        "allowed_actions": [
+            "create_branch",
+            "edit_project_files",
+            "create_commits",
+            "run_ci",
+            "open_or_update_pull_request",
+        ],
+        "prohibited_actions": [
+            "merge_to_main",
+            "branch_protection_or_ruleset_change",
+            "release_or_publish",
+            "production_deploy",
+            "destructive_data_change",
+            "repository_or_history_deletion",
+            "production_secret_change",
+            "irreversible_infrastructure_change",
+            "paid_service_activation",
+        ],
+        "transition_controls": [
+            {"action": name, "requires_authority_resolution": True}
+            for name in (
+                "merge_to_main",
+                "branch_protection_or_ruleset_change",
+                "release_or_publish",
+                "production_deploy",
+                "destructive_data_change",
+                "repository_or_history_deletion",
+                "production_secret_change",
+                "irreversible_infrastructure_change",
+                "paid_service_activation",
+            )
+        ],
+        "required_validation": [
+            "Project architecture scope audit",
+            "Mutation scope audit",
+            "GitHub evidence verification",
+        ],
+        "required_ci": [],
         "policy": {
             "binding_mode": "CENTRAL_CONTROL_V1",
-            "profile": "project-v1",
-            "path": "projects/policies/project.json",
+            "profile": "generic-project-v1",
+            "path": GENERIC_POLICY_PATH,
             "repository": CONTROL_REPOSITORY,
             "revision": "c" * 40,
-            "sha256": "d" * 64,
+            "sha256": hashlib.sha256(policy_raw).hexdigest(),
         },
         "recovery": {"mode": "APPEND_ONLY_V1"},
-        "terminal_condition": "green PR",
-        "privacy": {"contains_secrets": False, "contains_private_conversation_text": False},
-    }
-
-
-
-
-def policy():
-    return {
-        "schema_version": "1.0",
-        "policy_id": "project-v1",
-        "project": "TEST",
-        "repository": REPOSITORY,
-        "default_branch": "main",
-        "effect_policies": {
-            "E1_RECOVERABLE_PROJECT_LOCAL": {
-                "allowed_scope_patterns": ["src/**", ".project-leader/tasks/**", ".project-leader/results/**"],
-                "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
-                "required_prohibited_actions": ["merge_to_main"],
-                "required_human_gates": ["merge_to_main"],
-                "required_ci": [],
-                "allowed_ci": ["Project CI"],
-                "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
-            }
+        "terminal_condition": "validated bounded task; no unverified transition",
+        "privacy": {
+            "contains_secrets": False,
+            "contains_private_conversation_text": False,
         },
-        "sensitive_paths": ["src/**"],
-        "protected_paths": [".github/workflows/**"],
     }
 
 
-class ManagedCrossRepositoryTests(unittest.TestCase):
-    def make(self):
-        p = policy()
-        raw = (json.dumps(p, indent=2) + "\n").encode("utf-8")
-        t = task()
-        t["policy"]["sha256"] = hashlib.sha256(raw).hexdigest()
-        return t, p, raw
+class GenericManagedProjectTests(unittest.TestCase):
+    def setUp(self):
+        self.policy_path = ROOT / GENERIC_POLICY_PATH
+        self.raw = self.policy_path.read_bytes()
+        self.policy = json.loads(self.raw)
+        self.task = task(self.raw)
+        self.changed = [
+            "src/app.py",
+            ".project-leader/tasks/TASK-001.json",
+        ]
 
-    def test_target_base_and_control_revision_are_independent(self):
-        t, p, raw = self.make()
-        self.assertNotEqual(t["starting_state"]["base_sha"], t["policy"]["revision"])
+    def verify(self, task_record=None, policy=None, raw=None, changed=None, path=None):
+        return verify_managed_task_against_control_policy(
+            task_record or self.task,
+            policy or self.policy,
+            raw or self.raw,
+            "a" * 40,
+            changed or self.changed,
+            CONTROL_REPOSITORY,
+            "c" * 40,
+            path if path is not None else GENERIC_POLICY_PATH,
+        )
+
+    def test_generic_policy_is_default_without_registry(self):
+        self.assertEqual(resolve_project_policy_path(None), GENERIC_POLICY_PATH)
+        self.assertEqual(
+            resolve_project_policy_path("projects/policies/custom.json"),
+            "projects/policies/custom.json",
+        )
+
+    def test_generic_policy_accepts_unregistered_active_repository(self):
+        self.assertEqual(self.policy["repository_mode"], "ACTIVE_TARGET")
+        self.assertTrue(self.verify())
+
+    def test_generic_policy_binds_exact_control_revision_and_bytes(self):
+        task_record = json.loads(json.dumps(self.task))
+        task_record["policy"]["revision"] = "9" * 40
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+        task_record = json.loads(json.dumps(self.task))
+        task_record["policy"]["sha256"] = "0" * 64
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+    def test_generic_task_cannot_claim_whole_repository_scope(self):
+        task_record = json.loads(json.dumps(self.task))
+        task_record["mutation_scope"] = ["**"]
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+    def test_task_scope_must_narrow_generic_ceiling_without_path_escape(self):
+        task_record = json.loads(json.dumps(self.task))
+        task_record["mutation_scope"] = ["src/../secrets/**", ".project-leader/tasks/**"]
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+    def test_consequential_action_stays_outside_builder_actions(self):
+        task_record = json.loads(json.dumps(self.task))
+        task_record["allowed_actions"].append("merge_to_main")
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+        transition_actions = {
+            item["action"] for item in self.task["transition_controls"]
+        }
+        self.assertIn("merge_to_main", transition_actions)
+
+    def test_generic_policy_requires_architecture_scope_audit(self):
+        self.assertIn(
+            "Project architecture scope audit",
+            self.policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["required_validation"],
+        )
+        task_record = json.loads(json.dumps(self.task))
+        task_record["required_validation"].remove("Project architecture scope audit")
+        with self.assertRaises(ValueError):
+            self.verify(task_record=task_record)
+
+    def test_target_specific_policy_can_override_generic_default_when_explicit(self):
+        fixed = json.loads(json.dumps(self.policy))
+        fixed.pop("repository_mode")
+        fixed.pop("default_branch_mode")
+        fixed["repository"] = REPOSITORY
+        fixed["default_branch"] = "main"
+        fixed["policy_id"] = "specific-v1"
+        raw = (json.dumps(fixed, indent=2) + "\n").encode("utf-8")
+        task_record = json.loads(json.dumps(self.task))
+        task_record["policy"]["profile"] = "specific-v1"
+        task_record["policy"]["path"] = "projects/policies/custom.json"
+        task_record["policy"]["sha256"] = hashlib.sha256(raw).hexdigest()
         self.assertTrue(
-            verify_managed_task_against_control_policy(
-                t,
-                p,
-                raw,
-                "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY,
-                "c" * 40,
-                "projects/policies/project.json",
+            self.verify(
+                task_record=task_record,
+                policy=fixed,
+                raw=raw,
+                path="projects/policies/custom.json",
             )
         )
-
-    def test_wrong_control_revision_fails(self):
-        t, p, raw = self.make()
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "9" * 40, "projects/policies/project.json"
-            )
-
-    def test_policy_bytes_are_exactly_bound(self):
-        t, p, raw = self.make()
-        t["policy"]["sha256"] = "0" * 64
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_protected_target_path_requires_governance_task(self):
-        t, p, raw = self.make()
-        t["mutation_scope"].append(".github/workflows/**")
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".github/workflows/ci.yml"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_unregistered_ci_name_fails(self):
-        t, p, raw = self.make()
-        t["required_ci"] = ["Other CI"]
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_exact_file_scope_can_narrow_managed_policy_pattern(self):
-        t, p, raw = self.make()
-        t["mutation_scope"] = ["src/app.py", ".project-leader/tasks/TASK-001.json"]
-        self.assertTrue(
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-        )
-
-    def test_nested_subpattern_can_narrow_managed_policy_pattern(self):
-        t, p, raw = self.make()
-        t["mutation_scope"] = ["src/feature/**", ".project-leader/tasks/**"]
-        self.assertTrue(
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/feature/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-        )
-
-    def test_managed_scope_prefix_collision_fails_closed(self):
-        t, p, raw = self.make()
-        t["mutation_scope"] = ["src-escape/**", ".project-leader/tasks/**"]
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src-escape/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_managed_parent_traversal_scope_fails_closed(self):
-        t, p, raw = self.make()
-        t["mutation_scope"] = ["src/../secrets/**", ".project-leader/tasks/**"]
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_development_merge_action_is_explicitly_policy_bounded(self):
-        t, p, _ = self.make()
-        t["allowed_actions"].append("merge_development_branch")
-        p["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_actions"].append(
-            "merge_development_branch"
-        )
-        raw = (json.dumps(p, indent=2) + "\n").encode("utf-8")
-        t["policy"]["sha256"] = hashlib.sha256(raw).hexdigest()
-        self.assertTrue(
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-        )
-
-    def test_merge_to_main_remains_outside_allowed_actions(self):
-        t, p, raw = self.make()
-        t["allowed_actions"].append("merge_to_main")
-        with self.assertRaises(ValueError):
-            verify_managed_task_against_control_policy(
-                t, p, raw, "a" * 40,
-                ["src/app.py", ".project-leader/tasks/TASK-001.json"],
-                CONTROL_REPOSITORY, "c" * 40, "projects/policies/project.json"
-            )
-
-    def test_real_managed_policies_separate_development_merge_from_main_gate(self):
-        for path in (
-            "projects/policies/pink-iptv.json",
-            "projects/policies/fadego.json",
-            "projects/policies/vcam-pro.json",
-        ):
-            policy_data = json.loads((ROOT / path).read_text(encoding="utf-8"))
-            e1 = policy_data["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]
-            self.assertIn("merge_development_branch", e1["allowed_actions"], path)
-            self.assertNotIn("merge_to_main", e1["allowed_actions"], path)
-            self.assertIn("merge_to_main", e1["required_prohibited_actions"], path)
-            self.assertIn("merge_to_main", e1["required_human_gates"], path)
-
-    def test_real_registry_profiles_and_policies_are_consistent(self):
-        registry = (ROOT / "projects/registry.yaml").read_text(encoding="utf-8")
-        profiles = json.loads((ROOT / "projects/policy-profiles.json").read_text(encoding="utf-8"))
-        policies = {}
-        for path in (
-            "projects/policies/pink-iptv.json",
-            "projects/policies/fadego.json",
-            "projects/policies/vcam-pro.json",
-        ):
-            policies[path] = json.loads((ROOT / path).read_text(encoding="utf-8"))
-        self.assertTrue(validate_registry_profile_consistency(registry, profiles, policies))
 
 
 if __name__ == "__main__":

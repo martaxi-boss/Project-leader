@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-leader",
-  "version": "0.5.0",
-  "description": "Single project-control entry point with central managed-project V2 policy binding, immutable authorization evidence, and bounded recovery.",
+  "version": "0.6.0",
+  "description": "Autonomous project-control entry point with standing authority, architecture-first generic project bootstrap, immutable evidence, and bounded recovery.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
@@ -22,8 +22,8 @@
       "apps": "./.app.json",
       "interface": {
         "displayName": "Project Leader",
-        "shortDescription": "Coordinates projects and automatically recovers bounded execution failures.",
-        "longDescription": "Use Project Leader as the single entry point for registered software projects. It identifies the active project, reads the live control plane and target repository on GitHub, routes work through Consultant, Supervisor, Builder, and Recovery Guardian phases, audits evidence, safely recovers from transient failures or interrupted execution, and stops only at a genuine human gate.",
+        "shortDescription": "Autonomously coordinates project work through audited role hierarchy and recovery.",
+        "longDescription": "Use Project Leader as a reusable control skill inside any software project. It identifies the active target repository without a central registry, reconstructs live GitHub and project architecture, routes work through Consultant, Supervisor, Builder, and Recovery Guardian, executes covered transitions under standing authority, audits durable evidence, and interrupts the Owner only for genuine manual intervention or a new uncovered material decision.",
         "developerName": "martaxi-boss",
         "category": "Productivity",
         "capabilities": [

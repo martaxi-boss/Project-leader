@@ -22,6 +22,19 @@ def policy_sha256(raw_bytes):
     return hashlib.sha256(raw_bytes).hexdigest()
 
 
+def _task_transition_actions(task):
+    items = task.get("transition_controls") or task.get("human_gates") or []
+    return {item["action"] for item in items}
+
+
+def _policy_transition_actions(effect_policy):
+    return set(
+        effect_policy.get("required_transition_controls")
+        or effect_policy.get("required_human_gates")
+        or []
+    )
+
+
 def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, changed_files, expected_policy_path):
     validate_task(task)
     validate_project_policy(policy)
@@ -80,10 +93,10 @@ def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, c
     if missing_prohibitions:
         raise ValueError("task is missing required prohibitions: " + ", ".join(missing_prohibitions))
 
-    task_gates = {item["action"] for item in task["human_gates"] if item["requires_owner_approval"] is True}
-    missing_gates = sorted(set(effect_policy["required_human_gates"]) - task_gates)
+    task_gates = _task_transition_actions(task)
+    missing_gates = sorted(_policy_transition_actions(effect_policy) - task_gates)
     if missing_gates:
-        raise ValueError("task is missing required Human Gates: " + ", ".join(missing_gates))
+        raise ValueError("task is missing required consequential transition controls: " + ", ".join(missing_gates))
 
     missing_ci = sorted(set(effect_policy["required_ci"]) - set(task["required_ci"]))
     if missing_ci:

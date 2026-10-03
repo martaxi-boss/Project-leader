@@ -8,8 +8,6 @@
     "schema_version",
     "policy_id",
     "project",
-    "repository",
-    "default_branch",
     "effect_policies",
     "sensitive_paths",
     "protected_paths"
@@ -45,7 +43,6 @@
             "allowed_scope_patterns",
             "allowed_actions",
             "required_prohibited_actions",
-            "required_human_gates",
             "required_ci",
             "required_validation"
           ],
@@ -84,7 +81,8 @@
                 "minLength": 1
               },
               "uniqueItems": true,
-              "minItems": 1
+              "minItems": 1,
+              "description": "Legacy compatibility field. New policies use required_transition_controls."
             },
             "required_ci": {
               "type": "array",
@@ -111,6 +109,15 @@
                 "minLength": 1
               },
               "uniqueItems": true
+            },
+            "required_transition_controls": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
             }
           }
         },
@@ -121,7 +128,6 @@
             "allowed_scope_patterns",
             "allowed_actions",
             "required_prohibited_actions",
-            "required_human_gates",
             "required_ci",
             "required_validation"
           ],
@@ -160,7 +166,8 @@
                 "minLength": 1
               },
               "uniqueItems": true,
-              "minItems": 1
+              "minItems": 1,
+              "description": "Legacy compatibility field. New policies use required_transition_controls."
             },
             "required_ci": {
               "type": "array",
@@ -187,6 +194,15 @@
                 "minLength": 1
               },
               "uniqueItems": true
+            },
+            "required_transition_controls": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "minItems": 1
             }
           }
         }
@@ -209,6 +225,16 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "repository_mode": {
+      "enum": [
+        "ACTIVE_TARGET"
+      ]
+    },
+    "default_branch_mode": {
+      "enum": [
+        "ACTIVE_TARGET"
+      ]
     }
   }
 }

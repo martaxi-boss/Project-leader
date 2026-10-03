@@ -139,7 +139,7 @@ Do not execute or certify a retry from chat memory alone when the corresponding 
 
 An existing GitHub Actions run in `queued`, `waiting`, `pending`, `requested`, or `in_progress` state is not itself a failure.
 
-For every registered managed project:
+During recovery of any external target project:
 
 1. bind the wait to the exact GitHub Actions run IDs that satisfy the task's required CI;
 2. before any explicit dispatch/rerun, deduplicate by exact workflow name + target SHA + event context: reuse an active/successful exact match, route a terminal non-success to Recovery, and dispatch only if no exact match exists;
@@ -153,4 +153,4 @@ For every registered managed project:
 
 Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop. A completed external CI run must never leave the control plane parked indefinitely in `WAITING_EXTERNAL_CI`.
 
-For registered managed-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
+For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.

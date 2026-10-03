@@ -1,10 +1,16 @@
-# Registered projects
+# Project Leader project context
 
-Project-specific files here are bootstrap context only.
+Project Leader is an independent project and reusable control skill.
 
-The canonical source for code state is always the target repository on GitHub. Project Leader must refresh live commits, branches, PRs, CI, and artifacts before making an implementation or audit decision.
+This directory does **not** register or own external projects. Target-project architecture, implementation, CI, releases, and durable state belong to the active target repository.
 
-Registered:
-- PINK IPTV
-- FADEGO
-- VCAM-PRO
+Project Leader discovers the active target from current Project context, Owner instruction, and live GitHub evidence.
+
+Current Project Leader-owned project context in this directory:
+
+- `standing-authority.json` — durable Owner standing autonomy for the Project Leader runtime.
+- `policies/project-leader.json` — Project Leader's own repository policy.
+
+External target projects use an explicitly selected target-specific central policy only when one is intentionally maintained. Otherwise Project Leader uses `../control/generic-project-policy.json` and narrows each task from the target project's own architecture and live state.
+
+Historical project-specific bootstrap snapshots or registry entries are not part of the current runtime and should not be reintroduced.

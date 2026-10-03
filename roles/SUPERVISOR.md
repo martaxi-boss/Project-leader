@@ -32,12 +32,12 @@ Audit outcome:
 
 ## V2 trust duties
 
-For v2 Project Leader-local tasks, Supervisor binds policy to the exact live base. For registered managed projects, Supervisor must separately bind the target base SHA and the exact canonical Project Leader control revision + central policy path/profile/SHA-256, then verify requested scope/actions against that central policy ceiling before delegation. It must require policy-minimum CI, validation, prohibitions, and gated-effect controls. A policy gate does not force a new Owner prompt when standing authority already covers the effect. At audit, it must verify the trusted gate and external GitHub evidence verifier on the exact final head; a branch-authored Worker Result is never sufficient by itself.
+For v2 Project Leader-local tasks, Supervisor binds policy to the exact live base. For external target projects, Supervisor must separately bind the target base SHA and the exact canonical Project Leader control revision + central policy path/profile/SHA-256, then verify requested scope/actions against that central policy ceiling before delegation. Select an explicitly maintained target policy when applicable; otherwise use `control/generic-project-policy.json` and narrow the task from the active target's architecture and live state. It must require policy-minimum CI, validation, prohibitions, and gated-effect controls. A policy gate does not force a new Owner prompt when standing authority already covers the effect. At audit, it must verify the trusted gate and external GitHub evidence verifier on the exact final head; a branch-authored Worker Result is never sufficient by itself.
 
 
 ## Managed-project enforcement
 
-For every repository registered in `projects/registry.yaml`, Supervisor must reject new v1 Task/Worker records. Require v2, `IMMUTABLE_AUTHORIZATION_V1`, an authorization-only commit before substantive implementation, append-only recovery mode, live GitHub run IDs, authorization commit/digest verification, and implementation-SHA/final-head ancestry verification.
+For every active external target repository, Supervisor must reject new v1 Task/Worker records. Require v2, `IMMUTABLE_AUTHORIZATION_V1`, an authorization-only commit before substantive implementation, append-only recovery mode, live GitHub run IDs whenever CI is required, authorization commit/digest verification, and implementation-SHA/final-head ancestry verification. Central enrollment is not required; target architecture and live repository state determine the bounded task.
 
 If the managed repository has no project-local trusted gate on its base branch, do not fabricate a trusted-gate PASS. Perform the external GitHub evidence audit from the canonical Project Leader control plane and report the missing local gate as an enforcement limitation.
 
