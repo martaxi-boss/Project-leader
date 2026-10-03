@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-REPOSITORY-HYGIENE-024B-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-REPOSITORY-HYGIENE-024B",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-03T12:31:18.451Z",
+  "action": "trust_root_mutation",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "Owner authorized Project Leader repository hygiene, bounded deletion of fully merged non-main branches, and automatic deletion of future same-repository merged PR head branches. This transition covers the protected hygiene workflow and runbook contract only.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/repository-hygiene-024b",
+    "revision": "c25f8a7b1b5721888ca38da67a826c217412e031",
+    "base_revision": "aa39702a3d2fb7d5c211cc088c1badc06663b9f3",
+    "environment": null
+  }
+}
