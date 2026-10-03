@@ -126,6 +126,8 @@ For v2 recovery, persistence is part of the recovery transition itself:
 
 The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZED` record persisted after the retry started is invalid for that retry and must not be accepted as authorization. Recovery-event files are append-only: each event file must be created once and never rewritten.
 
+Terminal certification must fail when required Recovery evidence is absent or causally invalid. A retroactive event is invalid. A recovery journal containing `RETRY_AUTHORIZED` triggers structural verification even when the fresh replacement CI run has `run_attempt=1`. The committed `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and pre-retry `REPLAN` events must be ancestors of the CI-certified implementation SHA; terminal `RECOVERED` must be a descendant of that SHA on the final task line.
+
 Causality is structural as well as temporal. For any v2 task whose journal contains a retry, the commits that persist `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and any pre-retry `REPLAN` must be ancestors of the CI-certified `implementation_head_sha`. For terminal success, the `RECOVERED` commit must be a descendant of that implementation SHA on the final task line. Timestamp checks remain an additional defense, not the sole proof.
 
 Therefore an old-SHA GitHub `rerun` cannot be the terminal Recovery certificate: its `head_sha` predates the committed retry authorization. After `RETRY_AUTHORIZED`, create/retain a descendant task SHA containing the pre-retry journal and obtain a fresh required CI run on that descendant SHA (for example via the normal push trigger or an authorized workflow dispatch). Then append `RECOVERED` only after success.
@@ -150,6 +152,7 @@ During recovery of any external target project:
 7. if every bound run is terminal but the stored/control state still says `WAITING_EXTERNAL_CI`, classify `STALE_WAIT_STATE`; all-success routes immediately to Supervisor audit/validate/continue, while any failure/cancellation/timeout routes to Recovery;
 8. on session resume after interruption, re-read the bound run IDs before any new dispatch. Never use a stale chat/UI spinner as proof that CI is still active.
 9. if the session ended before the exact wait binding was durably captured, reconstruct the candidate run set from the live task, current certifying SHA, required workflow names, PR/head state, and GitHub run contexts; bind the existing runs before any dispatch. Missing chat state is never permission to create replacement CI.
+10. when recovering an interrupted or stale wait, reconstruct the existing run set from the live task, certifying SHA, required workflow names and PR/head before dispatching anything; candidate reconstruction and exact-run binding must converge on the already-existing GitHub runs rather than manufacturing replacement CI.
 
 Use a default 5-minute polling cadence and a 60-minute stale threshold unless a stricter canonical project rule applies. A long external CI job inside that window remains normal external work, not a loop. A completed external CI run must never leave the control plane parked indefinitely in `WAITING_EXTERNAL_CI`.
 
