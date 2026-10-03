@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from control.scope_policy import scope_pattern_is_within
 from control.validate_records import validate_project_policy, validate_scope, validate_task
 
 
@@ -19,9 +20,6 @@ def _read_json(path):
 
 def policy_sha256(raw_bytes):
     return hashlib.sha256(raw_bytes).hexdigest()
-
-
-from control.scope_policy import scope_pattern_is_within
 
 
 def verify_task_against_base_policy(task, policy, policy_raw, actual_base_sha, changed_files, expected_policy_path):
