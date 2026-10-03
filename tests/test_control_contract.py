@@ -403,6 +403,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("inspect the live PR base branch", skill)
         self.assertIn("Only a PR whose base branch is exactly `main` is a merge-to-main transition.", skill)
         self.assertIn("If the PR base is not `main`, do not classify the merge itself as `merge_to_main`", skill)
+        self.assertIn("merge_development_branch", skill)
         self.assertIn("continue automatically", skill)
 
     def test_project_leader_converges_before_human_gate(self):
