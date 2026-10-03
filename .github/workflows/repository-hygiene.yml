@@ -38,7 +38,7 @@ jobs:
               }
             }
 
-  sweep-branches-contained-in-main:
+  sweep-safe-obsolete-branches:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -48,27 +48,108 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
-      - name: Delete only branch tips fully contained in main
+      - name: Delete only branches proven obsolete against main
         uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
+            const repositoryFullName = `${owner}/${repo}`;
+            const currentMergedHead =
+              context.eventName === 'pull_request_target' &&
+              context.payload.pull_request?.merged === true
+                ? context.payload.pull_request.head.ref
+                : null;
+
             const main = await github.rest.repos.getBranch({
               owner,
               repo,
               branch: 'main',
             });
             const mainSha = main.data.commit.sha;
+
             const branches = await github.paginate(
               github.rest.repos.listBranches,
               { owner, repo, per_page: 100 },
             );
+            const openPulls = await github.paginate(
+              github.rest.pulls.list,
+              { owner, repo, state: 'open', per_page: 100 },
+            );
+            const openPrHeads = new Set(
+              openPulls
+                .filter(
+                  (pr) =>
+                    pr.head?.repo?.full_name === repositoryFullName &&
+                    typeof pr.head?.ref === 'string',
+                )
+                .map((pr) => pr.head.ref),
+            );
 
-            const deleted = [];
+            const deletedByAncestry = [];
+            const deletedByEquivalence = [];
             const preserved = [];
+
+            async function getPathState(path, ref) {
+              try {
+                const response = await github.rest.repos.getContent({
+                  owner,
+                  repo,
+                  path,
+                  ref,
+                });
+                if (Array.isArray(response.data) || !response.data.sha) {
+                  return { kind: 'unsupported' };
+                }
+                return {
+                  kind: 'present',
+                  sha: response.data.sha,
+                  type: response.data.type,
+                };
+              } catch (error) {
+                if (error.status === 404) {
+                  return { kind: 'missing' };
+                }
+                throw error;
+              }
+            }
+
+            async function deleteBranch(name, bucket) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${name}`,
+                });
+                bucket.push(name);
+              } catch (error) {
+                if (error.status === 404 || error.status === 422) {
+                  bucket.push(`${name} (already absent)`);
+                } else {
+                  throw error;
+                }
+              }
+            }
 
             for (const branch of branches) {
               if (branch.name === 'main') continue;
+
+              if (branch.name === currentMergedHead) {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  reason: 'handled by merged-PR head cleanup job',
+                });
+                continue;
+              }
+
+              if (openPrHeads.has(branch.name)) {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  reason: 'open pull request',
+                });
+                continue;
+              }
 
               const comparison = await github.rest.repos.compareCommits({
                 owner,
@@ -76,44 +157,103 @@ jobs:
                 base: branch.commit.sha,
                 head: mainSha,
               });
-
               const mergeBase = comparison.data.merge_base_commit?.sha;
-              if (mergeBase !== branch.commit.sha) {
+
+              if (mergeBase === branch.commit.sha) {
+                await deleteBranch(branch.name, deletedByAncestry);
+                continue;
+              }
+
+              if (!mergeBase) {
                 preserved.push({
                   name: branch.name,
                   sha: branch.commit.sha,
-                  status: comparison.data.status,
+                  reason: 'missing merge-base evidence',
                 });
                 continue;
               }
 
-              try {
-                await github.rest.git.deleteRef({
-                  owner,
-                  repo,
-                  ref: `heads/${branch.name}`,
+              const branchDelta = await github.rest.repos.compareCommits({
+                owner,
+                repo,
+                base: mergeBase,
+                head: branch.commit.sha,
+              });
+              const files = branchDelta.data.files;
+
+              if (!Array.isArray(files) || files.length >= 300) {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  reason: 'branch delta is unavailable or too large for safe equivalence proof',
                 });
-                deleted.push(branch.name);
-              } catch (error) {
-                if (error.status === 404 || error.status === 422) {
-                  deleted.push(`${branch.name} (already absent)`);
-                } else {
-                  throw error;
+                continue;
+              }
+
+              let equivalent = true;
+              let reason = 'all branch-specific final file states equal canonical main';
+
+              for (const file of files) {
+                if (!['added', 'modified', 'removed'].includes(file.status)) {
+                  equivalent = false;
+                  reason = `unsupported file status for safe proof: ${file.status} ${file.filename}`;
+                  break;
                 }
+
+                const mainState = await getPathState(file.filename, mainSha);
+
+                if (file.status === 'removed') {
+                  if (mainState.kind !== 'missing') {
+                    equivalent = false;
+                    reason = `removed path still exists in main: ${file.filename}`;
+                    break;
+                  }
+                  continue;
+                }
+
+                const branchState = await getPathState(
+                  file.filename,
+                  branch.commit.sha,
+                );
+                if (
+                  branchState.kind !== 'present' ||
+                  mainState.kind !== 'present' ||
+                  branchState.sha !== mainState.sha
+                ) {
+                  equivalent = false;
+                  reason = `branch content differs from main: ${file.filename}`;
+                  break;
+                }
+              }
+
+              if (equivalent) {
+                await deleteBranch(branch.name, deletedByEquivalence);
+              } else {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  reason,
+                });
               }
             }
 
             core.summary
               .addHeading('Repository hygiene')
               .addRaw(`Canonical main: ${mainSha}\n\n`)
-              .addHeading('Deleted branches', 2)
-              .addList(deleted.length ? deleted : ['None'])
-              .addHeading('Preserved branches with unique/divergent history', 2)
+              .addHeading('Deleted by ancestry', 2)
+              .addList(
+                deletedByAncestry.length ? deletedByAncestry : ['None'],
+              )
+              .addHeading('Deleted by canonical content equivalence', 2)
+              .addList(
+                deletedByEquivalence.length ? deletedByEquivalence : ['None'],
+              )
+              .addHeading('Preserved branches', 2)
               .addList(
                 preserved.length
                   ? preserved.map(
                       (item) =>
-                        `${item.name} @ ${item.sha} (compare status: ${item.status})`,
+                        `${item.name} @ ${item.sha} — ${item.reason}`,
                     )
                   : ['None'],
               );
