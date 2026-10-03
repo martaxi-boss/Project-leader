@@ -39,7 +39,7 @@ def task(version="2.0"):
         "mutation_scope": ["src/**", ".project-leader/tasks/**", ".project-leader/results/**"],
         "allowed_actions": ["create_branch", "edit_project_files", "create_commits", "run_ci", "open_or_update_pull_request"],
         "prohibited_actions": ["merge_to_main"],
-        "human_gates": [{"action": "merge_to_main", "requires_owner_approval": True}],
+        "human_gates": [{"action": "merge_to_main", "requires_authority_resolution": True}],
         "required_validation": ["Mutation scope audit", "GitHub evidence verification"],
         "required_ci": ["Project CI"],
         "policy": {
