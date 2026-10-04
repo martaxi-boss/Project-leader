@@ -1,0 +1,36 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048",
+  "terminal_status": "STALE_EXECUTION_PACKET",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048.json",
+  "authorization_commit_sha": "b4efb2d7f3609573fe808e12ced462f102897052",
+  "implementation_head_sha": "15dcebffdf84805ddcf0cca223261eef59013e19",
+  "branch": "builder/internal-operation-liveness-048",
+  "pr_number": null,
+  "recorded_at": "2026-10-04T11:33:00Z",
+  "state_observed_at": "2026-10-04T11:33:00Z",
+  "superseded_by": "PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048R",
+  "post_transition_record": null,
+  "changes": [
+    "Preserved the abandoned pre-PR internal-operation-liveness attempt as historical audit evidence.",
+    "The attempted functional liveness edits were superseded by clean re-execution 048R from canonical main."
+  ],
+  "validation": [
+    {
+      "name": "Governance ordering",
+      "status": "FAIL",
+      "evidence": "Exact trust-root transition authorization was not durably persisted before the trust-root edits in the original 048 attempt, so that execution is not certifiable."
+    }
+  ],
+  "ci": [],
+  "material_non_effects": [
+    "This historical record does not certify task 048.",
+    "No new functional source mutation is introduced by preserving this record.",
+    "No managed-project, VPS, deploy, release, secret, paid-service or branch-protection effect."
+  ],
+  "residual_blockers": [
+    "Original 048 execution is permanently non-certifying and superseded by 048R."
+  ]
+}
