@@ -85,8 +85,8 @@ jobs:
 
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
-          grep -q '"version": "0.6.1"' plugins/project-leader/plugin.json
-          grep -q '"version": "0.5.1"' plugins/recovery-guardian/plugin.json
+          grep -q '"version": "0.6.2"' plugins/project-leader/plugin.json
+          grep -q '"version": "0.5.2"' plugins/recovery-guardian/plugin.json
           grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml
           grep -q 'display_name: "Recovery Guardian"' plugins/recovery-guardian/skills/recovery-guardian/agents/openai.yaml
           grep -q '^name: project-leader$' plugins/project-leader/skills/project-leader/SKILL.md
