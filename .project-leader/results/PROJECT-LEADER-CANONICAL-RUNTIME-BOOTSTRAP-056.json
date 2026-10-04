@@ -1,0 +1,83 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056.json",
+  "authorization_commit_sha": "d9b132d8ce6060d2bbe95d780dbd1f3053ce1a23",
+  "implementation_head_sha": "9caf83fe70a19fef6b05d721cdd79053b5b8d4a1",
+  "branch": "builder/canonical-runtime-bootstrap-056",
+  "pr_number": 56,
+  "recorded_at": "2026-10-04T12:19:00Z",
+  "state_observed_at": "2026-10-04T12:19:00Z",
+  "superseded_by": null,
+  "post_transition_record": ".project-leader/transitions/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056-TRUST-ROOT.result.json",
+  "changes": [
+    "Added a universal CANONICAL_RUNTIME_BOOTSTRAP that reads the live canonical Project Leader plugin manifest and Skill contract before substantive routing whenever GitHub read access is available.",
+    "Added RUNTIME_SYNC_STALE and RUNTIME_CANONICAL_OVERRIDE_ACTIVE so a stale loaded ChatGPT Skill copy yields immediately to the live canonical contract for the current invocation instead of asking the Owner to resync, reinstall or wait for marketplace propagation.",
+    "Kept bare @Project Leader activation brief after the silent bootstrap and retained the installed Skill as a safe fallback when canonical GitHub is temporarily unreadable.",
+    "Explicitly avoided marketplace pluginId migration because the Owner does not want to preserve the legacy plugin identity.",
+    "Bumped Project Leader package version from 0.6.3 to 0.6.4 and added CI/regression/smoke coverage."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "GitHub compare from canonical base a2f7d8e207b979095f1866d9c526002cf5b98b6a to implementation head 9caf83fe70a19fef6b05d721cdd79053b5b8d4a1 is ahead-only and limited to task-authorized Project Leader runtime/docs/tests/package metadata plus durable task/transition authorization."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation head 9caf83fe70a19fef6b05d721cdd79053b5b8d4a1 passed Validate control plane 37201631363, Package ChatGPT plugins 37201631354 and Control contract tests 37201631366."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Task Authorization d9b132d8ce6060d2bbe95d780dbd1f3053ce1a23 and trust-root authorization f4f730dd7e0e64ed59c641cd452716c91388b3dc are ancestors of all runtime/control-contract mutations."
+    },
+    {
+      "name": "Canonical runtime bootstrap behavior",
+      "status": "PASS",
+      "evidence": "Canonical Skill, PROJECT_LEADER.md, RUNBOOK.md, regression tests and smoke test 21 all require CANONICAL_RUNTIME_BOOTSTRAP plus RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE and forbid blocking on resync/reinstall/cache propagation."
+    },
+    {
+      "name": "Legacy-identity non-preservation",
+      "status": "PASS",
+      "evidence": "The project-leader marketplace entry remains without pluginId and tests explicitly reject adding pluginId for this task."
+    },
+    {
+      "name": "Packaged skill/runtime alignment",
+      "status": "PASS",
+      "evidence": "Project Leader plugin.json is 0.6.4, packaged Skill contains the bootstrap contract, and package workflow 37201631354 succeeded."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37201631366
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37201631363
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37201631354
+    }
+  ],
+  "artifacts": [
+    "project-leader-plugin artifact 11303391067",
+    "recovery-guardian-plugin artifact 11303012102",
+    "plugin-supply-chain-manifest artifact 11303091754"
+  ],
+  "material_non_effects": [
+    "No PINK IPTV, FADEGO, VCAM-PRO or other managed-project repository mutation.",
+    "No workspace plugin uninstall, installation-policy change, legacy plugin identity migration, marketplace pluginId, VPS/OVH change, deploy, release, production secret, paid service, branch protection or force-push.",
+    "The correction does not claim to trigger the ChatGPT Marketplace Sync now button; it removes execution-time dependence on propagation once this bootstrap-capable runtime is present."
+  ],
+  "residual_blockers": []
+}

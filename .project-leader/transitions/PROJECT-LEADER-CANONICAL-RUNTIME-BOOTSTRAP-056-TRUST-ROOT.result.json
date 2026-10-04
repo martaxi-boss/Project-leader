@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/canonical-runtime-bootstrap-056",
+    "revision": "d9b132d8ce6060d2bbe95d780dbd1f3053ce1a23",
+    "base_revision": "a2f7d8e207b979095f1866d9c526002cf5b98b6a",
+    "environment": null
+  },
+  "observed_at": "2026-10-04T12:19:00Z",
+  "final_state": {
+    "status": "MUTATED",
+    "revision": "9caf83fe70a19fef6b05d721cdd79053b5b8d4a1"
+  },
+  "evidence": [
+    "Immutable Task Authorization commit d9b132d8ce6060d2bbe95d780dbd1f3053ce1a23 and exact trust-root authorization commit f4f730dd7e0e64ed59c641cd452716c91388b3dc preceded all runtime/control-contract edits.",
+    "Project Leader 0.6.4 adds CANONICAL_RUNTIME_BOOTSTRAP, RUNTIME_SYNC_STALE and RUNTIME_CANONICAL_OVERRIDE_ACTIVE to the packaged Skill and canonical operating contracts.",
+    "Implementation head 9caf83fe70a19fef6b05d721cdd79053b5b8d4a1 passed Validate control plane run 37201631363, Package ChatGPT plugins run 37201631354 and Control contract tests run 37201631366.",
+    "The marketplace entry for project-leader remains GitHub-local and contains no pluginId, so the task does not preserve or migrate the legacy plugin identity."
+  ],
+  "residual_blockers": []
+}
