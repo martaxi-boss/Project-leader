@@ -527,6 +527,26 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Test 20 — Universal internal-operation liveness", smoke)
         self.assertNotIn("parked as `WAITING_EXTERNAL_*`", "")
     
+    def test_project_leader_uses_canonical_runtime_bootstrap_when_loaded_skill_is_stale(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+        marketplace = json.loads((ROOT / ".agents/plugins/marketplace.json").read_text(encoding="utf-8"))
+
+        for content in (project, runbook, skill):
+            self.assertIn("CANONICAL_RUNTIME_BOOTSTRAP", content)
+            self.assertIn("RUNTIME_SYNC_STALE", content)
+            self.assertIn("RUNTIME_CANONICAL_OVERRIDE_ACTIVE", content)
+
+        self.assertIn("plugins/project-leader/plugin.json", skill)
+        self.assertIn("plugins/project-leader/skills/project-leader/SKILL.md", skill)
+        self.assertIn("Do not ask the Owner to resync", skill)
+        self.assertIn("Test 21 — Canonical runtime bootstrap after marketplace lag", smoke)
+
+        project_leader_entry = next(item for item in marketplace["plugins"] if item["name"] == "project-leader")
+        self.assertNotIn("pluginId", project_leader_entry)
+
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
         recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
