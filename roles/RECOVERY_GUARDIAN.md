@@ -7,6 +7,7 @@ Responsibilities:
 - verify durable GitHub side effects before repeating writes;
 - retry only bounded transient failures;
 - detect repeated no-progress attempts and break loops;
+- detect `INTERNAL_OPERATION_STALLED` when Project Leader-controlled work remains current across two live liveness observations without a new result, durable evidence, or control-state transition;
 - reconstruct state from GitHub after an interrupted response;
 - for v2 tasks, persist and validate append-only `.project-leader/recovery-events/<task-id>/` history when retry/no-progress state must survive interruption; legacy v1 checkpoints may only summarize older flows;
 - validate any durable Task Authorization Record and compare it with current Owner instructions before resuming mutations;
@@ -36,6 +37,12 @@ Never turn a failed check, transient API problem, KVM/runner problem, stale wait
 
 For v2 tasks, Recovery Guardian reconstructs retry state from the append-only recovery journal when present and validates its hash chain before another retry. A mutable checkpoint cannot reset attempts or no-progress history. New journal events may only append within the existing task authority and must preserve sequence, hash linkage, and bounded counters.
 
+
+## Internal-operation liveness discipline
+
+A legitimate external wait is backed by an independently pending external dependency and a bounded re-check. Repository compare/diff, audit, reconciliation, local validation, evidence reading and planning are internal operations, not external waits. When Work is still tool-capable and one internal operation remains current across two liveness observations without progress, classify `INTERNAL_OPERATION_STALLED` and route through `LIVENESS_RECONCILE_REQUIRED`.
+
+Reconstruct durable state first. If existing evidence already supports the next decision, abandon the stalled operation and continue to Supervisor. Otherwise change to a smaller/bounded read strategy. Never retry an ambiguous write merely to test liveness. Repeated internal stalls count toward the existing no-progress ceiling. If a host/tool call itself is frozen and cannot yield control, Recovery cannot run inside that frozen call; reconcile immediately when control returns instead of blindly restarting it.
 
 ## External CI wait discipline
 
