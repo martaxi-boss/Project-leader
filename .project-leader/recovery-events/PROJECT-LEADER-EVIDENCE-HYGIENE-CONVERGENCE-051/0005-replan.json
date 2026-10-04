@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-051",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 5,
+  "recorded_at": "2026-10-04T11:38:10Z",
+  "event": "REPLAN",
+  "strategy_generation": 3,
+  "action_fingerprint": "bind-historical-results-to-authorization-digests",
+  "attempt_count": 2,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 2,
+  "previous_event_sha256": "1389d59c2e9d6578abaeb709e6215b79daa3e67b8daef1e5f09b7f09310e8882",
+  "detail": "Change strategy by binding each preserved immutable historical Worker Result to the exact original authorization commit and SHA-256 digest, then revalidate before continuing. No source, runtime, or managed-project change is required."
+}
