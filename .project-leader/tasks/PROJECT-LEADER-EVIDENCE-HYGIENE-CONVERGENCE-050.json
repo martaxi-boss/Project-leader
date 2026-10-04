@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-050",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-04T11:31:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner instructed Project Leader to perform repository hygiene now, in parallel with closeout. Live audit found unique canonical evidence stranded on control branches 047/048r/049 and an obsolete pre-PR attempt branch 048. Task 050 is limited to preserving that durable evidence in main, correcting the PR #48 transition record from a temporary HISTORICAL_OBSERVED conclusion to the already-existing pre-effect authorized SUCCESS record found on control/merge-authorization-048r, preserving the obsolete 048 task as a non-success historical execution packet, and allowing existing repository-hygiene automation to delete only branches proven ancestry/content-equivalent after merge. No managed project or production/runtime mutation."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "f4c7b207646cf084f1c9acda7fd6b71f8a949b49",
+    "task_branch": "builder/evidence-hygiene-convergence-050",
+    "pr_number": null
+  },
+  "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+  "mutation_scope": [
+    ".project-leader/tasks/PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-050.json",
+    ".project-leader/results/PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-050.json",
+    ".project-leader/tasks/PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048.json",
+    ".project-leader/results/PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048.json",
+    ".project-leader/transitions/PROJECT-LEADER-SELF-PROVISIONED-DIAGNOSTICS-047-MERGE.authorization.json",
+    ".project-leader/transitions/PROJECT-LEADER-SELF-PROVISIONED-DIAGNOSTICS-047-MERGE.result.json",
+    ".project-leader/transitions/PROJECT-LEADER-SELF-PROVISIONED-DIAGNOSTICS-047-DELETE-046-CONTROL.result.json",
+    ".project-leader/transitions/PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048R-MERGE.authorization.json",
+    ".project-leader/transitions/PROJECT-LEADER-INTERNAL-OPERATION-LIVENESS-048R-MERGE.result.json",
+    ".project-leader/transitions/PROJECT-LEADER-MERGE-RECONCILIATION-049-MERGE.authorization.json",
+    ".project-leader/transitions/PROJECT-LEADER-MERGE-RECONCILIATION-049-MERGE.result.json"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "preserve_historical_evidence",
+    "allow_existing_safe_repository_hygiene"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "force_push",
+    "rewrite_git_history",
+    "delete_main",
+    "delete_unmerged_unique_history",
+    "unrelated_refactor",
+    "trust_root_mutation"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Pre-effect PR48 merge authorization proof",
+    "Historical evidence preservation",
+    "Post-hygiene survivor audit"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "f4c7b207646cf084f1c9acda7fd6b71f8a949b49",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Canonical main contains the unique 047/048R/049 transition evidence, PR #48 is represented by the pre-effect exact merge authorization commit 66901be876b7435fe1b270c1e0e4356b444bb167 and its SUCCESS result rather than the temporary historical-observed conclusion, obsolete task 048 is preserved with a non-success Worker Result explaining its supersession, required CI/trusted gate pass, and repository hygiene removes only non-main refs proven safe by ancestry/equivalence while preserving any remaining unique current control evidence.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
