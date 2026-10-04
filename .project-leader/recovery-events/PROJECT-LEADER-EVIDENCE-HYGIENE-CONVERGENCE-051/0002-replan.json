@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-051",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 2,
+  "recorded_at": "2026-10-04T11:36:10Z",
+  "event": "REPLAN",
+  "strategy_generation": 2,
+  "action_fingerprint": "preserve-evidence-bounded-batches",
+  "attempt_count": 1,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 1,
+  "previous_event_sha256": "f0622ba85673768159eabc3ed9c14eb42218021e446a768a49aaa64c4a19531b",
+  "detail": "Change strategy from one large orchestration to bounded batches. Reuse already-created immutable source evidence, limit each tool batch, verify branch head after each durable step, and do not repeat any ambiguous Git write."
+}
