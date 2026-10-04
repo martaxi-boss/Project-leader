@@ -43,8 +43,8 @@ New tasks use v2 records, immutable authorization before implementation, exact p
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.0**.
-- Recovery Guardian: **0.5.0**.
+- Project Leader: **0.6.1**.
+- Recovery Guardian: **0.5.1**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
