@@ -1,0 +1,127 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-04T01:45:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner explicitly orders Project Leader to correct the newly observed autonomy gap without breaking existing behavior and to perform same-execution hygiene. The correction must prevent routine manual/browser/tool-approval prompts when native non-interactive capabilities or repository-return paths remain available, preserve all existing access-discovery, recovery, CI, evidence and project-isolation controls, and preserve/canonicalize unique transition history before any cleanup."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "80288f44a236c0ca4095bf4399492632e0152dbe",
+    "task_branch": "builder/noninteractive-fallback-hygiene-043",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "RECOVERY_PROTOCOL.md",
+    "SMOKE_TESTS.md",
+    "README.md",
+    "PLUGIN_SETUP.md",
+    "roles/SUPERVISOR.md",
+    "roles/RECOVERY_GUARDIAN.md",
+    "control/managed_project_contract.py",
+    "tests/test_managed_project_contract.py",
+    "tests/test_control_contract.py",
+    "plugins/project-leader/plugin.json",
+    "plugins/project-leader/skills/project-leader/SKILL.md",
+    "plugins/project-leader/skills/project-leader/references/recovery-protocol.md",
+    "plugins/recovery-guardian/plugin.json",
+    "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
+    "plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md",
+    ".project-leader/tasks/PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043.json",
+    ".project-leader/results/PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043.json",
+    ".project-leader/recovery-events/PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043/**",
+    ".project-leader/transitions/PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043-*",
+    ".project-leader/transitions/PROJECT-LEADER-ACCESS-DISCOVERY-HYGIENE-042-MERGE.authorization.json",
+    ".project-leader/transitions/PROJECT-LEADER-ACCESS-DISCOVERY-HYGIENE-042-MERGE.result.json",
+    ".project-leader/transitions/PROJECT-LEADER-ACCESS-DISCOVERY-HYGIENE-042-DELETE-041-CONTROL.result.json"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "harden_trust_root",
+    "reconcile_control_contract_docs",
+    "reconcile_transition_records"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "cross_project_mutation",
+    "force_push",
+    "weaken_ci_or_security_controls"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Non-interactive fallback closure",
+    "Native tool capability exhaustion",
+    "Interactive-tool consent gate proof",
+    "Packaged skill/runtime alignment",
+    "Historical transition preservation",
+    "Obsolete branch audit"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "80288f44a236c0ca4095bf4399492632e0152dbe",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Project Leader must not ask the Owner to approve a browser, copy terminal commands, or switch tools merely because the currently selected connector is insufficient while a non-interactive native capability, GitHub subresource, workflow log/job/step/artifact/check path, repository-return path, or separately taskable covered operational channel remains. Native capability discovery and non-interactive diagnostics must be exhausted first; only an irreducible platform-enforced consent after convergence may become EXCLUSIVE_HUMAN_INTERVENTION. Existing FORCED_OPERATIONAL_ACCESS_DISCOVERY behavior, recovery integrity, project isolation and security/evidence controls must remain intact. The unique 042 merge/deletion transition evidence must be canonicalized so repository hygiene can safely remove the obsolete control/merge-authorization-042 ref. All required CI must pass before exact integration.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
