@@ -78,6 +78,22 @@ It is valid only when the next irreducible step is:
 
 Covered technical failures, incomplete checks, CI failures, retries, recovery, or executable consequential transitions are not Owner-permission events.
 
+`standing_authority.resolve_next_action` enforces this closure. `system_can_execute=False` alone returns discovery/remediation, never `HUMAN_GATE`. Pass raw `access_discovery` and `diagnostic_fallback` observations using the arguments of the existing reconcilers in `managed_project_contract.py`; the resolver recomputes their outcomes. A claimed `state`/`route` is not closure evidence. Existing channels, covered diagnostic bridges and unresolved bridge authority route back to the appropriate autonomous phase.
+
+Honor the returned `route` when present. `CONTINUE_REMEDIATION` describes the original action's incomplete executability; a `CONTINUE` or `CONTINUE_DIAGNOSTIC` route means use the selected channel, then re-resolve the original action. It does not request code changes or Owner permission by itself. Bridge and authority-resolution routes select their respective Supervisor/Builder phase.
+
+When diagnostic fallback is exhausted, follow `REENTER_ACCESS_DISCOVERY` and obtain fresh operational observations after that fallback. Supply them as `post_fallback_access_discovery`; the resolver recomputes them before considering an access gate. An absent post-fallback snapshot returns the re-entry route, an incomplete one continues discovery, and a newly found path continues automatically. Supervisor verifies the observation order against real evidence; do not relabel the earlier snapshot as fresh. This bounded re-entry is part of closure, not permission to loop indefinitely.
+
+Before a human interruption, set `convergence_complete=True` only after Supervisor verifies that currently executable covered work which does not depend on that human step is complete. This also applies to new uncovered material decisions; it never authorizes implementing the uncovered decision. Keep `controls_satisfied` scoped to the prerequisites of the exact next action: a manual test's future result is not a prerequisite for asking the person to perform it, but failing automated checks must be remediated first.
+
+For an actual manual action, supply `human_intervention={"kind": ..., "evidence": ...}`. Evidence must identify the exact step, its canonical acceptance requirement or observed platform constraint, and why the available automation cannot perform it. Supervisor verifies it independently; the object is an audit index, not proof by itself.
+
+- `PHYSICAL_DEVICE_TEST`, `HARDWARE_INTERACTION`, `OWNER_HELD_INPUT`: evidenced physical interaction or information only the Owner possesses may bypass operational access discovery.
+- `PLATFORM_CONSENT_REQUIRED`: account MFA/consent may become a gate only after complete operational discovery and native/self-provisioned diagnostic closure.
+- `ACCESS_PATH_UNAVAILABLE`: complete discovery and diagnostic exhaustion still require an identified action only the Owner can perform.
+
+Missing evidence remains Supervisor remediation/authority resolution. A technical failure cannot be relabelled as a manual intervention. Apply the existing anti-loop protocol if further evidence cannot be obtained; do not fabricate a gate or repeat exhausted discovery.
+
 ## External target-project policy
 
 Project Leader does not require a central registry of projects.

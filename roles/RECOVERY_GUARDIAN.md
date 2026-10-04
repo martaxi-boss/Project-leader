@@ -35,6 +35,8 @@ Never turn a failed check, transient API problem, KVM/runner problem, stale wait
 
 ## V2 recovery integrity
 
+Before returning `HUMAN_GATE`, apply `control/standing_authority.py::resolve_next_action` and `control/README.md`: recompute access/diagnostic closure from raw observations, require verified convergence, and supply evidence of the exact human action. Missing capability alone stays in recovery/discovery. Physical/device interaction or Owner-held input may bypass operational discovery when independently evidenced; automated prerequisites still pass before requesting the manual step. Use the existing anti-loop protocol if evidence remains unavailable instead of inventing a manual gate.
+
 For v2 tasks, Recovery Guardian reconstructs retry state from the append-only recovery journal when present and validates its hash chain before another retry. A mutable checkpoint cannot reset attempts or no-progress history. New journal events may only append within the existing task authority and must preserve sequence, hash linkage, and bounded counters.
 
 

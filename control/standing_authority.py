@@ -7,6 +7,16 @@ because the next irreducible step is genuinely human/manual or a new material
 decision.
 """
 
+from control.managed_project_contract import (
+    ACCESS_DISCOVERY_INCOMPLETE,
+    ACCESS_PATH_UNAVAILABLE,
+    NONINTERACTIVE_FALLBACK_EXHAUSTED,
+    NONINTERACTIVE_FALLBACK_INCOMPLETE,
+    PLATFORM_CONSENT_REQUIRED,
+    reconcile_noninteractive_tool_fallback,
+    reconcile_operational_access_discovery,
+)
+
 CONTINUE_AUTONOMOUSLY = "CONTINUE_AUTONOMOUSLY"
 CONTINUE_REMEDIATION = "CONTINUE_REMEDIATION"
 HUMAN_GATE = "HUMAN_GATE"
@@ -14,6 +24,31 @@ HUMAN_GATE = "HUMAN_GATE"
 EXCLUSIVE_HUMAN_INTERVENTION = "EXCLUSIVE_HUMAN_INTERVENTION"
 NEW_UNCOVERED_MATERIAL_DECISION = "NEW_UNCOVERED_MATERIAL_DECISION"
 STANDING_OWNER_GRANT = "STANDING_OWNER_GRANT"
+
+DIRECT_MANUAL_KINDS = frozenset({
+    "PHYSICAL_DEVICE_TEST", "HARDWARE_INTERACTION", "OWNER_HELD_INPUT",
+})
+ACCESS_MANUAL_KINDS = frozenset({ACCESS_PATH_UNAVAILABLE, PLATFORM_CONSENT_REQUIRED})
+
+
+def _human_intervention(record):
+    if record is None:
+        return None
+    if not isinstance(record, dict) or set(record) != {"kind", "evidence"}:
+        raise ValueError("human_intervention must contain only kind and evidence")
+    if not isinstance(record["kind"], str) or record["kind"] not in DIRECT_MANUAL_KINDS | ACCESS_MANUAL_KINDS:
+        raise ValueError("human_intervention kind must identify a genuine manual action")
+    if not isinstance(record["evidence"], str) or not record["evidence"].strip():
+        raise ValueError("human_intervention evidence must explain the exact irreducible human step")
+    return dict(record)
+
+
+def _observations(record, defaults):
+    if record is None:
+        return dict(defaults)
+    if not isinstance(record, dict) or set(record) - set(defaults):
+        raise ValueError("preflight input must contain raw observations, not a claimed state/route")
+    return {**defaults, **record}
 
 
 def resolve_next_action(
@@ -23,11 +58,21 @@ def resolve_next_action(
     system_can_execute,
     controls_satisfied,
     new_material_decision=False,
+    convergence_complete=False,
+    human_intervention=None,
+    access_discovery=None,
+    diagnostic_fallback=None,
+    post_fallback_access_discovery=None,
 ):
     """Resolve the next Project Leader action without action-name gates.
 
     Action names and effect classes do not create a Human Gate by themselves.
-    The caller must already have reconstructed canonical project state.
+    The caller must already have reconstructed canonical project state. A
+    missing-capability boolean is an observation, never Human Gate evidence.
+    Recompute access/diagnostic closure from raw discovery observations. Only
+    evidenced physical/manual steps may bypass operational access discovery.
+    controls_satisfied describes prerequisites for the exact next action, not
+    the outcome of a manual test that has yet to be performed.
 
     Returns a compact decision dictionary suitable for Supervisor/Recovery
     routing.
@@ -39,37 +84,121 @@ def resolve_next_action(
         ("system_can_execute", system_can_execute),
         ("controls_satisfied", controls_satisfied),
         ("new_material_decision", new_material_decision),
+        ("convergence_complete", convergence_complete),
     ):
         if not isinstance(value, bool):
             raise ValueError(f"{name} must be boolean")
 
-    if new_material_decision or not canonical_effect_covered:
+    manual = _human_intervention(human_intervention)
+
+    def decision(outcome, reason, authority_source=None, **evidence):
         return {
-            "decision": HUMAN_GATE,
-            "reason": NEW_UNCOVERED_MATERIAL_DECISION,
+            "decision": outcome,
+            "reason": reason,
             "action": action,
-            "authority_source": None,
+            "authority_source": authority_source,
+            **evidence,
         }
 
-    if not system_can_execute:
-        return {
-            "decision": HUMAN_GATE,
-            "reason": EXCLUSIVE_HUMAN_INTERVENTION,
-            "action": action,
-            "authority_source": None,
-        }
+    def converge():
+        return decision(
+            CONTINUE_REMEDIATION, "CONVERGENCE_PREFLIGHT_REQUIRED",
+            STANDING_OWNER_GRANT if canonical_effect_covered and not new_material_decision else None,
+            route="SUPERVISOR_AUDIT",
+        )
+
+    if new_material_decision or not canonical_effect_covered:
+        if not convergence_complete:
+            return converge()
+        return decision(HUMAN_GATE, NEW_UNCOVERED_MATERIAL_DECISION)
 
     if not controls_satisfied:
-        return {
-            "decision": CONTINUE_REMEDIATION,
-            "reason": "COVERED_CONTROLS_NOT_YET_SATISFIED",
-            "action": action,
-            "authority_source": STANDING_OWNER_GRANT,
-        }
+        return decision(
+            CONTINUE_REMEDIATION, "COVERED_CONTROLS_NOT_YET_SATISFIED",
+            STANDING_OWNER_GRANT,
+        )
 
-    return {
-        "decision": CONTINUE_AUTONOMOUSLY,
-        "reason": "COVERED_EXECUTABLE_ACTION",
-        "action": action,
-        "authority_source": STANDING_OWNER_GRANT,
-    }
+    if system_can_execute:
+        return decision(
+            CONTINUE_AUTONOMOUSLY, "COVERED_EXECUTABLE_ACTION", STANDING_OWNER_GRANT,
+        )
+
+    if manual and manual["kind"] in DIRECT_MANUAL_KINDS:
+        if not convergence_complete:
+            return converge()
+        return decision(HUMAN_GATE, EXCLUSIVE_HUMAN_INTERVENTION, human_intervention=manual)
+
+    access_args = _observations(access_discovery, {
+        "searched_surfaces": [], "candidate_channels": [], "direct_access_available": False,
+    })
+    if not isinstance(access_args["direct_access_available"], bool):
+        raise ValueError("direct_access_available must be boolean")
+    access = reconcile_operational_access_discovery(**access_args)
+    if access["state"] not in {ACCESS_DISCOVERY_INCOMPLETE, ACCESS_PATH_UNAVAILABLE}:
+        return decision(
+            CONTINUE_REMEDIATION, access["state"], STANDING_OWNER_GRANT,
+            route=access["route"], access_discovery=access,
+        )
+
+    fallback = reconcile_noninteractive_tool_fallback(**_observations(diagnostic_fallback, {
+        "checked_surfaces": [], "candidate_channels": [],
+        "self_provisioning_checked": False, "self_provision_candidates": [],
+    }))
+    if fallback["state"] not in {
+        NONINTERACTIVE_FALLBACK_INCOMPLETE,
+        NONINTERACTIVE_FALLBACK_EXHAUSTED,
+        PLATFORM_CONSENT_REQUIRED,
+    }:
+        return decision(
+            CONTINUE_REMEDIATION, fallback["state"], STANDING_OWNER_GRANT,
+            route=fallback["route"], diagnostic_fallback=fallback,
+        )
+    for preflight, incomplete, key in (
+        (access, ACCESS_DISCOVERY_INCOMPLETE, "access_discovery"),
+        (fallback, NONINTERACTIVE_FALLBACK_INCOMPLETE, "diagnostic_fallback"),
+    ):
+        if preflight["state"] == incomplete:
+            return decision(
+                CONTINUE_REMEDIATION, incomplete, STANDING_OWNER_GRANT,
+                route=preflight["route"], **{key: preflight},
+            )
+
+    if fallback["state"] == NONINTERACTIVE_FALLBACK_EXHAUSTED:
+        if post_fallback_access_discovery is None:
+            return decision(
+                CONTINUE_REMEDIATION, NONINTERACTIVE_FALLBACK_EXHAUSTED,
+                STANDING_OWNER_GRANT, route=fallback["route"],
+                access_discovery=access, diagnostic_fallback=fallback,
+            )
+        # Re-enter forced discovery with observations obtained AFTER fallback;
+        # the earlier access snapshot cannot silently certify this re-entry.
+        post_args = _observations(post_fallback_access_discovery, {
+            "searched_surfaces": [], "candidate_channels": [], "direct_access_available": False,
+        })
+        if not isinstance(post_args["direct_access_available"], bool):
+            raise ValueError("direct_access_available must be boolean")
+        access = reconcile_operational_access_discovery(**post_args)
+        if access["state"] != ACCESS_PATH_UNAVAILABLE:
+            return decision(
+                CONTINUE_REMEDIATION, access["state"], STANDING_OWNER_GRANT,
+                route=access["route"], post_fallback_access_discovery=access,
+            )
+
+    # Exhaustion is a candidate, not proof of an action only the Owner can do.
+    expected_kind = (
+        PLATFORM_CONSENT_REQUIRED
+        if fallback["state"] == PLATFORM_CONSENT_REQUIRED
+        else ACCESS_PATH_UNAVAILABLE
+    )
+    if not manual or manual["kind"] != expected_kind:
+        return decision(
+            CONTINUE_REMEDIATION, "HUMAN_INTERVENTION_EVIDENCE_REQUIRED",
+            STANDING_OWNER_GRANT, route="SUPERVISOR_AUTHORITY_RESOLUTION",
+            access_discovery=access, diagnostic_fallback=fallback,
+        )
+    if not convergence_complete:
+        return converge()
+    return decision(
+        HUMAN_GATE, EXCLUSIVE_HUMAN_INTERVENTION, human_intervention=manual,
+        access_discovery=access, diagnostic_fallback=fallback,
+    )

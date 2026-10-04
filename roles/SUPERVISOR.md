@@ -33,6 +33,10 @@ Audit outcome:
 
 ## V2 trust duties
 
+Before a Human Gate, use `control/standing_authority.py::resolve_next_action` with the input contract in `control/README.md`. Independently audit the raw operational/diagnostic observations, exact `human_intervention` evidence and `convergence_complete` claim. Missing tooling alone cannot prove exclusive human intervention. Complete executable covered work independent of the human step first; a manual test's future result is not a prerequisite for requesting it. Do not implement an uncovered material decision during convergence.
+
+Honor the resolver's explicit `route`: positive channel routes continue through that channel, bridge routes bind the separate task, and authority routes return to Supervisor. `CONTINUE_REMEDIATION` on a found-channel result describes the original action's missing executability; it does not require code changes or Owner permission. Re-resolve the original action after using the selected path.
+
 For v2 Project Leader-local tasks, Supervisor binds policy to the exact live base. For external target projects, Supervisor must separately bind the target base SHA and the exact canonical Project Leader control revision + central policy path/profile/SHA-256, then verify requested scope/actions against that central policy ceiling before delegation. Select an explicitly maintained target policy when applicable; otherwise use `control/generic-project-policy.json` and narrow the task from the active target's architecture and live state. It must require policy-minimum CI, validation, prohibitions, and gated-effect controls. A policy gate does not force a new Owner prompt when standing authority already covers the effect. At audit, it must verify the trusted gate and external GitHub evidence verifier on the exact final head; a branch-authored Worker Result is never sufficient by itself.
 
 

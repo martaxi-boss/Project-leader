@@ -102,6 +102,10 @@ When a failure occurs inside a covered task:
 
 Recovery must not widen project scope or cross into another mutable repository. One mutable target repository per task remains mandatory.
 
+Before returning an Owner interruption, apply `control/standing_authority.py::resolve_next_action` and the closure inputs in `control/README.md`. A missing-capability boolean or a claimed exhausted preflight state is insufficient. Recompute access and diagnostic outcomes from raw observations, including self-provisioned bridges and authority resolution. Require convergence of currently executable covered work independent of the human step plus evidence of the exact irreducible action. Physical/device tests, hardware interaction or Owner-held input may bypass operational discovery only when independently evidenced and automated prerequisites pass. Do not require the future manual-test result before asking for that test. New uncovered material decisions require convergence without authorizing their implementation. Unobtainable evidence follows the existing bounded anti-loop path; never fabricate a manual gate to terminate a technical failure.
+
+After `NONINTERACTIVE_FALLBACK_EXHAUSTED`, perform the required `REENTER_ACCESS_DISCOVERY` with fresh operational observations and supply `post_fallback_access_discovery` to the closure resolver. An earlier access snapshot does not prove post-fallback reconciliation. A new path continues automatically; repeated exhaustion remains subject to the same anti-loop limits.
+
 ## Platform outage limitation
 
 A ChatGPT agent cannot observe, control, or repair another ChatGPT conversation while the ChatGPT service itself is unavailable. It also cannot press UI retry buttons in a dead session.

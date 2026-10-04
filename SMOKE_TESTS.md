@@ -257,6 +257,12 @@ Pass only if:
 
 Fail if startup, recovery, audit or hygiene can force a broad opaque compare before the smaller durable state vector has been checked, or if a hygiene run becomes a routine critical-path wait.
 
+## Test 23 — Executable Human Gate closure
+
+Exercise `control.standing_authority.resolve_next_action` with missing direct SSH, an available Actions bridge, incomplete native diagnostics, an available self-provisioned workflow, unresolved bridge authority, platform MFA, a genuine physical/device test, red automated CI and a new uncovered architecture decision.
+
+Pass only if missing capability alone stays in discovery/remediation; existing paths and bounded bridges continue through the existing autonomous phases; raw observations are recomputed rather than trusting a claimed exhausted state; platform consent waits for complete native/bridge/access discovery; and every human interruption requires verified convergence. A physical/device test may become a genuine gate after independent covered work and automated prerequisites are complete, without waiting for its future manual result. A new uncovered decision remains unimplemented and is presented only after independent covered work converges. Diagnostic exhaustion must re-enter access discovery with fresh post-fallback observations before an access gate is considered. Exhausted discovery without an identified human action must not fabricate a manual gate or repeat the exhausted strategy indefinitely.
+
 ## Final acceptance
 
 This section is closed only when:
