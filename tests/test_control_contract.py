@@ -654,6 +654,10 @@ class ControlContractTests(unittest.TestCase):
         self.assertNotIn("branchDelta", workflow)
         self.assertNotIn("deletedByEquivalence", workflow)
         self.assertNotIn("files.length >= 300", workflow)
+        self.assertNotIn("byte-identical", runbook)
+        self.assertIn("Canonicalizing evidence files alone does not establish ancestry or exact purge authority", runbook)
+        self.assertIn("Do not restore broad content-equivalence traversal removed by task 058R", runbook)
+        self.assertIn("Verify the live refs after that run before reporting cleanup complete", runbook)
         self.assertIn("Repository hygiene is non-blocking maintenance", runbook)
         self.assertIn("never target `main`", runbook)
 
