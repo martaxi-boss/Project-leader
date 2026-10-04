@@ -9,8 +9,8 @@ Project Leader also uses the Recovery Guardian protocol internally, so normal wo
 
 ## Current canonical runtime
 
-- Project Leader **0.6.1**.
-- Recovery Guardian **0.5.1**.
+- Project Leader **0.6.0**.
+- Recovery Guardian **0.5.0**.
 
 Before consequential work, read the live `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, role contracts and `projects/standing-authority.json` from canonical GitHub state. The active target's architecture and live repository state define its bounded task; external projects do not require central enrollment.
 
