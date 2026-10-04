@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-051",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 4,
+  "recorded_at": "2026-10-04T11:38:00Z",
+  "event": "FAILURE_OBSERVED",
+  "strategy_generation": 2,
+  "action_fingerprint": "preserve-evidence-bounded-batches",
+  "attempt_count": 2,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 2,
+  "previous_event_sha256": "c4591c8b7f5e10c58be2811aa4a1abe11a8b88bb83425d5e703531aea81ab9ce",
+  "detail": "Control contract tests run 37199357593 failed after the bounded preservation attempt because immutable historical task results 048 and 050 did not include authorization_commit_sha and authorization_sha256 together. No merge or main effect occurred."
+}
