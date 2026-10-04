@@ -500,6 +500,33 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Active Work liveness guard", recovery)
         self.assertIn("Active Work external-CI liveness", (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8"))
 
+    def test_project_leader_recovers_stalled_internal_operation(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        supervisor = (ROOT / "roles/SUPERVISOR.md").read_text(encoding="utf-8")
+        role = (ROOT / "roles/RECOVERY_GUARDIAN.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        skill_recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        guardian_recovery = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+        builder_prompt = (ROOT / "AGENT_BUILDER_PROMPT.md").read_text(encoding="utf-8")
+
+        for content in (project, runbook, recovery, supervisor, role, skill, skill_recovery, guardian, guardian_recovery, builder_prompt):
+            self.assertIn("INTERNAL_OPERATION_STALLED", content)
+            self.assertIn("LIVENESS_RECONCILE_REQUIRED", content)
+
+        self.assertIn("legitimate external wait", skill)
+        self.assertIn("internal operations", skill)
+        self.assertIn("two liveness observations", recovery)
+        self.assertIn("existing evidence is already sufficient", skill)
+        self.assertIn("smaller/bounded read strategy", runbook)
+        self.assertIn("Never retry an ambiguous write merely to test liveness", role)
+        self.assertIn("host runtime or connector call itself is frozen", skill)
+        self.assertIn("Test 20 — Universal internal-operation liveness", smoke)
+        self.assertNotIn("parked as `WAITING_EXTERNAL_*`", "")
+    
     def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
         recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
@@ -650,8 +677,8 @@ class ControlContractTests(unittest.TestCase):
     def test_plugin_versions_mark_autonomous_runtime_generation(self):
         project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
         recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(project_leader["version"], "0.6.2")
-        self.assertEqual(recovery["version"], "0.5.2")
+        self.assertEqual(project_leader["version"], "0.6.3")
+        self.assertEqual(recovery["version"], "0.5.3")
         self.assertIn("standing authority", project_leader["description"].lower())
         self.assertIn("standing-authority", recovery["description"].lower())
 
