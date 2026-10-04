@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-051",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 6,
+  "recorded_at": "2026-10-04T11:38:20Z",
+  "event": "RETRY_AUTHORIZED",
+  "strategy_generation": 3,
+  "action_fingerprint": "bind-historical-results-to-authorization-digests",
+  "attempt_count": 3,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 2,
+  "previous_event_sha256": "ed258a9b0bd2c7723ddba1b034c488ebdc694a8a2214ee24dc3c83edb286cd59",
+  "detail": "Retry is authorized after the exact task-file digests were independently reconstructed. Update only the two historical Worker Results within task scope and re-run validation on the new descendant SHA."
+}
