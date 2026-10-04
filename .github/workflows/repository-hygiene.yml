@@ -99,13 +99,12 @@ jobs:
               tree_sha: mainSha,
               recursive: 'true',
             });
-            const authPaths = mainTree.data.tree
-              .filter(
-                (entry) =>
-                  entry.type === 'blob' &&
-                  entry.path?.startsWith('.project-leader/transitions/') &&
-                  entry.path?.endsWith('.authorization.json'),
-              );
+            const authPaths = mainTree.data.tree.filter(
+              (entry) =>
+                entry.type === 'blob' &&
+                entry.path?.startsWith('.project-leader/transitions/') &&
+                entry.path?.endsWith('.authorization.json'),
+            );
 
             for (const entry of authPaths) {
               const blob = await github.rest.git.getBlob({
@@ -144,32 +143,7 @@ jobs:
 
             const deletedByOwnerAuthorization = [];
             const deletedByAncestry = [];
-            const deletedByEquivalence = [];
             const preserved = [];
-
-            async function getPathState(path, ref) {
-              try {
-                const response = await github.rest.repos.getContent({
-                  owner,
-                  repo,
-                  path,
-                  ref,
-                });
-                if (Array.isArray(response.data) || !response.data.sha) {
-                  return { kind: 'unsupported' };
-                }
-                return {
-                  kind: 'present',
-                  sha: response.data.sha,
-                  type: response.data.type,
-                };
-              } catch (error) {
-                if (error.status === 404) {
-                  return { kind: 'missing' };
-                }
-                throw error;
-              }
-            }
 
             async function deleteBranch(name, bucket) {
               try {
@@ -227,93 +201,33 @@ jobs:
                 continue;
               }
 
+              if (branch.name.startsWith('control/merge-authorization-')) {
+                preserved.push({
+                  name: branch.name,
+                  sha: branch.commit.sha,
+                  reason:
+                    'durable transition-evidence ref; requires exact purge authorization',
+                });
+                continue;
+              }
+
               const comparison = await github.rest.repos.compareCommits({
                 owner,
                 repo,
                 base: branch.commit.sha,
                 head: mainSha,
+                per_page: 1,
               });
               const mergeBase = comparison.data.merge_base_commit?.sha;
 
               if (mergeBase === branch.commit.sha) {
                 await deleteBranch(branch.name, deletedByAncestry);
-                continue;
-              }
-
-              if (!mergeBase) {
-                preserved.push({
-                  name: branch.name,
-                  sha: branch.commit.sha,
-                  reason: 'missing merge-base evidence',
-                });
-                continue;
-              }
-
-              const branchDelta = await github.rest.repos.compareCommits({
-                owner,
-                repo,
-                base: mergeBase,
-                head: branch.commit.sha,
-              });
-              const files = branchDelta.data.files;
-
-              if (!Array.isArray(files) || files.length >= 300) {
-                preserved.push({
-                  name: branch.name,
-                  sha: branch.commit.sha,
-                  reason:
-                    'branch delta is unavailable or too large for safe equivalence proof',
-                });
-                continue;
-              }
-
-              let equivalent = true;
-              let reason =
-                'all branch-specific final file states equal canonical main';
-
-              for (const file of files) {
-                if (!['added', 'modified', 'removed'].includes(file.status)) {
-                  equivalent = false;
-                  reason =
-                    `unsupported file status for safe proof: ${file.status} ${file.filename}`;
-                  break;
-                }
-
-                const mainState = await getPathState(file.filename, mainSha);
-
-                if (file.status === 'removed') {
-                  if (mainState.kind !== 'missing') {
-                    equivalent = false;
-                    reason =
-                      `removed path still exists in main: ${file.filename}`;
-                    break;
-                  }
-                  continue;
-                }
-
-                const branchState = await getPathState(
-                  file.filename,
-                  branch.commit.sha,
-                );
-                if (
-                  branchState.kind !== 'present' ||
-                  mainState.kind !== 'present' ||
-                  branchState.sha !== mainState.sha
-                ) {
-                  equivalent = false;
-                  reason =
-                    `branch content differs from main: ${file.filename}`;
-                  break;
-                }
-              }
-
-              if (equivalent) {
-                await deleteBranch(branch.name, deletedByEquivalence);
               } else {
                 preserved.push({
                   name: branch.name,
                   sha: branch.commit.sha,
-                  reason,
+                  reason:
+                    'not fully contained in main; no exact purge authorization',
                 });
               }
             }
@@ -330,10 +244,6 @@ jobs:
               .addHeading('Deleted by ancestry', 2)
               .addList(
                 deletedByAncestry.length ? deletedByAncestry : ['None'],
-              )
-              .addHeading('Deleted by canonical content equivalence', 2)
-              .addList(
-                deletedByEquivalence.length ? deletedByEquivalence : ['None'],
               )
               .addHeading('Preserved branches', 2)
               .addList(
