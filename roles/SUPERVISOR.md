@@ -18,7 +18,8 @@ After Builder work:
 - require named `required_validation`/`required_ci` gates to pass before accepting `TERMINAL_SUCCESS`;
 - for every consequential transition, require exact-revision transition authorization/result records; when `projects/standing-authority.json` covers the exact executable effect, authorize with `STANDING_OWNER_GRANT` rather than asking the Owner again; never infer authorization from the observed effect alone;
 - if remediation is local and within the same authorized scope, issue a precise remediation task to Builder automatically;
-- before any Owner interruption, resolve the next action through the standing-authority rule: uncovered controls route to remediation, covered executable transitions continue automatically, and only `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION` becomes a Human Gate.
+- before any Owner interruption, resolve the next action through the standing-authority rule: uncovered controls route to remediation, covered executable transitions continue automatically, and only `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION` becomes a Human Gate;
+- when a connector/tool method is insufficient, require native capability inventory and non-interactive diagnostic fallback before accepting a browser/tool-consent request as `EXCLUSIVE_HUMAN_INTERVENTION`; one missing endpoint is not connector-wide exhaustion.
 
 Default permissions:
 - GitHub read access is required;
