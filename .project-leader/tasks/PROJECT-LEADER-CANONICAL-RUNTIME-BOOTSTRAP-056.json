@@ -1,0 +1,98 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-04T12:10:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner explicitly requested a correction so that after GitHub changes and marketplace synchronization, @Project Leader immediately works from the newest canonical contract and no longer depends on an older cached plugin copy. Owner does not want to preserve or migrate the legacy plugin identity. This task adds a universal canonical runtime bootstrap to Project Leader itself, leaves marketplace identity migration/pluginId out of scope, and adds CI/smoke coverage so future stale runtime copies self-reconcile against canonical GitHub before substantive execution."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "a2f7d8e207b979095f1866d9c526002cf5b98b6a",
+    "task_branch": "builder/canonical-runtime-bootstrap-056",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "SMOKE_TESTS.md",
+    "README.md",
+    "PLUGIN_SETUP.md",
+    "tests/test_control_contract.py",
+    ".github/workflows/validate-control-plane.yml",
+    "plugins/project-leader/plugin.json",
+    "plugins/project-leader/skills/project-leader/SKILL.md",
+    ".project-leader/tasks/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056.json",
+    ".project-leader/results/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056.json",
+    ".project-leader/recovery-events/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056/**",
+    ".project-leader/transitions/PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056-*"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "harden_trust_root",
+    "reconcile_control_contract_docs"
+  ],
+  "prohibited_actions": [
+    "preserve_or_migrate_legacy_plugin_identity",
+    "add_marketplace_pluginId",
+    "delete_or_uninstall_workspace_plugin",
+    "modify_workspace_installation_policy",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "force_push",
+    "unrelated_refactor",
+    "weaken_ci_or_security_controls"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Canonical runtime bootstrap behavior",
+    "Legacy-identity non-preservation",
+    "Packaged skill/runtime alignment"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "a2f7d8e207b979095f1866d9c526002cf5b98b6a",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Project Leader performs a read-only CANONICAL_RUNTIME_BOOTSTRAP on every activation before substantive execution: it reads the live canonical plugin manifest and Skill contract from martaxi-boss/Project-leader main when GitHub is available, compares them to the loaded runtime contract, classifies stale loaded runtime as RUNTIME_SYNC_STALE, activates RUNTIME_CANONICAL_OVERRIDE_ACTIVE, and executes the current invocation under the live canonical contract without asking the Owner to resync or waiting for marketplace cache propagation. Bare invocation remains brief after silent bootstrap. If canonical GitHub cannot be read, the installed Skill remains the safe fallback and ordinary access discovery applies only when the requested task actually needs unavailable evidence. Marketplace pluginId migration is not introduced. Project Leader version is bumped and required CI/package validation passes.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
