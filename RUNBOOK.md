@@ -66,14 +66,20 @@ For GitHub Actions, inspect the available run metadata and, where exposed, jobs,
 
 Prefer diagnostics that return to GitHub through sanitized logs, artifacts, checks, or other durable evidence. A separately bounded operations task that creates or fixes such a return path is preferable to requiring terminal copy/paste when current authority covers it.
 
+After native/read-only evidence is exhausted, run the universal self-provisioning check before any Owner prompt. Ask whether Project Leader can create a bounded diagnostic bridge itself: for example an ephemeral GitHub Actions workflow on a dedicated task branch in the active repository, a temporary read-only probe, or a separate bounded task in an existing operations repository with the necessary environment reachability. The bridge must use minimum permissions and existing authorized secret names, must emit only sanitized diagnostics, and must not create production side effects, incur cost, expose credential values, or combine mutations across repositories in one task.
+
+If a bridge is provisionable and current authority covers it, create/use it automatically and continue. If it is provisionable but authority is unresolved, route to Supervisor authority resolution first. Do not ask the Owner to choose or route the tool.
+
 Route this preflight as:
 
-- `NONINTERACTIVE_FALLBACK_INCOMPLETE` -> keep discovering native diagnostic surfaces;
+- `NONINTERACTIVE_FALLBACK_INCOMPLETE` -> keep discovering native or self-provisioned diagnostic surfaces;
 - `NONINTERACTIVE_PATH_FOUND` -> continue diagnosis automatically;
+- `DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK` -> create/use the bounded diagnostic bridge automatically when covered;
+- `DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION` -> Supervisor authority resolution;
 - `NONINTERACTIVE_FALLBACK_EXHAUSTED` -> re-enter `FORCED_OPERATIONAL_ACCESS_DISCOVERY` for another operational path;
-- `PLATFORM_CONSENT_REQUIRED` -> only after non-interactive exhaustion may a host-enforced browser/tool-consent action become an `EXCLUSIVE_HUMAN_INTERVENTION` candidate.
+- `PLATFORM_CONSENT_REQUIRED` -> only after native evidence, repository-return paths, self-provisioning, covered operations paths and authority resolution are exhausted may a host-enforced browser/tool-consent action become an `EXCLUSIVE_HUMAN_INTERVENTION` candidate.
 
-The Owner must never be used as a routing mechanism between tools that Project Leader can already use non-interactively.
+The Owner must never be used as a routing mechanism between tools that Project Leader can already use or safely provision under existing authority. Legitimate manual gates remain actions that genuinely require a person, such as device/physical tests, MFA/account consent, CAPTCHA or hardware interaction.
 
 ## Recovery rules
 
