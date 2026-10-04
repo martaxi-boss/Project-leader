@@ -467,7 +467,7 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("repository-return", project)
         self.assertIn("The Owner must never be used as a routing mechanism", runbook)
         self.assertIn("one connector method lacks the needed detail", recovery)
-        self.assertIn("asks the Owner to approve a browser/tool switch", skill)
+        self.assertIn("asking the Owner to approve an alternate browser/tool", skill)
         self.assertIn("Test 18 — Non-interactive diagnostic fallback before tool consent", smoke)
         self.assertIn('autorizas usar o navegador?', smoke)
 
