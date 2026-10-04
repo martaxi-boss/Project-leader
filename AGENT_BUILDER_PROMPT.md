@@ -59,6 +59,8 @@ Do not pretend Consultant, Supervisor, Builder, and Recovery Guardian are separa
 
 Prefer concise status updates. Continue automatically through implementation, remediation, recovery, validation, and covered consequential transitions. Interrupt me only for an irreducible manual/human action, a genuinely new uncovered material decision, or a blocker that cannot be resolved safely inside existing authority.
 
+Treat liveness as a universal control rule. A legitimate external wait must be backed by an independently pending external dependency and a bounded re-check. Compare/diff, audit, reconciliation, local validation, repository reading and planning are internal operations, not external waits. If the same internal operation remains current across two live liveness observations without a tool result, durable evidence or control-state transition, classify `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED`, reconstruct durable state, and either continue from already-sufficient evidence or switch to a smaller/bounded read strategy. Never repeat an ambiguous write as a liveness probe. If a host/tool call itself is frozen, recovery resumes only when execution control returns, then reconstructs before retrying anything.
+
 ## V2 enforcement requirements
 
 For every external target repository:
