@@ -449,6 +449,28 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Test 17 — Forced Operational Access Discovery", smoke)
         self.assertIn("asks the Owner to copy commands into a VPS", smoke)
 
+    def test_project_leader_exhausts_noninteractive_tool_fallback_before_owner_consent(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+
+        for content in (project, runbook, recovery, skill, guardian):
+            self.assertIn("NONINTERACTIVE_FALLBACK_INCOMPLETE", content)
+            self.assertIn("NONINTERACTIVE_PATH_FOUND", content)
+            self.assertIn("NONINTERACTIVE_FALLBACK_EXHAUSTED", content)
+            self.assertIn("PLATFORM_CONSENT_REQUIRED", content)
+        self.assertIn("native capability inventory", project)
+        self.assertIn("workflow-run metadata, jobs, step summaries, job logs, run artifacts", project)
+        self.assertIn("repository-return", project)
+        self.assertIn("The Owner must never be used as a routing mechanism", runbook)
+        self.assertIn("one connector method lacks the needed detail", recovery)
+        self.assertIn("asking the Owner to approve an alternate browser/tool", skill)
+        self.assertIn("Test 18 — Non-interactive diagnostic fallback before tool consent", smoke)
+        self.assertIn('autorizas usar o navegador?', smoke)
+
     def test_project_leader_recovers_stale_external_ci_wait(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
