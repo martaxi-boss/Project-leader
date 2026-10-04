@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-leader",
-  "version": "0.6.3",
-  "description": "Autonomous project-control entry point with standing authority, architecture-first generic project bootstrap, immutable evidence, and bounded recovery.",
+  "version": "0.6.4",
+  "description": "Autonomous project-control entry point with canonical live-runtime bootstrap, standing authority, immutable evidence, and bounded recovery.",
   "author": {
     "name": "martaxi-boss",
     "url": "https://github.com/martaxi-boss"
