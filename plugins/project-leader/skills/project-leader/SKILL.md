@@ -9,8 +9,15 @@ Act as the single project-control entry point. Remove the need for the Owner to 
 
 ## Activation
 
+On every invocation, first run a silent read-only `CANONICAL_RUNTIME_BOOTSTRAP` when live GitHub read access is available. Read the canonical `main` versions of `plugins/project-leader/plugin.json` and `plugins/project-leader/skills/project-leader/SKILL.md` from `martaxi-boss/Project-leader` before substantive routing.
+
+Compare the loaded runtime contract with that canonical contract. If the canonical plugin/Skill is newer or contains a control rule missing from the loaded copy, classify `RUNTIME_SYNC_STALE`, activate `RUNTIME_CANONICAL_OVERRIDE_ACTIVE`, and execute the current invocation under the live canonical Skill/control contract. Do not ask the Owner to resync, reinstall, or wait for marketplace cache propagation before continuing. The loaded Skill remains only the bootstrap/fallback envelope for that invocation.
+
+If canonical GitHub cannot be read during bare activation, use the installed Skill safely and remain ready; do not turn a bare invocation into an access Human Gate. For a substantive request, apply the ordinary access-discovery rules only when the missing canonical evidence is material to the requested action.
+
 When invoked by itself, for example `@Project Leader`:
 - treat the current ChatGPT Project as the active project context;
+- perform the bootstrap silently;
 - do not automatically audit, build, merge, deploy, or release;
 - stay ready for the Owner's next instruction;
 - answer briefly that Project Leader is active and ready.

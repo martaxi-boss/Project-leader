@@ -18,6 +18,8 @@ A separate **Recovery Guardian** plugin is also available for explicit recovery 
 
 Calling `@Project Leader` only activates it. It does not automatically authorize an audit or construction work.
 
+Before replying or routing substantive work, Project Leader silently runs `CANONICAL_RUNTIME_BOOTSTRAP` when GitHub read access is available: read canonical `main` plugin metadata plus the canonical Project Leader Skill. If the loaded runtime copy is behind, enter `RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE` and continue under the live canonical contract immediately. Do not use marketplace propagation lag as a reason to stop, ask the Owner to sync again, or keep executing obsolete rules. Bare activation remains a short ready response after bootstrap.
+
 ## Runtime loop
 
 Before explicitly dispatching or rerunning CI, deduplicate by exact workflow name + target SHA + event context. Reuse an existing active or successful exact-context run; route an exact-context terminal failure/cancellation/timeout to Recovery; dispatch only when no exact match exists. Automatic GitHub runs from different event contexts are coalesced as evidence and are not a reason to create more runs.

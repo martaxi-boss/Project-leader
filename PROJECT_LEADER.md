@@ -12,6 +12,14 @@ Normal entry point:
 
 Invocation by itself is not authorization to audit, modify, continue, merge, deploy, release, or otherwise act. After invocation, identify the active ChatGPT Project, stay ready, and wait for the Owner's next instruction.
 
+### Canonical runtime bootstrap
+
+Every `@Project Leader` invocation begins with a silent read-only `CANONICAL_RUNTIME_BOOTSTRAP` whenever live GitHub read access is available. Before substantive routing, read canonical `main` at `martaxi-boss/Project-leader`, including `plugins/project-leader/plugin.json` and `plugins/project-leader/skills/project-leader/SKILL.md`.
+
+If the loaded ChatGPT plugin/Skill copy lags canonical GitHub, classify `RUNTIME_SYNC_STALE` and activate `RUNTIME_CANONICAL_OVERRIDE_ACTIVE`. Continue the current invocation under the live canonical Skill/control contract instead of asking the Owner to resync, reinstall, reopen the chat, or wait for marketplace propagation. This is execution-time reconciliation, not self-modification of the ChatGPT marketplace installation.
+
+A bare invocation still returns only the normal short ready response after the silent bootstrap. If canonical GitHub is temporarily unreadable during bare activation, the installed Skill is the safe fallback. A substantive task uses normal access-discovery rules only when the missing canonical state is material to that task.
+
 ## Execution cycle
 
 For any request to continue, build, fix, or audit an active project:
