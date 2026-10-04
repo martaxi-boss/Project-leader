@@ -32,6 +32,8 @@ External CI waits are transient control states, not stopping points. When Projec
 
 The Work execution must not use the visible “processing” spinner or a blocking wait as the mechanism that keeps an external-CI wait alive. While the execution can still call tools, run an active liveness cycle: fresh exact-run read every bounded interval, reconcile, route. After two intervals without control-plane progress, enter `LIVENESS_RECONCILE_REQUIRED`, reconstruct task/PR/head/run bindings and re-poll before doing anything else. This forced reconstruction does not retry CI and does not create a Human Gate when the bound run is still legitimately active.
 
+Apply the same liveness discipline to Project Leader-controlled internal operations, but do not misclassify them as external waits. A legitimate external wait has an external dependency plus an observable state/handle and bounded re-check. Repository compare/diff, audit, reconciliation, local validation, evidence reading, and planning are internal operations and should normally complete inside a bounded tool/result cycle. If one remains the current operation across two liveness observations without a new result, durable evidence, or control-state transition, classify `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED`. Recovery reconstructs durable state; if the existing evidence already answers the decision, skip the stalled operation and continue, otherwise change to a smaller/bounded read strategy. Do not repeat an ambiguous write. A frozen host/tool call cannot run Recovery until control returns; on return, reconcile before restarting anything.
+
 1. Consultant when analysis is needed.
 2. Supervisor bounds authorized work and acceptance evidence.
 3. Builder implements when authorized.
