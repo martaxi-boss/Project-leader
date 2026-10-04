@@ -31,5 +31,7 @@
   ],
   "residual_blockers": [
     "Original 048 execution is superseded by 048R and must remain non-certifying."
-  ]
+  ],
+  "authorization_commit_sha": "b4efb2d7f3609573fe808e12ced462f102897052",
+  "authorization_sha256": "c64bc919633b9ebb1824346dd6331c5376c5458c8192fae2f3c4ba22c278cf2f"
 }
