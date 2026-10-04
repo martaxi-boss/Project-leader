@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-CONTROL-EVIDENCE-HYGIENE-059",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 2,
+  "recorded_at": "2026-10-04T14:38:00Z",
+  "event": "REPLAN",
+  "strategy_generation": 2,
+  "action_fingerprint": "PROJECT-LEADER-CONTROL-EVIDENCE-HYGIENE-059|supersede-with-059R-complete-policy-minimum",
+  "attempt_count": 1,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 0,
+  "previous_event_sha256": "f5440a35cdea7febcab2d98cee617aae9f97e42dff2922b09b3160451564d08d",
+  "detail": "Supersede task 059 without editing its immutable Task Authorization. Create clean replacement task 059R from canonical main with the same evidence-only hygiene objective and with the full E3 base-policy required_validation set, including 'Trust-root governance path'. Do not change runtime behavior or widen scope."
+}
