@@ -86,6 +86,14 @@ An alternate browser/UI/MFA/tool-consent action is eligible for `EXCLUSIVE_HUMAN
 - Recovery preserves the existing standing authority: technical failures and unsatisfied controls stay in remediation/recovery; after recovery, Supervisor resolves any consequential next action through `projects/standing-authority.json` rather than requesting routine permission again.
 - A full ChatGPT/platform outage cannot be repaired while the service itself is unavailable; when service returns, reconstruct and continue without asking the Owner to re-explain repository state.
 
+## Universal active Work liveness
+
+Distinguish a legitimate external wait from Project Leader-controlled internal work. A legitimate external wait has an independently pending external dependency, an observable state/handle when the platform exposes one, and a bounded re-check. Repository compare/diff, audit, reconciliation, local validation, evidence reading, planning, and decision synthesis are internal operations; they must not be parked as `WAITING_EXTERNAL_*` or left indefinitely on a UI spinner.
+
+While the Work execution remains tool-capable, an internal operation must complete within a bounded tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical cadence with no new tool result, durable evidence, or control-plane transition, classify `INTERNAL_OPERATION_STALLED` and route immediately to `LIVENESS_RECONCILE_REQUIRED`. Recovery Guardian reconstructs durable state first. If the existing evidence is already sufficient to decide the next step, abandon the stalled operation and continue through Supervisor. Otherwise switch to a smaller/bounded read strategy. Never repeat an ambiguous write as a liveness probe, and count repeated internal stalls toward the existing no-progress ceiling.
+
+If the host runtime or connector call itself is frozen and does not yield execution control, Recovery cannot execute concurrently inside that frozen call. State that limitation honestly. When control returns or the session resumes, reconstruct durable state and reconcile liveness before restarting any opaque internal operation.
+
 ## Standing authority and Human gates
 
 Read and validate `projects/standing-authority.json` before consequential transitions. The Project Leader skill uses this durable `STANDING_OWNER_GRANT` to avoid repetitive authorization prompts while preserving project scope, role hierarchy, exact-target evidence, and independent Supervisor audit.
