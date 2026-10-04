@@ -24,6 +24,7 @@ DEFAULT_STALE_AFTER_MINUTES = 60
 DEFAULT_LIVENESS_NO_PROGRESS_POLLS = 2
 ACCESS_DISCOVERY_REQUIRED_SURFACES = (
     "direct_session_capabilities",
+    "native_tool_capability_inventory",
     "target_repository_automation",
     "operational_repository_discovery",
     "existing_access_history",
@@ -38,6 +39,21 @@ ACCESS_ROUTE_DISCOVER = "CONTINUE_DISCOVERY"
 ACCESS_ROUTE_BOUND_TASK = "BOUND_OPERATIONS_TASK"
 ACCESS_ROUTE_AUTHORITY = "SUPERVISOR_AUTHORITY_RESOLUTION"
 ACCESS_ROUTE_HUMAN_GATE_CANDIDATE = "HUMAN_GATE_CANDIDATE"
+NONINTERACTIVE_DIAGNOSTIC_REQUIRED_SURFACES = (
+    "native_tool_capability_inventory",
+    "workflow_run_metadata",
+    "workflow_jobs_steps_logs",
+    "workflow_artifacts_checks_annotations",
+    "repository_return_path",
+    "historical_diagnostic_evidence",
+)
+NONINTERACTIVE_FALLBACK_INCOMPLETE = "NONINTERACTIVE_FALLBACK_INCOMPLETE"
+NONINTERACTIVE_PATH_FOUND = "NONINTERACTIVE_PATH_FOUND"
+NONINTERACTIVE_FALLBACK_EXHAUSTED = "NONINTERACTIVE_FALLBACK_EXHAUSTED"
+PLATFORM_CONSENT_REQUIRED = "PLATFORM_CONSENT_REQUIRED"
+NONINTERACTIVE_ROUTE_DISCOVER = "CONTINUE_DIAGNOSTIC_DISCOVERY"
+NONINTERACTIVE_ROUTE_CONTINUE = "CONTINUE_DIAGNOSTIC"
+NONINTERACTIVE_ROUTE_REENTER_ACCESS = "REENTER_ACCESS_DISCOVERY"
 LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
 STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
 LEGACY_CHECKPOINT_TERMINAL = "LEGACY_CHECKPOINT_TERMINAL"
@@ -374,6 +390,90 @@ def reconcile_operational_access_discovery(
     return {
         "state": ACCESS_PATH_UNAVAILABLE,
         "route": ACCESS_ROUTE_HUMAN_GATE_CANDIDATE,
+        "selected_channel": None,
+        "missing_surfaces": [],
+    }
+
+
+def reconcile_noninteractive_tool_fallback(
+    checked_surfaces,
+    candidate_channels,
+):
+    """Exhaust non-interactive diagnostic capabilities before Owner/tool consent.
+
+    This guard applies after an operational path has been found but the selected
+    connector/tool cannot explain a failure. Project Leader must inventory native
+    capabilities and inspect available GitHub run/job/step/log/artifact/check
+    subresources and repository-return paths before escalating to an interactive
+    browser or asking the Owner to approve a tool switch.
+    """
+    if not isinstance(checked_surfaces, list):
+        raise ValueError("checked_surfaces must be a list")
+    if len(set(checked_surfaces)) != len(checked_surfaces):
+        raise ValueError("checked_surfaces must be unique")
+    if not all(isinstance(item, str) and item for item in checked_surfaces):
+        raise ValueError("checked_surfaces entries must be non-empty strings")
+    if not isinstance(candidate_channels, list):
+        raise ValueError("candidate_channels must be a list")
+
+    normalized = []
+    for index, candidate in enumerate(candidate_channels):
+        if not isinstance(candidate, dict):
+            raise ValueError("diagnostic candidate channel must be an object")
+        name = candidate.get("name")
+        usable = candidate.get("usable")
+        requires_user_consent = candidate.get("requires_user_consent", False)
+        if not isinstance(name, str) or not name:
+            raise ValueError("diagnostic candidate channel name must be a non-empty string")
+        if not isinstance(usable, bool):
+            raise ValueError(f"diagnostic candidate channel usable must be boolean: {name}")
+        if not isinstance(requires_user_consent, bool):
+            raise ValueError(
+                f"diagnostic candidate channel requires_user_consent must be boolean: {name}"
+            )
+        normalized.append(
+            {
+                "index": index,
+                "name": name,
+                "usable": usable,
+                "requires_user_consent": requires_user_consent,
+            }
+        )
+
+    for candidate in normalized:
+        if candidate["usable"] and not candidate["requires_user_consent"]:
+            return {
+                "state": NONINTERACTIVE_PATH_FOUND,
+                "route": NONINTERACTIVE_ROUTE_CONTINUE,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    missing = [
+        surface
+        for surface in NONINTERACTIVE_DIAGNOSTIC_REQUIRED_SURFACES
+        if surface not in checked_surfaces
+    ]
+    if missing:
+        return {
+            "state": NONINTERACTIVE_FALLBACK_INCOMPLETE,
+            "route": NONINTERACTIVE_ROUTE_DISCOVER,
+            "selected_channel": None,
+            "missing_surfaces": missing,
+        }
+
+    for candidate in normalized:
+        if candidate["usable"] and candidate["requires_user_consent"]:
+            return {
+                "state": PLATFORM_CONSENT_REQUIRED,
+                "route": ACCESS_ROUTE_HUMAN_GATE_CANDIDATE,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    return {
+        "state": NONINTERACTIVE_FALLBACK_EXHAUSTED,
+        "route": NONINTERACTIVE_ROUTE_REENTER_ACCESS,
         "selected_channel": None,
         "missing_surfaces": [],
     }
