@@ -17,6 +17,8 @@ Project Leader reconstructs live GitHub state, routes through Consultant, Superv
 
 Every invocation now performs a silent canonical runtime bootstrap against the live Project Leader `main` contract when GitHub is readable. If the locally loaded Skill copy is stale, execution switches immediately to the canonical contract for that invocation instead of waiting for marketplace propagation.
 
+Before broad repository compare/reconstruction work, Project Leader now checks a bounded durable state vector first and only expands to exact refs/files/run IDs when still necessary. Repository hygiene remains autonomous maintenance but is not part of the ordinary execution critical path.
+
 Covered work follows `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. A failed check routes to bounded remediation, rather than a routine request for permission.
 
 ## Authority and transitions
@@ -45,7 +47,7 @@ New tasks use v2 records, immutable authorization before implementation, exact p
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.4**.
+- Project Leader: **0.6.5**.
 - Recovery Guardian: **0.5.3**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.

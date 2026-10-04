@@ -527,6 +527,25 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Test 20 — Universal internal-operation liveness", smoke)
         self.assertNotIn("parked as `WAITING_EXTERNAL_*`", "")
     
+    def test_project_leader_uses_bounded_state_preflight_before_broad_internal_reads(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        recovery = (ROOT / "RECOVERY_PROTOCOL.md").read_text(encoding="utf-8")
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
+        skill_recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+
+        for content in (project, runbook, recovery, skill, skill_recovery):
+            self.assertIn("BOUNDED_STATE_PREFLIGHT", content)
+            self.assertIn("default-branch HEAD", content)
+            self.assertIn("open PRs", content)
+            self.assertIn("active workflow runs", content)
+
+        self.assertIn("must not trigger a target-project repository compare/diff", skill)
+        self.assertIn("Repository hygiene is background maintenance", skill)
+        self.assertIn("enter `LIVENESS_RECONCILE_REQUIRED` immediately", skill)
+        self.assertIn("Test 22 — Bounded reconstruction and hygiene separation", smoke)
+
     def test_project_leader_uses_canonical_runtime_bootstrap_when_loaded_skill_is_stale(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
@@ -617,11 +636,6 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", workflow)
         self.assertIn("github.event.pull_request.head.ref != 'main'", workflow)
         self.assertIn("if (branch.name === 'main') continue;", workflow)
-        self.assertIn("merge_base_commit", workflow)
-        self.assertIn("mergeBase === branch.commit.sha", workflow)
-        self.assertIn("github.rest.git.deleteRef", workflow)
-        self.assertIn("github.event_name == 'workflow_dispatch' ||", workflow)
-        self.assertIn("github.event_name == 'push' ||", workflow)
         self.assertIn("state: 'open'", workflow)
         self.assertIn("openPrHeads.has(branch.name)", workflow)
         self.assertIn("delete_owner_authorized_superseded_non_main_branch_refs", workflow)
@@ -629,12 +643,18 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("EXACT_REVISION_BOUND", workflow)
         self.assertIn("authorizedSha === branch.commit.sha", workflow)
         self.assertIn("owner authorization revision mismatch", workflow)
-        self.assertIn("branchState.sha !== mainState.sha", workflow)
-        self.assertIn("['added', 'modified', 'removed']", workflow)
-        self.assertIn("files.length >= 300", workflow)
-        self.assertIn("byte-identical to canonical `main`", runbook)
-        self.assertIn("target branch name and exact revision both match", runbook)
-        self.assertIn("pushes to `main`", runbook)
+        self.assertIn("branch.name.startsWith('control/merge-authorization-')", workflow)
+        self.assertIn("durable transition-evidence ref", workflow)
+        self.assertIn("merge_base_commit", workflow)
+        self.assertIn("mergeBase === branch.commit.sha", workflow)
+        self.assertIn("per_page: 1", workflow)
+        self.assertIn("not fully contained in main; no exact purge authorization", workflow)
+        self.assertIn("github.rest.git.deleteRef", workflow)
+        self.assertNotIn("getPathState", workflow)
+        self.assertNotIn("branchDelta", workflow)
+        self.assertNotIn("deletedByEquivalence", workflow)
+        self.assertNotIn("files.length >= 300", workflow)
+        self.assertIn("Repository hygiene is non-blocking maintenance", runbook)
         self.assertIn("never target `main`", runbook)
 
     def test_runtime_contract_documents_are_consistent_for_v2_managed_projects(self):
@@ -697,7 +717,7 @@ class ControlContractTests(unittest.TestCase):
     def test_plugin_versions_mark_autonomous_runtime_generation(self):
         project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
         recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(project_leader["version"], "0.6.4")
+        self.assertEqual(project_leader["version"], "0.6.5")
         self.assertEqual(recovery["version"], "0.5.3")
         self.assertIn("standing authority", project_leader["description"].lower())
         self.assertIn("standing-authority", recovery["description"].lower())

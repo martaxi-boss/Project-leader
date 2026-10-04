@@ -237,6 +237,26 @@ Pass only if Project Leader:
 
 Fail if a successful GitHub/marketplace update can leave Project Leader knowingly executing obsolete control rules merely because the loaded plugin copy has not refreshed yet.
 
+## Test 22 — Bounded reconstruction and hygiene separation
+
+Exercise Project Leader with the real failure shape that motivated this rule: durable state already shows the default branch HEAD, no open PR, no active required CI, and a known next durable step, while a previous Work execution was left on a repository compare/diff or similar opaque internal operation.
+
+Pass only if:
+
+- normal internal reads complete and continue without entering Recovery unnecessarily;
+- before any potentially broad compare/diff/reconstruction/audit, `BOUNDED_STATE_PREFLIGHT` reads only the default-branch HEAD, open PRs, active workflow runs, and current task/branch/implementation head when available;
+- if that state vector already determines the next step, no broader repository compare is launched;
+- if evidence is still missing, the next read is narrowed to exact refs/files/run IDs/commit range;
+- a frozen host/tool call is not falsely claimed to be recoverable in parallel, but the next activation enters `LIVENESS_RECONCILE_REQUIRED` before repeating the unresolved opaque operation;
+- an interrupted session reconstructs GitHub/durable state and continues from the last proven state rather than replaying chat/UI state;
+- genuinely active required CI remains `WAITING_EXTERNAL_CI` and is not confused with an internal stall;
+- genuine Human Gates retain their existing semantics;
+- `CANONICAL_RUNTIME_BOOTSTRAP` remains limited to canonical plugin manifest + Skill reads and does not trigger target-repository compare/diff;
+- repository hygiene remains autonomous but non-blocking for ordinary project work and does not require a live Work execution to perform repository-wide content-equivalence comparisons;
+- the observed PINK IPTV shape (merged PR, updated main, successful CI, no active workflow, no open PR) can be classified from the bounded state vector without an unnecessary broad compare.
+
+Fail if startup, recovery, audit or hygiene can force a broad opaque compare before the smaller durable state vector has been checked, or if a hygiene run becomes a routine critical-path wait.
+
 ## Final acceptance
 
 This section is closed only when:

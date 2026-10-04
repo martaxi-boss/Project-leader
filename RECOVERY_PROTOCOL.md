@@ -168,6 +168,8 @@ A frozen/unavailable ChatGPT Work process cannot execute this guard while frozen
 
 Do not extend external-wait semantics to Project Leader's own internal control work. A legitimate external wait must have an independently pending external dependency (for example an active CI run, approval, provider response, or propagation event), an observable state/handle when available, and a bounded re-check. An internal compare/diff, repository read, audit, reconciliation, local validation, planning step, or evidence synthesis has no such external dependency and must not be parked as `WAITING_EXTERNAL_*` or left indefinitely on a UI spinner.
 
+Before starting or restarting any broad internal compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Reconstruct only the minimal durable state vector first: default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when available. If that evidence is sufficient, abandon the broader operation. Otherwise constrain the next read to the exact refs/files/run IDs/commit range required by the unresolved question. Repository hygiene is not part of this critical path unless hygiene itself is the task or an exact governance control requires it.
+
 While the Work execution is still tool-capable, internal operations are bounded to a tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical 5-minute cadence with no new tool result, durable evidence, or control-plane state transition, classify `INTERNAL_OPERATION_STALLED`, then route immediately to `LIVENESS_RECONCILE_REQUIRED`. This is Recovery work, not a Human Gate.
 
 Recovery Guardian then:
@@ -178,7 +180,7 @@ Recovery Guardian then:
 4. verifies durable side effects before any write retry and never uses an ambiguous write as a liveness probe;
 5. counts repeated `INTERNAL_OPERATION_STALLED` observations toward the existing no-progress/strategy ceiling.
 
-If the host runtime or a connector call itself is frozen and does not yield execution control, Recovery cannot execute concurrently inside that frozen call. That platform limitation must be stated honestly. When control returns or a new session resumes, classify the prior internal operation as needing reconciliation, reconstruct durable state first, and do not blindly restart the same opaque operation from chat/UI state.
+If the host runtime or a connector call itself is frozen and does not yield execution control, Recovery cannot execute concurrently inside that frozen call. That platform limitation must be stated honestly. When control returns or a new session resumes after an unresolved internal operation, enter `LIVENESS_RECONCILE_REQUIRED` immediately, run `BOUNDED_STATE_PREFLIGHT`, reconstruct durable state first, and do not restart the same opaque operation unless the bounded evidence proves that exact read is still required.
 
 For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
 

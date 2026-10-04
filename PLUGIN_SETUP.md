@@ -9,12 +9,14 @@ Project Leader also uses the Recovery Guardian protocol internally, so normal wo
 
 ## Current canonical runtime
 
-- Project Leader **0.6.4**.
+- Project Leader **0.6.5**.
 - Recovery Guardian **0.5.3**.
 
 Before consequential work, read the live `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, role contracts and `projects/standing-authority.json` from canonical GitHub state. The active target's architecture and live repository state define its bounded task; external projects do not require central enrollment.
 
 On each `@Project Leader` invocation, the Skill performs `CANONICAL_RUNTIME_BOOTSTRAP` when GitHub read access is available. If the installed/runtime copy lags canonical `main`, `RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE` keeps the invocation on the newest canonical contract without requiring another manual sync before work can continue.
+
+The 0.6.5 runtime also applies `BOUNDED_STATE_PREFLIGHT` before potentially broad internal reconstruction/compare work and keeps repository hygiene non-blocking for ordinary managed-project execution.
 
 Covered executable transitions continue through exact Supervisor authorization and validation under standing Owner authority. Human interruption is reserved for exclusive human intervention or a new uncovered material decision.
 
