@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-HYGIENE-FINALIZE-052-DELETE-01",
+  "task_id": "PROJECT-LEADER-HYGIENE-FINALIZE-052",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-04T11:42:00Z",
+  "action": "delete_owner_authorized_superseded_non_main_branch_refs",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "Owner requested immediate concurrent repository hygiene. Delete only exact failed convergence ref builder/evidence-hygiene-convergence-050 after PR #50 was closed unmerged and canonical hygiene PR #51 superseded the work.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/evidence-hygiene-convergence-050",
+    "revision": "d2b52984bd20235694d1dabeaf0f88b646ebc856",
+    "base_revision": "6ad03b6712096e994c07e6b7f324dd3a132b68d4",
+    "environment": null
+  }
+}
