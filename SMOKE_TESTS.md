@@ -220,6 +220,23 @@ Pass only if Project Leader:
 
 Fail if a Project Leader-controlled compare/audit/reconciliation step can consume a live Work execution indefinitely after the next decision is already derivable from durable evidence.
 
+## Test 21 — Canonical runtime bootstrap after marketplace lag
+
+Start from a ChatGPT runtime that has a valid but older Project Leader Skill copy while canonical `martaxi-boss/Project-leader` `main` contains a newer Project Leader plugin/Skill contract.
+
+Pass only if Project Leader:
+
+- silently executes `CANONICAL_RUNTIME_BOOTSTRAP` on invocation when GitHub read access is available;
+- reads canonical `plugins/project-leader/plugin.json` and `plugins/project-leader/skills/project-leader/SKILL.md` before substantive routing;
+- classifies the mismatch as `RUNTIME_SYNC_STALE`;
+- activates `RUNTIME_CANONICAL_OVERRIDE_ACTIVE` and follows the live canonical contract for the current invocation;
+- does not ask the Owner to resync, reinstall, reopen the chat, or wait for marketplace cache propagation before continuing;
+- keeps bare `@Project Leader` activation brief after the silent bootstrap;
+- falls back safely to the installed Skill if canonical GitHub is temporarily unreadable during bare activation;
+- does not add or require a legacy marketplace `pluginId` migration to achieve execution-time freshness.
+
+Fail if a successful GitHub/marketplace update can leave Project Leader knowingly executing obsolete control rules merely because the loaded plugin copy has not refreshed yet.
+
 ## Final acceptance
 
 This section is closed only when:
