@@ -7,6 +7,7 @@ from control.managed_project_contract import (
     decide_ci_dispatch,
     reconcile_external_ci_wait,
     reconcile_external_ci_liveness,
+    reconcile_noninteractive_tool_fallback,
     reconcile_operational_access_discovery,
     reconcile_legacy_checkpoint_liveness,
     validate_managed_result,
@@ -430,6 +431,7 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_operational_access_discovery(
             [
                 "direct_session_capabilities",
+                "native_tool_capability_inventory",
                 "target_repository_automation",
                 "operational_repository_discovery",
                 "existing_access_history",
@@ -451,6 +453,7 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_operational_access_discovery(
             [
                 "direct_session_capabilities",
+                "native_tool_capability_inventory",
                 "target_repository_automation",
                 "operational_repository_discovery",
                 "existing_access_history",
@@ -471,6 +474,7 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_operational_access_discovery(
             [
                 "direct_session_capabilities",
+                "native_tool_capability_inventory",
                 "target_repository_automation",
                 "operational_repository_discovery",
                 "existing_access_history",
@@ -491,6 +495,7 @@ class ManagedProjectContractTests(unittest.TestCase):
         state = reconcile_operational_access_discovery(
             [
                 "direct_session_capabilities",
+                "native_tool_capability_inventory",
                 "target_repository_automation",
                 "operational_repository_discovery",
                 "existing_access_history",
@@ -499,6 +504,84 @@ class ManagedProjectContractTests(unittest.TestCase):
         )
         self.assertEqual(state["state"], "ACCESS_PATH_UNAVAILABLE")
         self.assertEqual(state["route"], "HUMAN_GATE_CANDIDATE")
+
+    def test_noninteractive_fallback_prefers_native_diagnostics_over_browser_consent(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [
+                {
+                    "name": "github-workflow-job-logs",
+                    "usable": True,
+                    "requires_user_consent": False,
+                },
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                },
+            ],
+        )
+        self.assertEqual(state["state"], "NONINTERACTIVE_PATH_FOUND")
+        self.assertEqual(state["route"], "CONTINUE_DIAGNOSTIC")
+        self.assertEqual(state["selected_channel"], "github-workflow-job-logs")
+
+    def test_noninteractive_fallback_does_not_request_consent_before_exhaustion(self):
+        state = reconcile_noninteractive_tool_fallback(
+            ["native_tool_capability_inventory", "workflow_run_metadata"],
+            [
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "NONINTERACTIVE_FALLBACK_INCOMPLETE")
+        self.assertEqual(state["route"], "CONTINUE_DIAGNOSTIC_DISCOVERY")
+        self.assertIn("workflow_jobs_steps_logs", state["missing_surfaces"])
+
+    def test_platform_consent_is_candidate_only_after_noninteractive_exhaustion(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "PLATFORM_CONSENT_REQUIRED")
+        self.assertEqual(state["route"], "HUMAN_GATE_CANDIDATE")
+
+    def test_noninteractive_fallback_reenters_access_discovery_when_no_diagnostic_path_remains(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [],
+        )
+        self.assertEqual(state["state"], "NONINTERACTIVE_FALLBACK_EXHAUSTED")
+        self.assertEqual(state["route"], "REENTER_ACCESS_DISCOVERY")
 
     def test_duplicate_wait_run_ids_are_rejected(self):
         with self.assertRaises(ValueError):

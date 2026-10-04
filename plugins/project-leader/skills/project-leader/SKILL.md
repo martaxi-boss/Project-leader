@@ -56,13 +56,21 @@ When audit discovers an in-scope defect, drift, stale evidence, incomplete recon
 
 ## Forced operational access discovery
 
-Before saying that access/evidence is unavailable, asking the Owner to paste terminal commands, or emitting an access-related Human Gate, run `FORCED_OPERATIONAL_ACCESS_DISCOVERY`.
+Before saying that access/evidence is unavailable, asking the Owner to paste terminal commands, asking the Owner to approve an alternate browser/tool, or emitting an access-related Human Gate, run `FORCED_OPERATIONAL_ACCESS_DISCOVERY`.
 
-A missing direct SSH/shell/provider tool in the current session is only one observation. Inspect direct session capabilities, the target repository's workflows/operations paths, reasonably discoverable adjacent operational repositories, and historical workflow/run evidence that may prove an existing bridge to the required environment. Read-only inspection of another repository is allowed as reference discovery and does not violate one-mutable-repository isolation.
+A missing direct SSH/shell/provider tool or one insufficient connector method is only an observation. Inspect direct session capabilities, perform a native capability inventory for the connected service/tool, inspect the target repository's workflows/operations paths, reasonably discoverable adjacent operational repositories, and historical workflow/run evidence that may prove an existing bridge to the required environment. Read-only inspection of another repository is allowed as reference discovery and does not violate one-mutable-repository isolation.
+
+If an operational channel is found but execution fails, do not immediately switch to an interactive browser or ask the Owner for approval. Run the non-interactive diagnostic fallback first. For GitHub Actions, dynamically discover and inspect every native evidence surface that is available: run metadata, jobs, step summaries, job logs, artifacts, checks/check-runs/annotations or statuses, workflow definitions, repository-return evidence, and relevant historical runs. The absence of one subresource, including a run that failed before creating jobs/steps, does not prove that the GitHub connector as a whole is insufficient.
+
+Prefer repository-return diagnostics: sanitized logs, artifacts, checks, or other durable GitHub evidence that Project Leader can read itself. Do not use Owner terminal copy/paste or an interactive browser as the default return path.
+
+Route non-interactive fallback as: `NONINTERACTIVE_FALLBACK_INCOMPLETE -> continue diagnostic discovery`; `NONINTERACTIVE_PATH_FOUND -> continue diagnostic automatically`; `NONINTERACTIVE_FALLBACK_EXHAUSTED -> re-enter FORCED_OPERATIONAL_ACCESS_DISCOVERY`; `PLATFORM_CONSENT_REQUIRED -> Human Gate candidate only after non-interactive exhaustion and only when the host/platform itself requires user confirmation`.
 
 If an existing channel can be used read-only/non-mutating, use it. If it requires a mutation in another repository, create a separate bounded operations task for that repository when standing/current authority covers it; never mutate the second repository under the first task. If authority is unresolved, Supervisor resolves it before any Owner prompt. Search for channel metadata and evidence, never substitute credential values.
 
 Route access discovery as: `ACCESS_DISCOVERY_INCOMPLETE -> continue discovery`; `ACCESS_PATH_FOUND -> continue`; `ACCESS_PATH_REQUIRES_SEPARATE_TASK -> bounded operations task`; `ACCESS_PATH_REQUIRES_AUTHORITY_RESOLUTION -> Supervisor authority resolution`; only `ACCESS_PATH_UNAVAILABLE` may proceed to the ordinary Human Gate closure test.
+
+An alternate browser/UI/MFA/tool-consent action is eligible for `EXCLUSIVE_HUMAN_INTERVENTION` only when no non-interactive native capability, repository-return path, separately taskable covered operations path, or authority-resolvable channel can continue the objective.
 
 ## Recovery requirements
 
