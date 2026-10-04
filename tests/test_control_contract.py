@@ -697,7 +697,7 @@ class ControlContractTests(unittest.TestCase):
     def test_plugin_versions_mark_autonomous_runtime_generation(self):
         project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
         recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(project_leader["version"], "0.6.3")
+        self.assertEqual(project_leader["version"], "0.6.4")
         self.assertEqual(recovery["version"], "0.5.3")
         self.assertIn("standing authority", project_leader["description"].lower())
         self.assertIn("standing-authority", recovery["description"].lower())
