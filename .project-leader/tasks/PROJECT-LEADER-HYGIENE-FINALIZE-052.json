@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-HYGIENE-FINALIZE-052",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-04T11:41:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner instructed Project Leader to perform repository hygiene immediately while closing the liveness correction. Canonical hygiene PR #51 already integrated and removed older obsolete refs. Live post-merge audit now shows exactly two later failed convergence refs, builder/evidence-hygiene-convergence-050 at d2b52984bd20235694d1dabeaf0f88b646ebc856 and builder/evidence-hygiene-convergence-051 at 401c4d59eabfca3758a13cc17e4c00e68197e2be, both attached to closed unmerged PRs and superseded by canonical PR #51. This task only exact-authorizes deletion of those two obsolete refs through the existing repository-hygiene workflow, preserves main and the current control/merge-authorization-051 evidence ref, and records verifiable results."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "6ad03b6712096e994c07e6b7f324dd3a132b68d4",
+    "task_branch": "builder/hygiene-finalize-052",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    ".project-leader/tasks/PROJECT-LEADER-HYGIENE-FINALIZE-052.json",
+    ".project-leader/results/PROJECT-LEADER-HYGIENE-FINALIZE-052.json",
+    ".project-leader/recovery-events/PROJECT-LEADER-HYGIENE-FINALIZE-052/**",
+    ".project-leader/transitions/PROJECT-LEADER-HYGIENE-FINALIZE-052-DELETE-*",
+    ".project-leader/transitions/PROJECT-LEADER-HYGIENE-FINALIZE-052-MERGE*"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "reconcile_transition_records",
+    "delete_owner_authorized_superseded_non_main_branch_refs"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "force_push",
+    "rewrite_git_history",
+    "delete_main",
+    "delete_unlisted_branch_ref",
+    "delete_revision_mismatched_branch_ref",
+    "delete_open_pr_branch_ref",
+    "unrelated_refactor",
+    "weaken_ci_or_security_controls"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Exact superseded branch authorization verification",
+    "Post-hygiene survivor audit"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "6ad03b6712096e994c07e6b7f324dd3a132b68d4",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Exact CURRENT_OWNER_INSTRUCTION deletion authorizations for only builder/evidence-hygiene-convergence-050@d2b52984bd20235694d1dabeaf0f88b646ebc856 and builder/evidence-hygiene-convergence-051@401c4d59eabfca3758a13cc17e4c00e68197e2be are canonicalized; required CI/trusted gate pass; repository hygiene deletes those exact refs after merge; main remains intact; current control/merge-authorization-051 is preserved; final live branch inventory contains no failed convergence residue.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
