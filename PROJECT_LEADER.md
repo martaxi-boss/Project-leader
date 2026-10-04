@@ -71,13 +71,24 @@ For GitHub Actions, dynamically discover and exhaust the native evidence surface
 
 Prefer a repository-return path: operational workflows should return sanitized diagnostics through GitHub logs, artifacts, checks, or other durable repository evidence that Project Leader can read itself. Do not make terminal copy/paste or an interactive browser the default return channel.
 
+If those native/read-only surfaces are exhausted, Project Leader must still attempt **self-provisioned diagnostics** before asking the Owner to route tools manually. This rule is universal for every managed project. Determine whether the same objective can be continued by creating a bounded diagnostic bridge under existing authority, for example:
+- a dedicated task branch in the active target repository containing a temporary GitHub Actions diagnostic workflow;
+- a separate bounded task in a reasonably discoverable operations repository that already has the required environment reachability;
+- a repository-side probe that returns only sanitized read-only evidence through logs, artifacts, checks, statuses, or another durable GitHub surface.
+
+A self-provisioned diagnostic bridge must be narrow, temporary, auditable, non-destructive, and use the minimum permissions and secrets already authorized for that project. It must not print credential values, broaden architecture, create production side effects, change customer/runtime data, incur cost, or silently cross repository scope. One mutable repository per task remains mandatory: when the bridge belongs in another repository, use a separate bounded task and return to the original project afterward.
+
+When existing authority covers the bridge, create and use it automatically. When the bridge is technically possible but authority is unresolved, route to Supervisor authority resolution first — not to the Owner. Only if native evidence, repository-return paths, self-provisioning, separately taskable covered operations paths, and authority resolution are all exhausted may tool/browser consent become a Human Gate candidate.
+
 Route the diagnostic fallback as:
 - `NONINTERACTIVE_FALLBACK_INCOMPLETE -> continue diagnostic discovery`;
 - `NONINTERACTIVE_PATH_FOUND -> continue diagnostic automatically`;
+- `DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK -> create/use the bounded diagnostic bridge automatically when covered`;
+- `DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION -> Supervisor authority resolution`;
 - `NONINTERACTIVE_FALLBACK_EXHAUSTED -> re-enter FORCED_OPERATIONAL_ACCESS_DISCOVERY`;
-- `PLATFORM_CONSENT_REQUIRED -> Human Gate candidate only after every required non-interactive surface is exhausted and the host/platform itself requires user confirmation`.
+- `PLATFORM_CONSENT_REQUIRED -> Human Gate candidate only after every required native and self-provisioned surface is exhausted and the host/platform itself requires user confirmation`.
 
-An alternate browser, UI, MFA prompt, or tool-consent dialog is therefore not a routine permission request. It is eligible for `EXCLUSIVE_HUMAN_INTERVENTION` only when no non-interactive native capability, GitHub subresource, repository-return path, separately taskable covered operations path, or authority-resolvable channel can continue the same objective.
+An alternate browser, UI, MFA prompt, or tool-consent dialog is therefore not a routine permission request. It is eligible for `EXCLUSIVE_HUMAN_INTERVENTION` only when no non-interactive native capability, GitHub subresource, repository-return path, self-provisioned diagnostic bridge, separately taskable covered operations path, or authority-resolvable channel can continue the same objective. Physical/device tests, account MFA/consent, CAPTCHA, hardware interaction, or other actions that only a human can actually perform remain legitimate manual gates.
 
 If an existing channel can be used read-only/non-mutating, use it. If it requires a mutation in another repository, create a separate bounded operations task for that repository when standing/current authority covers it; never mutate the second repository under the first task. If authority is unresolved, Supervisor resolves it before any Owner prompt. Search for channel metadata and evidence, never substitute credential values.
 
