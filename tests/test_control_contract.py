@@ -460,16 +460,22 @@ class ControlContractTests(unittest.TestCase):
         for content in (project, runbook, recovery, skill, guardian):
             self.assertIn("NONINTERACTIVE_FALLBACK_INCOMPLETE", content)
             self.assertIn("NONINTERACTIVE_PATH_FOUND", content)
+            self.assertIn("DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK", content)
+            self.assertIn("DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION", content)
             self.assertIn("NONINTERACTIVE_FALLBACK_EXHAUSTED", content)
             self.assertIn("PLATFORM_CONSENT_REQUIRED", content)
         self.assertIn("native capability inventory", project)
         self.assertIn("workflow-run metadata, jobs, step summaries, job logs, run artifacts", project)
+        self.assertIn("self-provisioned diagnostics", project)
         self.assertIn("repository-return", project)
         self.assertIn("The Owner must never be used as a routing mechanism", runbook)
-        self.assertIn("one connector method lacks the needed detail", recovery)
+        self.assertIn("universal self-provisioning check", recovery)
         self.assertIn("asking the Owner to approve an alternate browser/tool", skill)
+        self.assertIn("universal managed-project rule", skill)
         self.assertIn("Test 18 — Non-interactive diagnostic fallback before tool consent", smoke)
+        self.assertIn("Test 19 — Universal autonomous diagnostic bridge for future projects", smoke)
         self.assertIn('autorizas usar o navegador?', smoke)
+        self.assertIn("pre-existing registry entry", smoke)
 
     def test_project_leader_recovers_stale_external_ci_wait(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
