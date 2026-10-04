@@ -87,18 +87,8 @@
     }
   ],
   "artifacts": [
-    {
-      "name": "project-leader-plugin",
-      "run_id": 37171276890,
-      "artifact_id": 11291751026,
-      "sha256": "f25a969a802cb6d83c08556a8461450c7e4caca8f35366a9ae4c889114ada843"
-    },
-    {
-      "name": "recovery-guardian-plugin",
-      "run_id": 37171276890,
-      "artifact_id": 11291780836,
-      "sha256": "c45ac0af8f88e7a203c57f10e667aa692994895617ffc7f9d66b6c0037217de2"
-    }
+    "project-leader-plugin artifact 11291751026 from run 37171276890, sha256:f25a969a802cb6d83c08556a8461450c7e4caca8f35366a9ae4c889114ada843",
+    "recovery-guardian-plugin artifact 11291780836 from run 37171276890, sha256:c45ac0af8f88e7a203c57f10e667aa692994895617ffc7f9d66b6c0037217de2"
   ],
   "material_non_effects": [
     "No Project Leader skill/runtime behavior changed.",
