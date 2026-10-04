@@ -164,6 +164,22 @@ If two polling intervals elapse without a control-plane state transition while t
 
 A frozen/unavailable ChatGPT Work process cannot execute this guard while frozen. That platform limitation must be reported honestly. On the next activation, the first action is durable GitHub reconstruction and stale-wait reconciliation; never ask the Owner to recreate CI or repository history merely because the prior Work process stopped running.
 
+### Universal internal-operation liveness guard
+
+Do not extend external-wait semantics to Project Leader's own internal control work. A legitimate external wait must have an independently pending external dependency (for example an active CI run, approval, provider response, or propagation event), an observable state/handle when available, and a bounded re-check. An internal compare/diff, repository read, audit, reconciliation, local validation, planning step, or evidence synthesis has no such external dependency and must not be parked as `WAITING_EXTERNAL_*` or left indefinitely on a UI spinner.
+
+While the Work execution is still tool-capable, internal operations are bounded to a tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical 5-minute cadence with no new tool result, durable evidence, or control-plane state transition, classify `INTERNAL_OPERATION_STALLED`, then route immediately to `LIVENESS_RECONCILE_REQUIRED`. This is Recovery work, not a Human Gate.
+
+Recovery Guardian then:
+
+1. reconstructs the task, current branch/PR/head and relevant durable evidence before doing anything else;
+2. if already-available evidence is sufficient for the pending decision, abandons the stalled internal operation and routes directly to Supervisor continuation;
+3. otherwise changes to a smaller, bounded or alternate read strategy instead of repeating the same opaque operation;
+4. verifies durable side effects before any write retry and never uses an ambiguous write as a liveness probe;
+5. counts repeated `INTERNAL_OPERATION_STALLED` observations toward the existing no-progress/strategy ceiling.
+
+If the host runtime or a connector call itself is frozen and does not yield execution control, Recovery cannot execute concurrently inside that frozen call. That platform limitation must be stated honestly. When control returns or a new session resumes, classify the prior internal operation as needing reconciliation, reconstruct durable state first, and do not blindly restart the same opaque operation from chat/UI state.
+
 For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
 
 ## Operational access discovery during recovery
