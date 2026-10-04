@@ -46,7 +46,7 @@ The Work execution must not use the visible “processing” spinner or a blocki
 
 ## Access discovery preflight
 
-Before declaring missing access or asking the Owner to run terminal commands, Project Leader must inspect four surfaces: direct session capabilities, target-repository automation, reasonably discoverable operational repositories, and historical execution evidence for candidate channels. Search for operational paths, not secret values.
+Before declaring missing access, asking the Owner to run terminal commands, or asking the Owner to approve a browser/tool switch, Project Leader must inspect five surfaces: direct session capabilities, a native tool-capability inventory, target-repository automation, reasonably discoverable operational repositories, and historical execution evidence for candidate channels. Search for operational paths, not secret values.
 
 A read-only lookup in another repository is reference discovery and is compatible with one-mutable-repository-per-task isolation. If an adjacent operations repository contains an existing GitHub Actions/SSH/deploy channel, classify it before stopping:
 
@@ -56,7 +56,24 @@ A read-only lookup in another repository is reference discovery and is compatibl
 - `ACCESS_DISCOVERY_INCOMPLETE` -> continue discovery, never stop;
 - `ACCESS_PATH_UNAVAILABLE` -> only now may an access Human Gate become a candidate, still subject to the normal Human Gate closure test.
 
-Do not confuse "this session has no SSH tool" with "the project has no operational access path".
+Do not confuse "this session has no SSH tool" or "this connector method lacks one endpoint" with "the project has no operational access path".
+
+### Non-interactive diagnostic fallback
+
+When an access path has been found but its execution fails, do not immediately replace the connector with a browser or ask the Owner for approval. Inventory the native capabilities that are actually available and exhaust the non-interactive evidence path first.
+
+For GitHub Actions, inspect the available run metadata and, where exposed, jobs, step summaries, job logs, artifacts, checks/check-runs/annotations or statuses, workflow definitions, repository-return evidence, and relevant historical runs. If one surface is absent because the workflow failed before jobs or steps existed, record that absence and continue through the remaining native surfaces instead of treating it as connector-wide incapability.
+
+Prefer diagnostics that return to GitHub through sanitized logs, artifacts, checks, or other durable evidence. A separately bounded operations task that creates or fixes such a return path is preferable to requiring terminal copy/paste when current authority covers it.
+
+Route this preflight as:
+
+- `NONINTERACTIVE_FALLBACK_INCOMPLETE` -> keep discovering native diagnostic surfaces;
+- `NONINTERACTIVE_PATH_FOUND` -> continue diagnosis automatically;
+- `NONINTERACTIVE_FALLBACK_EXHAUSTED` -> re-enter `FORCED_OPERATIONAL_ACCESS_DISCOVERY` for another operational path;
+- `PLATFORM_CONSENT_REQUIRED` -> only after non-interactive exhaustion may a host-enforced browser/tool-consent action become an `EXCLUSIVE_HUMAN_INTERVENTION` candidate.
+
+The Owner must never be used as a routing mechanism between tools that Project Leader can already use non-interactively.
 
 ## Recovery rules
 
