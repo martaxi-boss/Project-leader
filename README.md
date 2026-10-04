@@ -27,6 +27,8 @@ Covered work follows `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. A fai
 
 A covered, executable and validated transition uses `STANDING_OWNER_GRANT` and continues automatically. Human interruption is reserved for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`. Recovery preserves existing authority and never expands it.
 
+The executable standing-authority resolver recomputes access/diagnostic closure before operational Human Gates and requires convergence plus an exact evidenced manual action. Missing tooling alone remains discovery/remediation. Physical tests remain valid manual steps after automated prerequisites and independent covered work are complete.
+
 External targets bootstrap from their own architecture and live repository state. Use an explicitly selected target policy when applicable; otherwise bind `control/generic-project-policy.json` and narrow each task to the authorized objective.
 
 ## Canonical contracts
@@ -47,8 +49,8 @@ New tasks use v2 records, immutable authorization before implementation, exact p
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.5**.
-- Recovery Guardian: **0.5.3**.
+- Project Leader: **0.6.6**.
+- Recovery Guardian: **0.5.4**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 

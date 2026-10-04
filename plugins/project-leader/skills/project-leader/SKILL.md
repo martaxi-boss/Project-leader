@@ -120,7 +120,11 @@ Before any merge, inspect the live PR base and exact head. Development-branch me
 
 Before any Owner interruption, run a **convergence preflight** and exhaust covered audit, remediation, reconciliation, CI/evidence repair, recovery, and consequential transitions.
 
+Apply the executable Human Gate closure in live `control/standing_authority.py::resolve_next_action`; read its input contract in `control/README.md` when resolving an interruption. `system_can_execute=False` alone is not evidence of a manual gate. Recompute access/diagnostic preflights from raw observations, including self-provisioned bridges and authority resolution; a claimed exhausted state is insufficient. Require verified `convergence_complete` and exact `human_intervention` evidence. Genuine physical/device interaction or Owner-held input may bypass operational discovery after automated prerequisites pass. A manual test's future result is not a prerequisite for asking for that test. Complete currently executable covered work independent of the human step first, including before new uncovered material decisions, without implementing those decisions. Apply bounded anti-loop recovery if evidence remains unavailable; never fabricate a gate.
+
 Project isolation is mandatory: one mutable target repository per task. Do not modify another project's repository or project-specific policy merely because the Project Leader skill is being used elsewhere.
+
+After `NONINTERACTIVE_FALLBACK_EXHAUSTED`, follow `REENTER_ACCESS_DISCOVERY`; obtain fresh raw operational observations and bind them as `post_fallback_access_discovery` in the closure resolver. The pre-fallback snapshot cannot certify that re-entry. Recompute the fresh result, continue any path found, and use existing anti-loop limits if the strategy remains exhausted.
 
 Do not infer a gate from an action name, effect class, or ambiguous dictation.
 

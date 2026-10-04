@@ -57,6 +57,8 @@ Emit `HUMAN_GATE` only for:
 
 A merge to `main`, release, deploy, governance change, infrastructure/secret/data transition, or paid/commercial transition is not a Human Gate by action name alone. It remains consequential and must pass exact-target Supervisor audit and durable transition evidence.
 
+Use the executable closure in `control/standing_authority.py::resolve_next_action` and its input contract in `control/README.md`. Missing capability alone must remain discovery/remediation. Recompute operational/diagnostic preflights from raw observations before an access/consent gate; never trust a claimed exhausted state. Require verified convergence and an exact evidenced human action. Genuine physical/device interaction or Owner-held input may bypass operational discovery after automated prerequisites pass. Do not require a manual test's future result before requesting that test. Exhaust currently executable covered work which does not depend on the human step first, including before a new uncovered material decision; never implement that uncovered decision during convergence.
+
 ### Forced Operational Access Discovery
 
 Missing a direct shell, SSH client, provider tool, workflow-dispatch action, connector method, or currently selected tool in the current Work session is **not** proof that operational access or diagnostic evidence is unavailable.

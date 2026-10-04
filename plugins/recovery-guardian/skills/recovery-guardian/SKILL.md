@@ -15,9 +15,13 @@ If the Owner says `recover` or `continue after the error`, reconstruct the lates
 
 ## Canonical sources
 
+Resolve any Owner interruption through live `control/standing_authority.py::resolve_next_action` and its input contract in `control/README.md`. Missing capability alone stays in discovery/remediation. Recompute operational/diagnostic closure from raw observations, require verified `convergence_complete` and exact `human_intervention` evidence, and exhaust covered work independent of the human step first. Evidenced physical/device interaction or Owner-held input may bypass operational discovery after automated prerequisites pass; the requested manual test's future result is not a prerequisite. New uncovered decisions are never implemented during convergence. If evidence remains unavailable, use bounded anti-loop recovery instead of fabricating a manual gate.
+
 Use `martaxi-boss/Project-leader` as the control plane. Read live `RECOVERY_PROTOCOL.md`, `roles/RECOVERY_GUARDIAN.md`, and `projects/standing-authority.json`, then reconstruct the active target repository from durable task evidence, current Project context, current Owner instruction, and live GitHub state. No central project registry is required. Project isolation remains one mutable target repository per task.
 
 ## Workflow
+
+After `NONINTERACTIVE_FALLBACK_EXHAUSTED`, re-enter forced operational discovery using fresh raw observations obtained after fallback. Supply `post_fallback_access_discovery` to the closure resolver; do not reuse the earlier snapshot as proof of re-entry. Continue any newly found path and retain the existing anti-loop limits.
 
 1. Identify the active project and likely interrupted task.
 2. Reconstruct default branch, task branch, PRs, relevant commits, CI/workflow state, and artifacts as applicable.

@@ -129,6 +129,8 @@ When all three hold, record an exact transition authorization with source `STAND
 
 Use `HUMAN_GATE` only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
+Apply `control/standing_authority.py::resolve_next_action` using the closure contract in `control/README.md`. `system_can_execute=False` alone starts discovery/remediation. Feed raw operational/diagnostic observations, complete the self-provisioning check, and independently verify the exact `human_intervention` evidence. A claimed exhausted state cannot replace these inputs. Set `convergence_complete=True` only after currently executable covered work independent of the human step is finished. Evidenced physical/device tests, hardware interaction and Owner-held input may then be manual gates without unrelated GitHub diagnostic discovery. Automated prerequisites must pass; the requested manual test's future result is not one of those prerequisites. New uncovered material decisions also require convergence, without authorizing the uncovered effect.
+
 Action names such as merge to `main`, release, deploy, governance change, secret/infrastructure/data transition, or paid/commercial activation do not create Human Gates by themselves.
 
 Project isolation remains strict: one mutable target repository per task. The Project Leader project is not a container for other project implementations; its skill may operate on another project only when that project is the active target context.

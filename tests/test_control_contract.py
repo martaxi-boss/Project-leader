@@ -717,10 +717,17 @@ class ControlContractTests(unittest.TestCase):
     def test_plugin_versions_mark_autonomous_runtime_generation(self):
         project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
         recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(project_leader["version"], "0.6.5")
-        self.assertEqual(recovery["version"], "0.5.3")
+        self.assertEqual(project_leader["version"], "0.6.6")
+        self.assertEqual(recovery["version"], "0.5.4")
         self.assertIn("standing authority", project_leader["description"].lower())
         self.assertIn("standing-authority", recovery["description"].lower())
+
+    def test_both_packaged_recovery_references_match_canonical_protocol(self):
+        canonical = (ROOT / "RECOVERY_PROTOCOL.md").read_bytes()
+        for name in ("project-leader", "recovery-guardian"):
+            reference = ROOT / f"plugins/{name}/skills/{name}/references/recovery-protocol.md"
+            with self.subTest(plugin=name):
+                self.assertEqual(reference.read_bytes(), canonical)
 
 
 
