@@ -85,28 +85,11 @@ jobs:
 
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
-          grep -q '"version": "0.6.3"' plugins/project-leader/plugin.json
+          grep -q '"version": "0.6.4"' plugins/project-leader/plugin.json
           grep -q '"version": "0.5.3"' plugins/recovery-guardian/plugin.json
           grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml
           grep -q 'display_name: "Recovery Guardian"' plugins/recovery-guardian/skills/recovery-guardian/agents/openai.yaml
-          grep -q '^name: project-leader          grep -q '^name: recovery-guardian$' plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
-          grep -q 'projects/standing-authority.json' PROJECT_LEADER.md
-          grep -q 'control/generic-project-policy.json' PROJECT_LEADER.md
-          grep -q 'RECOVERY_PROTOCOL.md' RUNBOOK.md
-          grep -q '.project-leader/checkpoints/<task-id>.json' RECOVERY_PROTOCOL.md
-          grep -q 'four internal operating phases' AGENT_BUILDER_PROMPT.md
-
-          python -m json.tool .agents/plugins/marketplace.json >/dev/null
-          python -m json.tool plugins/project-leader/plugin.json >/dev/null
-          python -m json.tool plugins/project-leader/.app.json >/dev/null
-          python -m json.tool plugins/recovery-guardian/plugin.json >/dev/null
-          python -m json.tool plugins/recovery-guardian/.app.json >/dev/null
-          python -m json.tool projects/standing-authority.json >/dev/null
-          python -m json.tool projects/policies/project-leader.json >/dev/null
-          python -m json.tool control/generic-project-policy.json >/dev/null
-
-          echo "Project Leader autonomous control plane: PASS"
- plugins/project-leader/skills/project-leader/SKILL.md
+          grep -q '^name: project-leader$' plugins/project-leader/skills/project-leader/SKILL.md
           grep -q 'CANONICAL_RUNTIME_BOOTSTRAP' plugins/project-leader/skills/project-leader/SKILL.md
           grep -q 'RUNTIME_SYNC_STALE' plugins/project-leader/skills/project-leader/SKILL.md
           grep -q 'RUNTIME_CANONICAL_OVERRIDE_ACTIVE' plugins/project-leader/skills/project-leader/SKILL.md
