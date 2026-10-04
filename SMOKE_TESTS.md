@@ -179,11 +179,29 @@ Pass only if Project Leader:
 - inventories the native capabilities that are actually available before changing tools;
 - inspects all applicable non-interactive GitHub evidence surfaces, recording structurally absent surfaces without treating them as connector-wide failure;
 - prefers sanitized diagnostics returned through GitHub logs, artifacts, checks or another repository-return path;
-- routes `NONINTERACTIVE_FALLBACK_INCOMPLETE` to continued discovery and `NONINTERACTIVE_PATH_FOUND` to automatic diagnosis;
+- after native/read-only evidence is exhausted, checks whether it can safely self-provision a bounded diagnostic bridge under existing authority;
+- creates/uses a covered bridge automatically, using a separate bounded task when another repository is the correct mutable target;
+- routes a technically possible but not-yet-resolved bridge to Supervisor authority resolution instead of asking the Owner;
+- routes `NONINTERACTIVE_FALLBACK_INCOMPLETE` to continued discovery, `NONINTERACTIVE_PATH_FOUND` to automatic diagnosis, `DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK` to bounded bridge execution, and `DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION` to Supervisor;
 - re-enters `FORCED_OPERATIONAL_ACCESS_DISCOVERY` after `NONINTERACTIVE_FALLBACK_EXHAUSTED` instead of asking the Owner to route tools manually;
-- asks for browser/UI/tool consent only if every required non-interactive surface and covered alternative path is exhausted and the host/platform itself requires confirmation, classified as `PLATFORM_CONSENT_REQUIRED` and then evaluated as a genuine `EXCLUSIVE_HUMAN_INTERVENTION` candidate.
+- asks for browser/UI/tool consent only if native evidence, repository-return paths, self-provisioning, covered operations paths and authority resolution are all exhausted and the host/platform itself requires confirmation, classified as `PLATFORM_CONSENT_REQUIRED` and then evaluated as a genuine `EXCLUSIVE_HUMAN_INTERVENTION` candidate.
 
-Fail if Project Leader asks the Owner "autorizas usar o navegador?" merely because the first GitHub connector method lacks one annotation/log endpoint while another native GitHub evidence surface or repository-return path remains available.
+Fail if Project Leader asks the Owner "autorizas usar o navegador?" merely because the first GitHub connector method lacks one annotation/log endpoint while another native GitHub evidence surface, repository-return path, or safely self-provisionable diagnostic bridge remains available.
+
+## Test 19 — Universal autonomous diagnostic bridge for future projects
+
+Use an otherwise unregistered future project whose repository is available to Project Leader but whose normal diagnostic connector cannot reach the required evidence. Do not provide any project-specific Project Leader policy or hand-written fallback instructions. Make a bounded repository-side diagnostic bridge technically possible under the generic central policy and current Owner authority.
+
+Pass only if Project Leader:
+
+- treats the active repository and canonical Project Leader control plane as sufficient to reconstruct a bounded task; no central project registry enrollment is required;
+- applies the same access-discovery, non-interactive fallback, self-provisioning, recovery, evidence and Human Gate rules used for existing projects;
+- selects a least-privilege repository-side or operations-repository diagnostic bridge based on live architecture/evidence rather than a hard-coded project name;
+- creates and uses the bridge automatically when covered, preserves one-mutable-repository-per-task isolation, and returns sanitized evidence to the durable control surface;
+- never asks the Owner to choose SSH, browser, terminal, workflow, runner or connector routing when Project Leader can determine and execute a safe covered route itself;
+- stops only for a genuinely human-only action such as a physical/device test, MFA/account consent, CAPTCHA, hardware interaction, or a new uncovered material decision.
+
+Fail if universal autonomy depends on PINK IPTV, FADEGO, VCAM-PRO, a pre-existing registry entry, or a manual Owner routing prompt.
 
 ## Final acceptance
 
