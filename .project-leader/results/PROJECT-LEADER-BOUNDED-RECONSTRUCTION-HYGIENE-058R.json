@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-BOUNDED-RECONSTRUCTION-HYGIENE-058R.json",
   "authorization_commit_sha": "098bf703079602caa37ad0b6e1f9a7ff283710ca",
-  "authorization_sha256": "d3d4151f0b4b617db72bf7a6bfd9c6f074d1ddf1d035c9b87f34a18e05cbea86",
+  "authorization_sha256": "b21553ae5d9059a9955f129664c4ba98f4c8c134217b909fefd998d018bfe413",
   "implementation_head_sha": "34ae154f81f5a053b8589d29f6400e4103099356",
   "branch": "builder/bounded-reconstruction-hygiene-058r",
   "pr_number": 58,
