@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 1,
+  "recorded_at": "2026-10-04T12:21:00Z",
+  "event": "FAILURE_OBSERVED",
+  "strategy_generation": 1,
+  "action_fingerprint": "PROJECT-LEADER-CANONICAL-RUNTIME-BOOTSTRAP-056|PR56|final-head validation|immutable authorization contract invalid",
+  "attempt_count": 1,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 1,
+  "previous_event_sha256": null,
+  "detail": "PR #56 final-head validation exposed two durable-control defects in task 056: the immutable Task Authorization omitted policy-required prohibitions merge_to_main and license_selection, and the Worker Result supplied authorization_commit_sha without authorization_sha256. The Task Authorization is immutable and must not be edited in place. Do not retry the same task packet or weaken the trusted gate."
+}
