@@ -1,0 +1,50 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-050",
+  "terminal_status": "STALE_EXECUTION_PACKET",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-050.json",
+  "implementation_head_sha": "d2b52984bd20235694d1dabeaf0f88b646ebc856",
+  "branch": "builder/evidence-hygiene-convergence-050",
+  "pr_number": 50,
+  "recorded_at": "2026-10-04T11:37:10Z",
+  "state_observed_at": "2026-10-04T11:37:10Z",
+  "superseded_by": "PROJECT-LEADER-EVIDENCE-HYGIENE-CONVERGENCE-051",
+  "post_transition_record": null,
+  "changes": [
+    "Preserved the closed-without-merge hygiene attempt 050 as historical audit evidence."
+  ],
+  "validation": [
+    {
+      "name": "Control contract validation",
+      "status": "FAIL",
+      "evidence": "Control contract tests run 37199110944 rejected the attempted historical 048 Worker Result because authorization_commit_sha was present without authorization_sha256."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "FAILURE",
+      "run_id": 37199110944
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37199110950
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37199110946
+    }
+  ],
+  "material_non_effects": [
+    "PR #50 was closed without merge.",
+    "No canonical main effect occurred from task 050.",
+    "No functional runtime or managed-project mutation was produced."
+  ],
+  "residual_blockers": [
+    "Task 050 is superseded by clean hygiene re-execution 051."
+  ]
+}
