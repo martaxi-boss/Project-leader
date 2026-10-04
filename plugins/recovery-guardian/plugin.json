@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "recovery-guardian",
-  "version": "0.5.1",
+  "version": "0.5.0",
   "description": "Recovery controller with append-only anti-loop history, standing-authority preservation, external-CI wait semantics, and live GitHub reconstruction.",
   "author": {
     "name": "martaxi-boss",
