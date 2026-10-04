@@ -46,5 +46,7 @@
   ],
   "residual_blockers": [
     "Task 050 is superseded by clean hygiene re-execution 051."
-  ]
+  ],
+  "authorization_commit_sha": "266980d753fa6ac8282db7352b2de666ef0be4ca",
+  "authorization_sha256": "cdcf4ae17efbaac6ab699d8954ae15dc3463efa4501c1093c082611e4c61e38a"
 }
