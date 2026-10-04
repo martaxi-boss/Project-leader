@@ -547,7 +547,7 @@ class ManagedProjectContractTests(unittest.TestCase):
         self.assertEqual(state["route"], "CONTINUE_DIAGNOSTIC_DISCOVERY")
         self.assertIn("workflow_jobs_steps_logs", state["missing_surfaces"])
 
-    def test_platform_consent_is_candidate_only_after_noninteractive_exhaustion(self):
+    def test_self_provisioning_is_mandatory_before_browser_consent(self):
         state = reconcile_noninteractive_tool_fallback(
             [
                 "native_tool_capability_inventory",
@@ -565,6 +565,89 @@ class ManagedProjectContractTests(unittest.TestCase):
                 }
             ],
         )
+        self.assertEqual(state["state"], "NONINTERACTIVE_FALLBACK_INCOMPLETE")
+        self.assertEqual(state["route"], "CONTINUE_DIAGNOSTIC_DISCOVERY")
+        self.assertEqual(state["missing_surfaces"], ["self_provisioned_diagnostic_bridge"])
+
+    def test_covered_self_provisioned_bridge_beats_browser_consent(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                }
+            ],
+            self_provisioning_checked=True,
+            self_provision_candidates=[
+                {
+                    "name": "ephemeral-github-diagnostic-workflow",
+                    "provisionable": True,
+                    "authority_covered": True,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK")
+        self.assertEqual(state["route"], "BOUND_DIAGNOSTIC_BRIDGE_TASK")
+        self.assertEqual(state["selected_channel"], "ephemeral-github-diagnostic-workflow")
+
+    def test_uncovered_self_provisioned_bridge_routes_to_supervisor_not_owner(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                }
+            ],
+            self_provisioning_checked=True,
+            self_provision_candidates=[
+                {
+                    "name": "operations-repository-diagnostic-bridge",
+                    "provisionable": True,
+                    "authority_covered": False,
+                }
+            ],
+        )
+        self.assertEqual(state["state"], "DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION")
+        self.assertEqual(state["route"], "SUPERVISOR_AUTHORITY_RESOLUTION")
+
+    def test_platform_consent_is_candidate_only_after_noninteractive_exhaustion(self):
+        state = reconcile_noninteractive_tool_fallback(
+            [
+                "native_tool_capability_inventory",
+                "workflow_run_metadata",
+                "workflow_jobs_steps_logs",
+                "workflow_artifacts_checks_annotations",
+                "repository_return_path",
+                "historical_diagnostic_evidence",
+            ],
+            [
+                {
+                    "name": "cloud-browser",
+                    "usable": True,
+                    "requires_user_consent": True,
+                }
+            ],
+            self_provisioning_checked=True,
+            self_provision_candidates=[],
+        )
         self.assertEqual(state["state"], "PLATFORM_CONSENT_REQUIRED")
         self.assertEqual(state["route"], "HUMAN_GATE_CANDIDATE")
 
@@ -579,6 +662,8 @@ class ManagedProjectContractTests(unittest.TestCase):
                 "historical_diagnostic_evidence",
             ],
             [],
+            self_provisioning_checked=True,
+            self_provision_candidates=[],
         )
         self.assertEqual(state["state"], "NONINTERACTIVE_FALLBACK_EXHAUSTED")
         self.assertEqual(state["route"], "REENTER_ACCESS_DISCOVERY")

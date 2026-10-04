@@ -47,12 +47,17 @@ NONINTERACTIVE_DIAGNOSTIC_REQUIRED_SURFACES = (
     "repository_return_path",
     "historical_diagnostic_evidence",
 )
+SELF_PROVISION_DIAGNOSTIC_SURFACE = "self_provisioned_diagnostic_bridge"
 NONINTERACTIVE_FALLBACK_INCOMPLETE = "NONINTERACTIVE_FALLBACK_INCOMPLETE"
 NONINTERACTIVE_PATH_FOUND = "NONINTERACTIVE_PATH_FOUND"
+DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK = "DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK"
+DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION = "DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION"
 NONINTERACTIVE_FALLBACK_EXHAUSTED = "NONINTERACTIVE_FALLBACK_EXHAUSTED"
 PLATFORM_CONSENT_REQUIRED = "PLATFORM_CONSENT_REQUIRED"
 NONINTERACTIVE_ROUTE_DISCOVER = "CONTINUE_DIAGNOSTIC_DISCOVERY"
 NONINTERACTIVE_ROUTE_CONTINUE = "CONTINUE_DIAGNOSTIC"
+NONINTERACTIVE_ROUTE_BOUND_BRIDGE = "BOUND_DIAGNOSTIC_BRIDGE_TASK"
+NONINTERACTIVE_ROUTE_AUTHORITY = "SUPERVISOR_AUTHORITY_RESOLUTION"
 NONINTERACTIVE_ROUTE_REENTER_ACCESS = "REENTER_ACCESS_DISCOVERY"
 LEGACY_ACTIVE_CORROBORATED = "LEGACY_ACTIVE_CORROBORATED"
 STALE_LEGACY_CHECKPOINT = "STALE_LEGACY_CHECKPOINT"
@@ -398,14 +403,19 @@ def reconcile_operational_access_discovery(
 def reconcile_noninteractive_tool_fallback(
     checked_surfaces,
     candidate_channels,
+    self_provisioning_checked=False,
+    self_provision_candidates=None,
 ):
-    """Exhaust non-interactive diagnostic capabilities before Owner/tool consent.
+    """Exhaust non-interactive diagnostics and self-provisioned bridges before consent.
 
-    This guard applies after an operational path has been found but the selected
-    connector/tool cannot explain a failure. Project Leader must inventory native
-    capabilities and inspect available GitHub run/job/step/log/artifact/check
-    subresources and repository-return paths before escalating to an interactive
-    browser or asking the Owner to approve a tool switch.
+    After native connector evidence is exhausted, Project Leader must still ask:
+    can it create a bounded repository-side diagnostic bridge under existing
+    authority? Examples include an ephemeral task branch/workflow or an existing
+    operations repository path that returns sanitized logs/artifacts/check evidence.
+
+    Platform/browser consent is eligible only after native evidence, repository
+    return paths, self-provisioning, and authority-resolvable alternatives are
+    all exhausted.
     """
     if not isinstance(checked_surfaces, list):
         raise ValueError("checked_surfaces must be a list")
@@ -415,6 +425,12 @@ def reconcile_noninteractive_tool_fallback(
         raise ValueError("checked_surfaces entries must be non-empty strings")
     if not isinstance(candidate_channels, list):
         raise ValueError("candidate_channels must be a list")
+    if not isinstance(self_provisioning_checked, bool):
+        raise ValueError("self_provisioning_checked must be boolean")
+    if self_provision_candidates is None:
+        self_provision_candidates = []
+    if not isinstance(self_provision_candidates, list):
+        raise ValueError("self_provision_candidates must be a list")
 
     normalized = []
     for index, candidate in enumerate(candidate_channels):
@@ -440,6 +456,32 @@ def reconcile_noninteractive_tool_fallback(
             }
         )
 
+    normalized_bridges = []
+    for index, candidate in enumerate(self_provision_candidates):
+        if not isinstance(candidate, dict):
+            raise ValueError("self-provision diagnostic candidate must be an object")
+        name = candidate.get("name")
+        provisionable = candidate.get("provisionable")
+        authority_covered = candidate.get("authority_covered")
+        if not isinstance(name, str) or not name:
+            raise ValueError("self-provision diagnostic candidate name must be a non-empty string")
+        if not isinstance(provisionable, bool):
+            raise ValueError(
+                f"self-provision diagnostic candidate provisionable must be boolean: {name}"
+            )
+        if not isinstance(authority_covered, bool):
+            raise ValueError(
+                f"self-provision diagnostic candidate authority_covered must be boolean: {name}"
+            )
+        normalized_bridges.append(
+            {
+                "index": index,
+                "name": name,
+                "provisionable": provisionable,
+                "authority_covered": authority_covered,
+            }
+        )
+
     for candidate in normalized:
         if candidate["usable"] and not candidate["requires_user_consent"]:
             return {
@@ -461,6 +503,32 @@ def reconcile_noninteractive_tool_fallback(
             "selected_channel": None,
             "missing_surfaces": missing,
         }
+
+    if not self_provisioning_checked:
+        return {
+            "state": NONINTERACTIVE_FALLBACK_INCOMPLETE,
+            "route": NONINTERACTIVE_ROUTE_DISCOVER,
+            "selected_channel": None,
+            "missing_surfaces": [SELF_PROVISION_DIAGNOSTIC_SURFACE],
+        }
+
+    for candidate in normalized_bridges:
+        if candidate["provisionable"] and candidate["authority_covered"]:
+            return {
+                "state": DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK,
+                "route": NONINTERACTIVE_ROUTE_BOUND_BRIDGE,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
+
+    for candidate in normalized_bridges:
+        if candidate["provisionable"]:
+            return {
+                "state": DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION,
+                "route": NONINTERACTIVE_ROUTE_AUTHORITY,
+                "selected_channel": candidate["name"],
+                "missing_surfaces": [],
+            }
 
     for candidate in normalized:
         if candidate["usable"] and candidate["requires_user_consent"]:
