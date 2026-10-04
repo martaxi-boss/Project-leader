@@ -1,0 +1,73 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-CONTROL-EVIDENCE-HYGIENE-059",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-CONTROL-EVIDENCE-HYGIENE-059.json",
+  "authorization_commit_sha": "3cedd6c89ea7f24a13ecda9e5779bb5a15ff919a",
+  "authorization_sha256": "467075a07da8f9017728a2b8f9b8f63382f61a6695d521c7bcc6b067e7be1a4d",
+  "implementation_head_sha": "c1b96061b7a5197214b2165f502d76c2df42427d",
+  "branch": "builder/control-evidence-hygiene-059",
+  "pr_number": 59,
+  "recorded_at": "2026-10-04T14:36:00Z",
+  "state_observed_at": "2026-10-04T14:36:00Z",
+  "superseded_by": null,
+  "post_transition_record": null,
+  "changes": [
+    "Canonicalized the previously unique merge/purge transition evidence from control/merge-authorization-055, control/merge-authorization-057 and control/merge-authorization-058 into the task branch for promotion to canonical main.",
+    "Added exact CURRENT_OWNER_INSTRUCTION purge authorizations for the three obsolete control refs at their live audited revisions.",
+    "Made no runtime, architecture, role, standing-authority, Human-Gate, package-version or managed-project change."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "GitHub diff from main d68459c3bda12b83ecb8e94e3da4c5aba6af6a92 to implementation head c1b96061b7a5197214b2165f502d76c2df42427d contains only the immutable task record, exact transition evidence files listed in task scope, and three task-local purge authorization records."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Required exact implementation-head CI succeeded: Control contract tests 37209791308, Validate control plane 37209791303, Package ChatGPT plugins 37209791296."
+    },
+    {
+      "name": "Control evidence canonicalization",
+      "status": "PASS",
+      "evidence": "All eight evidence records identified as present on control/merge-authorization-055, -057, or -058 and absent from main were copied byte-for-byte into the task branch before promotion."
+    },
+    {
+      "name": "Exact obsolete-ref cleanup authority",
+      "status": "PASS",
+      "evidence": "Purge authorizations bind exact live refs: 055@00a16e859bfba9515e4338f70894220dcd932d9f, 057@d7cd00f1df77751998ded30cfa25d22af5e60308, 058@634f9004b8b5e3ed7159fa66f7c8d147868859b2. Repository hygiene will delete only exact matches after these records are canonical on main."
+    },
+    {
+      "name": "Role and authority invariants",
+      "status": "PASS",
+      "evidence": "No role file, projects/standing-authority.json, Human-Gate rule, runtime Skill/plugin, architecture document, managed-project repository or production surface changed."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37209791308
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37209791303
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37209791296
+    }
+  ],
+  "artifacts": [],
+  "material_non_effects": [
+    "Project Leader remains version 0.6.5.",
+    "No PINK IPTV, FADEGO, VCAM-PRO or other managed-project mutation.",
+    "No branch protection, release, deploy, production secret, paid service, force-push, architecture, role, standing-authority or Human-Gate change."
+  ],
+  "residual_blockers": []
+}
