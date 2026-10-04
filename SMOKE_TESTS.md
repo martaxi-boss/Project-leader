@@ -203,6 +203,23 @@ Pass only if Project Leader:
 
 Fail if universal autonomy depends on PINK IPTV, FADEGO, VCAM-PRO, a pre-existing registry entry, or a manual Owner routing prompt.
 
+## Test 20 — Universal internal-operation liveness
+
+Use a live Work execution after enough durable evidence already exists to decide the next step. Leave Project Leader on an internal repository compare/diff, audit, reconciliation, local validation, evidence-read or planning operation without producing a new tool result, durable evidence or control-state transition.
+
+Pass only if Project Leader:
+
+- distinguishes the internal operation from a legitimate external wait; an external wait must be backed by an independently pending dependency plus an observable state/handle when available and a bounded re-check;
+- never classifies the internal operation as `WAITING_EXTERNAL_CI` or another passive external-wait state merely because the UI still says processing;
+- after two live liveness observations without progress, classifies `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED` and enters Recovery Guardian;
+- reconstructs durable state before retrying anything;
+- if existing evidence already determines the next step, abandons the unnecessary compare/audit operation and continues immediately;
+- otherwise changes to a smaller/bounded read strategy and counts repeated stalls toward the existing no-progress ceiling;
+- never repeats an ambiguous write as a liveness probe;
+- states the platform limitation honestly when a host/tool call itself is frozen and cannot yield control, then reconciles first when control returns.
+
+Fail if a Project Leader-controlled compare/audit/reconciliation step can consume a live Work execution indefinitely after the next decision is already derivable from durable evidence.
+
 ## Final acceptance
 
 This section is closed only when:
