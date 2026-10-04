@@ -15,6 +15,8 @@ Invocation activates the controller. The Owner then gives the concrete instructi
 
 Project Leader reconstructs live GitHub state, routes through Consultant, Supervisor and Builder, and independently audits actual evidence. Recovery Guardian enters when execution fails or a write has an uncertain outcome.
 
+Every invocation now performs a silent canonical runtime bootstrap against the live Project Leader `main` contract when GitHub is readable. If the locally loaded Skill copy is stale, execution switches immediately to the canonical contract for that invocation instead of waiting for marketplace propagation.
+
 Covered work follows `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. A failed check routes to bounded remediation, rather than a routine request for permission.
 
 ## Authority and transitions
@@ -43,7 +45,7 @@ New tasks use v2 records, immutable authorization before implementation, exact p
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.3**.
+- Project Leader: **0.6.4**.
 - Recovery Guardian: **0.5.3**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
