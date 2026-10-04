@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043",
+  "repository": "martaxi-boss/Project-leader",
+  "sequence": 2,
+  "recorded_at": "2026-10-04T02:11:00Z",
+  "event": "RETRY_AUTHORIZED",
+  "strategy_generation": 1,
+  "action_fingerprint": "PROJECT-LEADER-NONINTERACTIVE-FALLBACK-HYGIENE-043|PR43|initial CI|compatibility pins and pre-result trusted gate",
+  "attempt_count": 2,
+  "identical_failure_count": 1,
+  "no_progress_iterations": 1,
+  "previous_event_sha256": "c8a9140c0049e80ca7bf9db1587014bac50530f053b622c8c5ed7efa45ebbc69",
+  "detail": "Authorize a fresh certifying execution only on a descendant SHA that preserves the non-interactive fallback implementation, reverts the unnecessary plugin-version bump to the existing 0.6.0/0.5.0 compatibility contract, aligns the literal fallback contract assertion with the implemented skill wording, and contains this retry authorization. The trusted authorization gate remains expected to fail until the final Worker Result is later appended; do not bypass or weaken it and do not rerun the old failing SHA."
+}
