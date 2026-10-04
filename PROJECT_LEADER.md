@@ -51,18 +51,35 @@ A merge to `main`, release, deploy, governance change, infrastructure/secret/dat
 
 ### Forced Operational Access Discovery
 
-Missing a direct shell, SSH client, provider tool, workflow-dispatch action, or connector in the current Work session is **not** proof that operational access is unavailable.
+Missing a direct shell, SSH client, provider tool, workflow-dispatch action, connector method, or currently selected tool in the current Work session is **not** proof that operational access or diagnostic evidence is unavailable.
 
-Before Project Leader may claim `essential access/evidence is unavailable` or emit `EXCLUSIVE_HUMAN_INTERVENTION` for access, it must run `FORCED_OPERATIONAL_ACCESS_DISCOVERY` and record what was checked. At minimum, inspect:
+Before Project Leader may claim `essential access/evidence is unavailable`, ask the Owner to paste terminal commands, ask the Owner to approve an alternate browser/tool, or emit `EXCLUSIVE_HUMAN_INTERVENTION` for access, it must run `FORCED_OPERATIONAL_ACCESS_DISCOVERY` and record what was checked. At minimum, inspect:
 
 1. direct session capabilities/connectors;
-2. the active target repository for existing workflows, deployment/operations scripts, environment references and access paths;
-3. reasonably discoverable adjacent operational repositories owned by the same project/Owner context, using strong repository/project/infrastructure identifiers rather than broad credential hunting;
-4. existing workflow/PR/run history that proves whether a discovered channel previously reached the required environment.
+2. a native capability inventory for the connected service/tool before concluding that one connector method represents the connector as a whole;
+3. the active target repository for existing workflows, deployment/operations scripts, environment references and access paths;
+4. reasonably discoverable adjacent operational repositories owned by the same project/Owner context, using strong repository/project/infrastructure identifiers rather than broad credential hunting;
+5. existing workflow/PR/run history that proves whether a discovered channel previously reached the required environment.
 
 Read-only inspection of an adjacent operational repository does not violate one-mutable-repository isolation. It may be used to discover a GitHub Actions -> SSH bridge, deployment workflow, provider connector, operations runner, or equivalent existing path. Never expose or search for substitute secret values; inspect only metadata, workflow definitions, configured secret *names*, and durable execution evidence permitted by the available tools.
 
-If a usable access path exists without a new mutation, use it and continue. If using the path requires mutating a different repository, do **not** mutate it inside the current task: return to Supervisor, resolve authority, and when covered create a separate bounded operations task for that repository, then return to the original project. If such a path exists but authority is unresolved, resolve authority before interrupting the Owner.
+### Non-interactive diagnostic fallback
+
+Finding an operational channel is not the end of discovery. If that channel fails or the first connector method cannot explain the failure, run the non-interactive fallback preflight before changing tools or interrupting the Owner.
+
+For GitHub Actions, dynamically discover and exhaust the native evidence surfaces that the current connector actually exposes. When available, inspect workflow-run metadata, jobs, step summaries, job logs, run artifacts, check suites/check runs/annotations or statuses, the workflow definition, repository-return paths, and relevant historical runs. A statement such as "the GitHub connector cannot obtain the annotation" is insufficient until the capability inventory and these non-interactive subresources have been checked or proven unavailable.
+
+Prefer a repository-return path: operational workflows should return sanitized diagnostics through GitHub logs, artifacts, checks, or other durable repository evidence that Project Leader can read itself. Do not make terminal copy/paste or an interactive browser the default return channel.
+
+Route the diagnostic fallback as:
+- `NONINTERACTIVE_FALLBACK_INCOMPLETE -> continue diagnostic discovery`;
+- `NONINTERACTIVE_PATH_FOUND -> continue diagnostic automatically`;
+- `NONINTERACTIVE_FALLBACK_EXHAUSTED -> re-enter FORCED_OPERATIONAL_ACCESS_DISCOVERY`;
+- `PLATFORM_CONSENT_REQUIRED -> Human Gate candidate only after every required non-interactive surface is exhausted and the host/platform itself requires user confirmation`.
+
+An alternate browser, UI, MFA prompt, or tool-consent dialog is therefore not a routine permission request. It is eligible for `EXCLUSIVE_HUMAN_INTERVENTION` only when no non-interactive native capability, GitHub subresource, repository-return path, separately taskable covered operations path, or authority-resolvable channel can continue the same objective.
+
+If an existing channel can be used read-only/non-mutating, use it. If it requires a mutation in another repository, create a separate bounded operations task for that repository when standing/current authority covers it; never mutate the second repository under the first task. If authority is unresolved, Supervisor resolves it before any Owner prompt. Search for channel metadata and evidence, never substitute credential values.
 
 Only after all required discovery surfaces are exhausted and no executable or separately-bindable path remains may Project Leader classify `ACCESS_PATH_UNAVAILABLE` and treat a Human Gate as a candidate. A request that the Owner manually copy terminal commands merely because the current Work session lacks direct SSH fails this preflight whenever an existing operational channel is reasonably discoverable.
 
