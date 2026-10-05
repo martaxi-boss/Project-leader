@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-RECOVERY-COMPACTION-064-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-RECOVERY-COMPACTION-064",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-RECOVERY-COMPACTION-064-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/recovery-compaction-064",
+    "revision": "3f1df1425018b336e39df86a883541acffa259a1",
+    "base_revision": "c42ed27cc6c520bfd63015097c8c60ee42392ba5",
+    "environment": null
+  },
+  "observed_at": "2026-10-05T17:30:00Z",
+  "final_state": {
+    "status": "AUDITED",
+    "revision": "46ca680a5814620f454cb3ac4a43f0dc83e5bd28"
+  },
+  "evidence": [
+    "Current Owner instruction authorized the minimal Project Leader trust-root correction; exact immutable task authorization 3f1df1425018b336e39df86a883541acffa259a1 was committed before trust-root authorization d2478609bef780ece98f6d4f27d3a926710bbd6e.",
+    "Exact implementation 46ca680a5814620f454cb3ac4a43f0dc83e5bd28 is a descendant of both pre-effect authorization commits and changes only authorized Project Leader control/docs/tests/plugin/version-validation paths.",
+    "Required implementation runs 37348785637, 37348785563 and 37348785585 completed SUCCESS; control-contract suite reports 202 tests OK."
+  ],
+  "residual_blockers": []
+}

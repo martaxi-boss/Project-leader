@@ -1,0 +1,85 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-RECOVERY-COMPACTION-064",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-RECOVERY-COMPACTION-064.json",
+  "authorization_commit_sha": "3f1df1425018b336e39df86a883541acffa259a1",
+  "authorization_sha256": "ed4d5df9f6b07c139110e2f88f0107dbc76bb3b08c1e5721c1c9b9941a5fd90c",
+  "implementation_head_sha": "46ca680a5814620f454cb3ac4a43f0dc83e5bd28",
+  "branch": "builder/recovery-compaction-064",
+  "pr_number": 65,
+  "recorded_at": "2026-10-05T17:30:00Z",
+  "state_observed_at": "2026-10-05T17:30:00Z",
+  "changes": [
+    "Added executable Recovery Compaction closure returning DERIVED_COMPLETION_AUTHORITY for already-authorized bounded E1 remediation.",
+    "Made APPEND_ONLY_V1 durable Recovery evidence proportional: strict for same-action reruns, interruption-safe anti-loop/replan state, ambiguous-write causality, immutable audit and boundary outcomes, but not for every ordinary technical failure.",
+    "Preserved automatic CI liveness, Human Gate closure, security/trust boundaries, project isolation and required validation strength.",
+    "Added universal A-E regression scenarios and synchronized canonical/plugin Recovery protocol references.",
+    "Bumped Project Leader to 0.6.7 and Recovery Guardian to 0.5.5 and aligned validate-control-plane version expectations."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Exact base c42ed27cc6c520bfd63015097c8c60ee42392ba5 -> implementation 46ca680a5814620f454cb3ac4a43f0dc83e5bd28 changes only Task 064-authorized Project Leader control/docs/tests/plugin/version workflow paths; no external project path or repository was mutated."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation SHA 46ca680a5814620f454cb3ac4a43f0dc83e5bd28 has successful Control contract tests run 37348785637, Validate control plane run 37348785563 and Package ChatGPT plugins run 37348785585."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable task authorization commit 3f1df1425018b336e39df86a883541acffa259a1 precedes exact trust-root authorization d2478609bef780ece98f6d4f27d3a926710bbd6e, which precedes implementation 46ca680a5814620f454cb3ac4a43f0dc83e5bd28. Workflow version synchronization was explicitly inside task scope."
+    },
+    {
+      "name": "Recovery compaction scenario matrix",
+      "status": "PASS",
+      "evidence": "Control contract run 37348785637 completed SUCCESS with 202 tests OK, including compact E1 recovery, architecture-boundary rejection, derived completion authority, new-permission rejection, no-progress replan and same-action durable-journal cases."
+    },
+    {
+      "name": "Runtime contract consistency",
+      "status": "PASS",
+      "evidence": "PROJECT_LEADER.md, RUNBOOK.md, RECOVERY_PROTOCOL.md, role contracts, Project Leader Skill, Recovery Guardian Skill and both packaged recovery references express the same compact-recovery boundary; both packaged protocol references use the same canonical recovery-protocol blob."
+    },
+    {
+      "name": "Validation workflow version consistency",
+      "status": "PASS",
+      "evidence": "validate-control-plane.yml version expectations were changed only from Project Leader 0.6.6 / Recovery Guardian 0.5.4 to 0.6.7 / 0.5.5; exact implementation Validate control plane run 37348785563 succeeded."
+    },
+    {
+      "name": "Continuous hygiene consistency",
+      "status": "PASS",
+      "evidence": "Failed exploratory PR 64 was closed and not carried into Task 064. Task 064 branch starts from canonical main and contains only its own authorization, transition authorization and implementation changes; no PINK IPTV mutation or project-specific exception was introduced."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37348785637
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37348785563
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37348785585
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/65"
+  ],
+  "material_non_effects": [
+    "No PINK IPTV or other external project mutation.",
+    "No standing-authority, role-hierarchy, branch-protection, release, deploy, secret, paid-service or product-architecture change.",
+    "No weakening of CI, acceptance evidence, scope enforcement, Human Gates or E2/E3 transition controls."
+  ],
+  "residual_blockers": []
+}
