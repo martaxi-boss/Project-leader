@@ -9,9 +9,9 @@
   "authorization_sha256": "b6a3778a537b45d738f9755cffc19eecc788ced5dc84fefecaf63e815ce1c554",
   "implementation_head_sha": "68c94e957b346a5810399a1054a6b70721809f2e",
   "branch": "builder/recovery-compaction-hygiene-066",
-  "pr_number": 68,
+  "pr_number": 69,
   "recorded_at": "2026-10-05T18:01:10Z",
-  "state_observed_at": "2026-10-05T18:01:10Z",
+  "state_observed_at": "2026-10-05T18:04:00Z",
   "changes": [
     "Copied exact Task 065 PR67 merge authorization into the canonical-closeout branch and recorded the verified merge result.",
     "Added exact CURRENT_OWNER_INSTRUCTION purge authorizations for builder/recovery-compaction-063, builder/recovery-compaction-064, control/merge-authorization-065, and control/merge-authorization-065-pr67.",
@@ -57,7 +57,7 @@
     }
   ],
   "artifacts": [
-    "https://github.com/martaxi-boss/Project-leader/pull/68"
+    "https://github.com/martaxi-boss/Project-leader/pull/69"
   ],
   "material_non_effects": [
     "No Project Leader runtime behavior change.",
