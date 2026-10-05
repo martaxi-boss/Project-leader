@@ -566,15 +566,26 @@ class ControlContractTests(unittest.TestCase):
         project_leader_entry = next(item for item in marketplace["plugins"] if item["name"] == "project-leader")
         self.assertNotIn("pluginId", project_leader_entry)
 
-    def test_project_leader_requires_durable_v2_recovery_events_before_retry(self):
+    def test_project_leader_compacts_ordinary_e1_recovery_and_keeps_durable_rerun_proof(self):
+        project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
         skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(encoding="utf-8")
         recovery = (ROOT / "plugins/project-leader/skills/project-leader/references/recovery-protocol.md").read_text(encoding="utf-8")
-        self.assertIn("FAILURE_OBSERVED", skill)
-        self.assertIn("RETRY_AUTHORIZED", skill)
-        self.assertIn("RECOVERED", skill)
+        guardian = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(encoding="utf-8")
+        smoke = (ROOT / "SMOKE_TESTS.md").read_text(encoding="utf-8")
+        control = (ROOT / "control/standing_authority.py").read_text(encoding="utf-8")
+
+        for content in (project, skill, recovery, guardian):
+            self.assertIn("Recovery Compaction", content)
+            self.assertIn("DERIVED_COMPLETION_AUTHORITY", content)
+            self.assertIn("FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE", content)
+        self.assertIn("COMPACT_RECOVERY", control)
+        self.assertIn("RECOVERY_REPLAN_REQUIRED", control)
         self.assertIn("run_attempt > 1", recovery)
         self.assertIn("Terminal certification must fail", recovery)
         self.assertIn("retroactive event is invalid", recovery)
+        self.assertIn("control-only", project)
+        self.assertIn("Test 24 — Universal Recovery Compaction / execution efficiency", smoke)
+
 
     def test_legacy_active_checkpoint_requires_live_corroboration(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
@@ -721,8 +732,8 @@ class ControlContractTests(unittest.TestCase):
     def test_plugin_versions_mark_autonomous_runtime_generation(self):
         project_leader = json.loads((ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8"))
         recovery = json.loads((ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(project_leader["version"], "0.6.6")
-        self.assertEqual(recovery["version"], "0.5.4")
+        self.assertEqual(project_leader["version"], "0.6.7")
+        self.assertEqual(recovery["version"], "0.5.5")
         self.assertIn("standing authority", project_leader["description"].lower())
         self.assertIn("standing-authority", recovery["description"].lower())
 

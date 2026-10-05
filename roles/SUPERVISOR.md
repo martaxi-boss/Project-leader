@@ -49,3 +49,8 @@ If the managed repository has no project-local trusted gate on its base branch, 
 An active external CI run is `WAITING_EXTERNAL_CI`; it is neither remediation evidence nor no-progress until it reaches a terminal state or exceeds the canonical stale threshold.
 
 Supervisor must distinguish a legitimate external wait from Project Leader-controlled internal work. External waiting requires an independently pending external dependency plus observable state/handle when available and a bounded re-check. Compare/diff, audit, reconciliation, local validation, evidence reading and planning are internal operations. If one is still current across two live liveness observations with no new tool result, durable evidence or control-state transition, accept `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED` and route to Recovery instead of accepting a passive spinner as progress.
+
+
+## Recovery compaction audit
+
+For an in-scope technical failure, distinguish ordinary E1 completion from a new authority event. Apply `resolve_recovery_action`: when the existing objective and standing delegation still cover the same workstream and no architecture/security/permission/Human-Gate boundary changes, accept `DERIVED_COMPLETION_AUTHORITY` and allow Recovery/Builder to fix and retest without separate failure/authorization/retry commits. Require durable append-only Recovery evidence only when continuity, causal retry proof, anti-loop/replan persistence, immutable audit, or a boundary outcome actually requires it. Required CI, acceptance evidence, scope audit and consequential-transition controls remain unchanged.

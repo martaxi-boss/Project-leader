@@ -5,11 +5,16 @@ from pathlib import Path
 from control.standing_authority import (
     CONTINUE_AUTONOMOUSLY,
     CONTINUE_REMEDIATION,
+    COMPACT_RECOVERY,
+    DERIVED_COMPLETION_AUTHORITY,
     EXCLUSIVE_HUMAN_INTERVENTION,
     HUMAN_GATE,
     NEW_UNCOVERED_MATERIAL_DECISION,
+    NORMAL_AUTHORITY_RESOLUTION,
+    RECOVERY_REPLAN_REQUIRED,
     STANDING_OWNER_GRANT,
     resolve_next_action,
+    resolve_recovery_action,
 )
 from control.validate_records import validate_standing_authority
 from control.managed_project_contract import (
@@ -60,6 +65,44 @@ class StandingAuthorityTests(unittest.TestCase):
             record["project_isolation"],
             "ONE_MUTABLE_TARGET_REPOSITORY_PER_TASK",
         )
+
+
+    def compact_recovery(self, **overrides):
+        args = {
+            "objective_authorized": True,
+            "standing_delegation_valid": True,
+            "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+            "same_project_workstream": True,
+        }
+        args.update(overrides)
+        return resolve_recovery_action(**args)
+
+    def test_recovery_compaction_a_simple_ci_failure(self):
+        decision = self.compact_recovery()
+        self.assertEqual(decision["decision"], COMPACT_RECOVERY)
+        self.assertEqual(decision["authority_kind"], DERIVED_COMPLETION_AUTHORITY)
+        self.assertFalse(decision["durable_recovery_required"])
+
+    def test_recovery_compaction_b_architecture_change_requires_normal_authority(self):
+        self.assertEqual(self.compact_recovery(architecture_change=True)["decision"], NORMAL_AUTHORITY_RESOLUTION)
+
+    def test_recovery_compaction_c_evident_e1_fix_uses_derived_completion_authority(self):
+        decision = self.compact_recovery()
+        self.assertEqual(decision["authority_kind"], DERIVED_COMPLETION_AUTHORITY)
+        self.assertEqual(decision["authority_source"], STANDING_OWNER_GRANT)
+
+    def test_recovery_compaction_d_new_permission_keeps_existing_gate_rules(self):
+        self.assertEqual(self.compact_recovery(new_permission_required=True)["decision"], NORMAL_AUTHORITY_RESOLUTION)
+
+    def test_recovery_compaction_e_repeated_no_progress_forces_replan(self):
+        decision = self.compact_recovery(no_progress_iterations=3)
+        self.assertEqual(decision["decision"], RECOVERY_REPLAN_REQUIRED)
+        self.assertTrue(decision["durable_recovery_required"])
+
+    def test_same_action_retry_keeps_durable_causal_journal(self):
+        decision = self.compact_recovery(same_action_retry=True)
+        self.assertEqual(decision["decision"], COMPACT_RECOVERY)
+        self.assertTrue(decision["durable_recovery_required"])
 
     def test_merge_to_main_is_not_a_human_gate_by_action_name(self):
         decision = resolve_next_action(
