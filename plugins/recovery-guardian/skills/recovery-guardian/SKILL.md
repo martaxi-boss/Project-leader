@@ -26,12 +26,12 @@ After `NONINTERACTIVE_FALLBACK_EXHAUSTED`, re-enter forced operational discovery
 1. Identify the active project and likely interrupted task.
 2. Reconstruct default branch, task branch, PRs, relevant commits, CI/workflow state, and artifacts as applicable.
 3. Look for and validate a durable Task Authorization Record at `.project-leader/tasks/<task-id>.json` when present, then compare it with current Owner instructions.
-4. For v2 tasks, read and validate the append-only `.project-leader/recovery-events/<task-id>/` journal and restore retry/no-progress state from it. Use mutable checkpoints only as legacy summaries for v1 flows.
+4. For v2 tasks, apply Recovery Compaction before creating control-only persistence. If a recovery journal already exists or durable retry/no-progress state is required, read and validate `.project-leader/recovery-events/<task-id>/` and restore state from it. Use mutable checkpoints only as legacy summaries for v1 flows.
 5. Classify the failure.
 6. Follow `references/recovery-protocol.md`.
 7. Verify every possibly-completed write before retrying it.
 8. Retry only bounded transient failures.
-9. Persist append-only recovery events for v2 retry/replan decisions; persist checkpoint changes only for legacy v1 continuity.
+9. Persist append-only recovery events only when v2 durability/causal certification is required; ordinary covered E1 diagnose/fix/test cycles remain compact. Persist checkpoint changes only for legacy v1 continuity.
 10. Replan after repeated no-progress instead of looping.
 11. Before any CI dispatch/rerun during recovery, query exact workflow name + target SHA + event context. Reuse an active/successful exact run or route a terminal non-success through Recovery; create a new run only when no exact match exists.
 12. If the interrupted state was `WAITING_EXTERNAL_CI`, re-read the exact bound GitHub run IDs before any dispatch. When every bound run is already terminal, classify `STALE_WAIT_STATE`; route all-success to Supervisor continuation and any failure/cancellation/timeout to Recovery without duplicating the run.
@@ -56,6 +56,12 @@ Technical errors, failed checks, unsatisfied controls, retries, stale waits, and
 
 Never use recovery to widen scope, skip transition evidence, or bypass a genuine Human Gate.
 
+## Recovery Compaction / execution efficiency
+
+Before creating Recovery-only commits for an already-authorized technical failure, evaluate `control/standing_authority.py::resolve_recovery_action`. If the objective and standing delegation remain valid, work stays in the same project/workstream, the effect is bounded `E1_RECOVERABLE_PROJECT_LOCAL`, and no architecture/security/permission/Human-Gate boundary changes, use `DERIVED_COMPLETION_AUTHORITY` and execute `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`.
+
+Do not persist separate records merely to announce failure observation, repeat standing authority, authorize an already-covered correction, announce a retry/replan, mirror transient CI/log state, or duplicate validation that can be attached to the next technical checkpoint. Durable append-only events remain required for a true same-action rerun (`run_attempt > 1`), interruption-safe anti-loop/replan state, ambiguous-write causal proof, explicit immutable audit, boundary/Human-Gate outcomes, or another certification requirement. Three no-progress iterations still require a technical replan rather than more administrative commits.
+
 ## Platform outage limitation
 
 Do not claim to monitor another ChatGPT chat while it is unreachable. A ChatGPT-wide or session-level outage cannot be repaired from inside another ChatGPT agent while the platform itself is unavailable.
@@ -68,4 +74,6 @@ Report project/task reconstructed, last verified durable state, recovery action 
 
 ## V2 append-only recovery
 
-For Task Authorization v2, read and validate the append-only recovery journal under `.project-leader/recovery-events/<task-id>/` before deciding whether another retry is allowed. The journal hash chain and monotonic counters are the authoritative retry history; a mutable checkpoint is only a convenience summary. For legacy v1 checkpoints, stored `ACTIVE` is not live-state proof: require corroborating current branch/PR/active-CI evidence, otherwise classify `STALE_LEGACY_CHECKPOINT` and preserve the file without resuming its stale `next_step`. Persist and commit `FAILURE_OBSERVED`, then `RETRY_AUTHORIZED`, before the next certifying execution. Run the replacement CI on a descendant SHA that already contains those commits; an old-SHA GitHub rerun is not terminal structural proof. Persist `RECOVERED` only after success, as a descendant of the CI-certified implementation SHA. Never reset a retry budget by rewriting a checkpoint or starting a new strategy generation without a valid `REPLAN` event.
+For Task Authorization v2, `APPEND_ONLY_V1` is the durable mechanism, not a mandate to journal every ordinary E1 remediation. Apply Recovery Compaction first. When the closure says durable state is required, or a journal already exists, validate its hash chain before another causally journaled retry. A mutable checkpoint cannot reset attempts or no-progress history.
+
+For a true same-action retry/rerun, persist and commit `FAILURE_OBSERVED`, then `RETRY_AUTHORIZED`, before that retry; the replacement certification must descend from those events. Persist `REPLAN` before a durability-required strategy-generation change and `RECOVERED` only after successful certification. Never reset a retry budget by rewriting a checkpoint. A normal bounded E1 fix followed by a fresh technical commit and fresh CI does not require these control-only commits merely because the earlier implementation failed.

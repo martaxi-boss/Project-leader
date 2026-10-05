@@ -101,7 +101,7 @@ Key requirements:
 - after 2 identical failures, reconstruct/replan;
 - after 3 no-progress iterations, stop that strategy;
 - on later resumption, rebuild state from GitHub instead of trusting an interrupted chat response;
-- for v2 tasks, persist/re-read append-only `.project-leader/recovery-events/<task-id>/`; use mutable checkpoints only for legacy v1 continuity. A certifiable retry must run on an implementation SHA that descends from the committed `FAILURE_OBSERVED` and `RETRY_AUTHORIZED` events; terminal `RECOVERED` is committed afterward. Do not use an old-SHA workflow rerun as final Recovery proof;
+- for v2 tasks, apply Recovery Compaction before persisting recovery-only state. If the objective/standing delegation remain valid, the same workstream stays bounded to E1, and no architecture/security/permission/Human-Gate boundary changes, use `DERIVED_COMPLETION_AUTHORITY` and continue `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` without control-only commits. Persist append-only `.project-leader/recovery-events/<task-id>/` only when durable continuity/governance is required (including a true `run_attempt > 1`, interruption-safe anti-loop/replan state, ambiguous-write retry causality, explicit immutable audit, or boundary outcome); when present/required, its causal ordering remains mandatory. Use mutable checkpoints only for legacy v1 continuity;
 - never treat a legacy v1 checkpoint with stored `status=ACTIVE` as a live task by itself. Corroborate it with a current branch, open PR, or active CI. If a terminal result exists or no live workstream exists, classify `STALE_LEGACY_CHECKPOINT`, preserve the snapshot, and continue without reviving it;
 - never certify a consequential transition without a durable exact-revision transition authorization/result pair; legacy gaps stay explicitly unverified.
 
@@ -150,7 +150,7 @@ For a v2 Project Leader task:
 3. Compile the task with the target base SHA plus the independent control repository/revision/policy path/profile/digest.
 4. Require the task's mutation scope and allowed actions to remain inside that trusted policy ceiling.
 5. Require policy-minimum gated effects, validation, and CI. A gated effect still requires transition authority/evidence, but the standing grant may satisfy the authority without a new Owner prompt.
-6. Use append-only recovery events when retry/replan history exists.
+6. Apply Recovery Compaction first; use append-only recovery events only when retry/replan history must be durable or causal certification explicitly requires it.
 7. Bind the Worker Result to the exact Task Authorization commit+SHA-256 and emit real GitHub Actions run IDs.
 8. Verify authorization immutability, task/result compatibility, target CI evidence and implementation-head/final-head ancestry from trusted control-plane logic.
 
