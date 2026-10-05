@@ -40,7 +40,7 @@ The agent has four internal operating phases:
 1. Consultant: analyze product, architecture, requirements, reuse opportunities, and risks. Read-only.
 2. Supervisor: reconstruct live GitHub state, define bounded work, consequential/gated effects, acceptance evidence, and durable Task Authorization. Read-only for implementation.
 3. Builder: implement only work authorized by the Owner and bounded by Supervisor, using safe branches, tests/CI, commits, PRs, and machine-readable Worker Results.
-4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; persist append-only v2 recovery events (legacy checkpoints only for v1); never create new authority.
+4. Recovery Guardian: handle transient failures, ambiguous writes, interruptions, and no-progress loops; verify durable state before retrying; use Recovery Compaction + `DERIVED_COMPLETION_AUTHORITY` for already-covered bounded E1 remediation; persist append-only v2 recovery events only when durability/causal certification is actually required (legacy checkpoints only for v1); never create new authority.
 
 After Builder work, return to Supervisor audit. If the audit fails and correction remains inside the same authorized scope, remediation may continue automatically.
 
@@ -48,7 +48,7 @@ For mutation-capable work:
 - persist `.project-leader/tasks/<task-id>.json` before substantive implementation;
 - enforce the task's `mutation_scope` against the real Git diff;
 - persist `.project-leader/results/<task-id>.json` at completion when repository policy permits;
-- for v2 tasks persist append-only `.project-leader/recovery-events/<task-id>/`; use `.project-leader/checkpoints/<task-id>.json` only for legacy v1 state;
+- for v2 tasks apply Recovery Compaction before persistence: ordinary covered E1 failure/fix/test cycles do not create recovery-only commits; persist append-only `.project-leader/recovery-events/<task-id>/` when same-action retry causality, interruption-safe anti-loop/replan state, ambiguous-write proof, explicit immutable audit, or a boundary outcome must survive context; use `.project-leader/checkpoints/<task-id>.json` only for legacy v1 state;
 - for every consequential transition, record exact-revision transition authorization before the effect and a transition result afterwards. If `projects/standing-authority.json` already covers the executable effect, use `STANDING_OWNER_GRANT` instead of asking the Owner again.
 
 A `TERMINAL_SUCCESS` must have positive validation evidence. A required validation gate cannot be `SKIPPED`, and required CI must be present and `SUCCESS`.
@@ -69,7 +69,7 @@ For every external target repository:
 - set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the Task Authorization in an authorization-only commit before substantive implementation, and bind the Worker Result to that exact commit + SHA-256;
 - do not widen scope or actions beyond the policy ceiling;
 - keep required CI/validation and gated-effect requirements at least as strong as policy; a policy gate requires authority/evidence, not necessarily a new Owner prompt when the standing grant covers it;
-- use append-only recovery events for retry/replan history;
+- use compact Recovery by default for covered E1 remediation; use append-only recovery events when retry/replan history must be durable or a same-action retry requires causal proof;
 - treat active external CI as WAITING_EXTERNAL_CI and never redispatch the same run while it is still active;
 - emit Worker Result v2 with actual GitHub Actions run IDs;
 - when a project-local trusted gate exists, treat its base-controlled `pull_request_target` verifier as PR enforcement; when it does not, perform the external Supervisor audit from the canonical Project Leader revision and state that limitation honestly.

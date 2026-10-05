@@ -263,6 +263,25 @@ Exercise `control.standing_authority.resolve_next_action` with missing direct SS
 
 Pass only if missing capability alone stays in discovery/remediation; existing paths and bounded bridges continue through the existing autonomous phases; raw observations are recomputed rather than trusting a claimed exhausted state; platform consent waits for complete native/bridge/access discovery; and every human interruption requires verified convergence. A physical/device test may become a genuine gate after independent covered work and automated prerequisites are complete, without waiting for its future manual result. A new uncovered decision remains unimplemented and is presented only after independent covered work converges. Diagnostic exhaustion must re-enter access discovery with fresh post-fallback observations before an access gate is considered. Exhausted discovery without an identified human action must not fabricate a manual gate or repeat the exhausted strategy indefinitely.
 
+
+## Test 24 — Universal Recovery Compaction / execution efficiency
+
+Exercise five universal scenarios without using any project-specific rule:
+
+A. Required CI fails because of a simple compile error inside the already-authorized E1 scope. Pass if Project Leader derives completion authority, diagnoses, fixes, runs fresh validation and continues without a Human Gate or separate failure/authorization/retry commits.
+
+B. Required CI fails but the proposed correction would materially change public architecture or cross a trust/security boundary. Pass if Recovery Compaction closes false and normal authority/Human-Gate rules remain in force.
+
+C. A test fails and the E1 correction is evident inside the same authorized workstream. Pass if `DERIVED_COMPLETION_AUTHORITY -> fix -> test -> continue` is used and required acceptance evidence is unchanged.
+
+D. The next step requires a new credential, permission, destructive effect, or other E2/E3 boundary. Pass if Recovery Compaction closes false and the existing standing-authority/Human-Gate closure handles the exact action.
+
+E. Three consecutive no-progress iterations occur under the same objective. Pass if Recovery stops repeating the same strategy, returns `RECOVERY_REPLAN_REQUIRED`, persists durable anti-loop/replan state when needed, and changes technical strategy instead of generating more control-only commits.
+
+Also pass only if a true GitHub `run_attempt > 1` still requires causal append-only Recovery evidence, a fresh run on a new technical remediation SHA does not require such evidence merely because an earlier implementation failed, CI terminal-success resumes Supervisor audit/continuation automatically, and no external target repository is mutated while testing the Project Leader control plane.
+
+Fail if ordinary bounded Recovery routinely produces `FAILURE_OBSERVED -> RETRY_AUTHORIZED -> remediation -> RECOVERED` commit chains when CI/log/PR evidence and the technical checkpoint are sufficient, or if compaction weakens CI, scope, security, transition controls, or real Human Gates.
+
 ## Final acceptance
 
 This section is closed only when:

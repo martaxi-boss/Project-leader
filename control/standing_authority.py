@@ -24,6 +24,10 @@ HUMAN_GATE = "HUMAN_GATE"
 EXCLUSIVE_HUMAN_INTERVENTION = "EXCLUSIVE_HUMAN_INTERVENTION"
 NEW_UNCOVERED_MATERIAL_DECISION = "NEW_UNCOVERED_MATERIAL_DECISION"
 STANDING_OWNER_GRANT = "STANDING_OWNER_GRANT"
+DERIVED_COMPLETION_AUTHORITY = "DERIVED_COMPLETION_AUTHORITY"
+COMPACT_RECOVERY = "COMPACT_RECOVERY"
+RECOVERY_REPLAN_REQUIRED = "RECOVERY_REPLAN_REQUIRED"
+NORMAL_AUTHORITY_RESOLUTION = "NORMAL_AUTHORITY_RESOLUTION"
 
 DIRECT_MANUAL_KINDS = frozenset({
     "PHYSICAL_DEVICE_TEST", "HARDWARE_INTERACTION", "OWNER_HELD_INPUT",
@@ -50,6 +54,87 @@ def _observations(record, defaults):
         raise ValueError("preflight input must contain raw observations, not a claimed state/route")
     return {**defaults, **record}
 
+
+
+def resolve_recovery_action(
+    *,
+    objective_authorized,
+    standing_delegation_valid,
+    effect_class,
+    same_project_workstream,
+    architecture_change=False,
+    security_boundary_change=False,
+    new_permission_required=False,
+    human_gate_required=False,
+    new_material_decision=False,
+    same_action_retry=False,
+    durable_continuity_required=False,
+    immutable_audit_required=False,
+    no_progress_iterations=0,
+):
+    """Resolve compact completion authority for already-covered E1 Recovery."""
+    for name, value in (
+        ("objective_authorized", objective_authorized),
+        ("standing_delegation_valid", standing_delegation_valid),
+        ("same_project_workstream", same_project_workstream),
+        ("architecture_change", architecture_change),
+        ("security_boundary_change", security_boundary_change),
+        ("new_permission_required", new_permission_required),
+        ("human_gate_required", human_gate_required),
+        ("new_material_decision", new_material_decision),
+        ("same_action_retry", same_action_retry),
+        ("durable_continuity_required", durable_continuity_required),
+        ("immutable_audit_required", immutable_audit_required),
+    ):
+        if not isinstance(value, bool):
+            raise ValueError(f"{name} must be boolean")
+    if not isinstance(effect_class, str) or not effect_class:
+        raise ValueError("effect_class must be a non-empty string")
+    if not isinstance(no_progress_iterations, int) or isinstance(no_progress_iterations, bool) or no_progress_iterations < 0:
+        raise ValueError("no_progress_iterations must be a non-negative integer")
+
+    covered_e1 = (
+        objective_authorized
+        and standing_delegation_valid
+        and same_project_workstream
+        and effect_class == "E1_RECOVERABLE_PROJECT_LOCAL"
+    )
+    boundary_changed = any((
+        architecture_change,
+        security_boundary_change,
+        new_permission_required,
+        human_gate_required,
+        new_material_decision,
+    ))
+    if not covered_e1 or boundary_changed:
+        return {
+            "decision": NORMAL_AUTHORITY_RESOLUTION,
+            "reason": "RECOVERY_SCOPE_OR_BOUNDARY_CHANGED",
+            "authority_kind": None,
+            "authority_source": None,
+            "durable_recovery_required": True,
+        }
+
+    if no_progress_iterations >= 3:
+        return {
+            "decision": RECOVERY_REPLAN_REQUIRED,
+            "reason": "NO_PROGRESS_LIMIT_REACHED",
+            "authority_kind": DERIVED_COMPLETION_AUTHORITY,
+            "authority_source": STANDING_OWNER_GRANT,
+            "durable_recovery_required": True,
+        }
+
+    return {
+        "decision": COMPACT_RECOVERY,
+        "reason": "RECOVERY_COMPACTION_CLOSURE_PASSED",
+        "authority_kind": DERIVED_COMPLETION_AUTHORITY,
+        "authority_source": STANDING_OWNER_GRANT,
+        "durable_recovery_required": (
+            same_action_retry
+            or durable_continuity_required
+            or immutable_audit_required
+        ),
+    }
 
 def resolve_next_action(
     action,

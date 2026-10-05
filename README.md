@@ -43,14 +43,14 @@ External targets bootstrap from their own architecture and live repository state
 - `control/` — executable authorization, scope, integrity and evidence checks.
 - `SMOKE_TESTS.md` — acceptance scenarios.
 
-New tasks use v2 records, immutable authorization before implementation, exact policy binding and concrete CI evidence whenever required. Recovery events are append-only. Archived schemas remain available because durable historical audit records still require validation.
+New tasks use v2 records, immutable authorization before implementation, exact policy binding and concrete CI evidence whenever required. Recovery Compaction keeps ordinary already-covered E1 diagnose/fix/test cycles free of control-only commit spam; when durable recovery history is required, events remain append-only and causally validated. Archived schemas remain available because durable historical audit records still require validation.
 
 ## Installation and packaging
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.6**.
-- Recovery Guardian: **0.5.4**.
+- Project Leader: **0.6.7**.
+- Recovery Guardian: **0.5.5**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
