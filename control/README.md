@@ -116,17 +116,17 @@ Every changed file must match the Task Authorization `mutation_scope`.
 
 ## Recovery
 
-Current mutation-capable v2 tasks use append-only recovery events:
+Run `control.standing_authority.resolve_recovery_action` before creating Recovery-only persistence for an already-authorized technical failure. If the objective and standing delegation remain valid, the work stays in the same workstream, the effect is bounded `E1_RECOVERABLE_PROJECT_LOCAL`, and no architecture/security/permission/Human-Gate boundary changes, the resolver returns `COMPACT_RECOVERY` with authority kind `DERIVED_COMPLETION_AUTHORITY`.
 
-`.project-leader/recovery-events/<task-id>/`
+Compact Recovery follows `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`. Do not create separate control-only commits for failure observation, repeated standing authority, retry intent, planning, or transient validation state when CI/logs/PR evidence plus the next technical checkpoint preserve sufficient traceability.
 
-Validate the journal with:
+`APPEND_ONLY_V1` is the durable Recovery mechanism, not a mandate to persist every failure. Use `.project-leader/recovery-events/<task-id>/` when a true same-action rerun, interruption-safe counters, replan/no-progress state, ambiguous-write causality, an explicit immutable-audit requirement, a boundary/Human-Gate outcome, or another certification requirement must survive context. A GitHub workflow `run_attempt > 1` still requires the causal journal; a fresh run on a new technical remediation SHA does not require one merely because an earlier implementation failed.
+
+Validate a required/present journal with:
 
 `python control/validate_records.py recovery-journal <event-1> <event-2> ...`
 
-The journal is hash chained and monotonic so retry/no-progress history cannot be erased.
-
-Mutable checkpoints remain only for historical/legacy continuity. A stored legacy `ACTIVE` checkpoint is not current-state proof without live branch/PR/CI corroboration.
+The journal remains hash chained and monotonic. Mutable checkpoints remain only for historical/legacy continuity.
 
 ## Trust model
 

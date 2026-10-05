@@ -112,33 +112,33 @@ A ChatGPT agent cannot observe, control, or repair another ChatGPT conversation 
 
 Durable work therefore lives in GitHub. When ChatGPT becomes available again, Project Leader or Recovery Guardian reconstructs from GitHub and resumes from the last verified step.
 
-## V2 append-only recovery journal
+## V2 Recovery Compaction and append-only recovery journal
 
-For Task Authorization v2, durable retry state is append-only:
+For Task Authorization v2, `APPEND_ONLY_V1` remains the durable anti-loop and audit mechanism. It is **not** a requirement to create a separate control commit for every ordinary technical failure.
 
-`.project-leader/recovery-events/<task-id>/<sequence>.json`
+Before creating recovery-only persistence, evaluate `control/standing_authority.py::resolve_recovery_action`. Compact Recovery is allowed only while the objective is already authorized, the standing delegation remains valid, work stays in the same project/workstream, the effect is `E1_RECOVERABLE_PROJECT_LOCAL`, and there is no material architecture change, security/trust-boundary change, new permission/credential, genuine Human Gate, or new uncovered material decision.
 
-Each event is validated against `control/recovery-event.schema.json` and hash-chains to the canonical SHA-256 of the previous event. Sequences are contiguous. Attempt, identical-failure, and no-progress counters cannot decrease within the same strategy generation; a strategy generation may increase only on a `REPLAN` event.
+When the closure passes, use `DERIVED_COMPLETION_AUTHORITY` and execute:
 
-This makes deleting/resetting a mutable checkpoint insufficient to erase retry history. The legacy checkpoint may still summarize current state, but v2 anti-loop decisions must be reconstructible from the journal when recovery events exist.
+`FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`
 
-For v2 recovery, persistence is part of the recovery transition itself:
-- append and durably commit `FAILURE_OBSERVED` immediately after a retryable failure is classified;
-- append and durably commit `RETRY_AUTHORIZED` before the next dispatch/rerun;
-- append and durably commit `REPLAN` before switching strategy generation;
-- append and durably commit `RECOVERED` after the retry/replan succeeds.
+Do not create a separate commit merely to record failure discovery, repeat authority already covered by standing delegation, announce retry/replan intent, mirror transient CI/log state, or re-state validation that can be bound to the next technical checkpoint. Keep those observations in live execution, CI/logs/PR evidence, and the eventual Worker Result or one consolidated durable checkpoint after a meaningful technical transition.
 
-The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZED` record persisted after the retry started is invalid for that retry and must not be accepted as authorization. Recovery-event files are append-only: each event file must be created once and never rewritten.
+Durable Recovery persistence is required when it materially protects continuity or governance, including:
+- a true same-action GitHub rerun where `run_attempt > 1`, or another retry whose causal authorization must precede the effect;
+- Recovery state/counters must survive interruption before the next technical checkpoint;
+- repeated no-progress reaches a strategy replan or anti-loop boundary;
+- an ambiguous write requires durable causal proof before repeating a mutation;
+- an explicit immutable-audit requirement, Human Gate, BLOCKED outcome, authority change, security/trust boundary, or scope transition must survive context;
+- the control artifact itself is required for execution or certification.
 
-Terminal certification must fail when required Recovery evidence is absent or causally invalid. A retroactive event is invalid. A recovery journal containing `RETRY_AUTHORIZED` triggers structural verification even when the fresh replacement CI run has `run_attempt=1`. The committed `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and pre-retry `REPLAN` events must be ancestors of the CI-certified implementation SHA; terminal `RECOVERED` must be a descendant of that SHA on the final task line.
+When durable persistence is required, use `.project-leader/recovery-events/<task-id>/<sequence>.json`. Each event remains schema-validated, hash-chained, contiguous and monotonic. For a durability-required retry, commit `FAILURE_OBSERVED` and `RETRY_AUTHORIZED` before the causally journaled retry, `REPLAN` before a durability-required strategy-generation change, and `RECOVERED` after successful certification.
 
-Causality is structural as well as temporal. For any v2 task whose journal contains a retry, the commits that persist `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and any pre-retry `REPLAN` must be ancestors of the CI-certified `implementation_head_sha`. For terminal success, the `RECOVERED` commit must be a descendant of that implementation SHA on the final task line. Timestamp checks remain an additional defense, not the sole proof.
+The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZED` record persisted after the retry started is invalid. Recovery-event files are append-only and must never be rewritten.
 
-Therefore an old-SHA GitHub `rerun` cannot be the terminal Recovery certificate: its `head_sha` predates the committed retry authorization. After `RETRY_AUTHORIZED`, create/retain a descendant task SHA containing the pre-retry journal and obtain a fresh required CI run on that descendant SHA (for example via the normal push trigger or an authorized workflow dispatch). Then append `RECOVERED` only after success.
+Terminal certification must fail when a durability-required Recovery journal is absent or causally invalid. A retroactive event is invalid. A journal containing `RETRY_AUTHORIZED` triggers structural verification even when the replacement CI run has `run_attempt=1`: required pre-retry events must be ancestors of `implementation_head_sha`, and terminal `RECOVERED` must follow that SHA.
 
-Before treating any later GitHub Actions failure as a task Recovery failure, classify the run SHA against the task's `implementation_head_sha`. A run on a permitted evidence-only descendant is non-certifying and must not reopen the task's recovery journal merely because an automatic `push`/`pull_request` workflow ran there. If branch protection/rulesets require checks on the live PR head, that run is a merge-governance condition; resolve it without moving the certifying implementation head or creating a recursive evidence-commit/CI loop. A material descendant remains different: it becomes the new implementation head candidate and requires fresh task CI.
-
-Do not execute or certify a retry from chat memory alone when the corresponding append-only events are missing. A live `run_attempt > 1` still requires its current-head recovery journal and timestamp checks, but structural ancestry may additionally reject that rerun as unsuitable for terminal certification.
+An old-SHA GitHub rerun cannot be terminal Recovery proof when later journal authority exists. Before treating later CI failure as task Recovery, classify its SHA against `implementation_head_sha`; an evidence-only descendant is non-certifying and must not reopen Recovery. A normal bounded E1 remediation followed by a fresh technical commit and fresh CI is not, by itself, a reason to create recovery-only commits.
 
 
 ## Waiting on external CI
@@ -186,7 +186,7 @@ Recovery Guardian then:
 
 If the host runtime or a connector call itself is frozen and does not yield execution control, Recovery cannot execute concurrently inside that frozen call. That platform limitation must be stated honestly. When control returns or a new session resumes after an unresolved internal operation, enter `LIVENESS_RECONCILE_REQUIRED` immediately, run `BOUNDED_STATE_PREFLIGHT`, reconstruct durable state first, and do not restart the same opaque operation unless the bounded evidence proves that exact read is still required.
 
-For external target-project v2 tasks, append-only recovery events are authoritative. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
+For external target-project v2 tasks, append-only recovery events are authoritative when the Recovery Compaction closure says durable state is required or when a journal already exists. Ordinary bounded E1 remediation may remain compact with no control-only event commits. New mutable v1 checkpoints must not be used as the source of retry counters; a checkpoint may only summarize legacy state.
 
 ## Operational access discovery during recovery
 

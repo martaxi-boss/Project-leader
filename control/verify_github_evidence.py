@@ -95,6 +95,7 @@ def api_get_optional(url, token):
 
 
 def ci_run_requires_recovery_journal(payload):
+    """Require a journal for a true GitHub rerun, not every fresh remediation run."""
     attempt = payload.get("run_attempt", 1)
     return isinstance(attempt, int) and not isinstance(attempt, bool) and attempt > 1
 

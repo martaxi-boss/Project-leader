@@ -336,6 +336,9 @@ class EvidenceVerifierTests(unittest.TestCase):
         self.assertFalse(ci_run_requires_recovery_journal({"run_attempt": 1}))
         self.assertTrue(ci_run_requires_recovery_journal({"run_attempt": 2}))
 
+    def test_fresh_technical_remediation_run_stays_compact(self):
+        self.assertFalse(ci_run_requires_recovery_journal({"run_attempt": 1, "head_sha": "b" * 40}))
+
     def test_retry_requires_valid_recovery_journal(self):
         from control.validate_records import canonical_sha256
 
