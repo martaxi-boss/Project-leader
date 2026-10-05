@@ -9,7 +9,7 @@
   "authorization_sha256": "17d5a3fdeb147b54e07fe6a133ee05940bec6b34b01ec79e4ad8da9246fcf395",
   "implementation_head_sha": "06b3596641b171a41f4a86fe8f03c9bd20a797c8",
   "branch": "builder/recovery-compaction-065",
-  "pr_number": 66,
+  "pr_number": 67,
   "recorded_at": "2026-10-05T17:35:15Z",
   "state_observed_at": "2026-10-05T17:35:15Z",
   "changes": [
@@ -74,7 +74,7 @@
     }
   ],
   "artifacts": [
-    "https://github.com/martaxi-boss/Project-leader/pull/66"
+    "https://github.com/martaxi-boss/Project-leader/pull/67"
   ],
   "material_non_effects": [
     "No PINK IPTV or other external project mutation.",
