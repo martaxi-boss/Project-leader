@@ -44,6 +44,8 @@ If an internal operation remains current across two liveness observations withou
 
 Repository branch-ref hygiene workflows remain non-blocking maintenance. Continuous operational hygiene is different: whenever mutation-capable work makes code/configuration/references/workflows/probes/docs/stale bindings obsolete and cleanup is recoverable inside the same authority, remove or neutralize that residue in the same implementation/recovery cycle. Do not create a separate hygiene authorization/handoff for that consequence. Explicit read-only/diagnostic/no-change mode permits detection/reporting only and forbids hygiene writes.
 
+Compatibility invariant: **Repository hygiene is non-blocking maintenance**. The legacy phrase refers to the branch-ref sweep workflow; it does not defer `CONTINUOUS_HYGIENE_ACTIVE` cleanup caused by the current change.
+
 1. Reconstruct the smallest live state needed.
 2. Use Consultant only for material product/architecture/requirements/reuse/risk uncertainty.
 3. Supervisor establishes the bounded task envelope and protects material boundaries; do not reauthorize subordinate covered E1 operations while that envelope remains valid.

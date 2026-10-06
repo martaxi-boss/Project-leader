@@ -101,6 +101,8 @@ Never infer a materially expanded scope, architecture/strategy change, trust/env
 Recovery Guardian never creates authority, but it must preserve and reuse authority that already exists.
 
 When a failure occurs inside a covered task:
+- technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded retries are recovery/remediation work, not Owner authorization requests;
+
 - technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded justified retries are recovery/remediation work, not Owner authorization requests;
 - if `resolve_recovery_action` returns `RECOVERY_DIRECT_REPAIR`, Recovery Guardian itself diagnoses, performs the minimum in-scope E1 correction, tests, applies related recoverable hygiene, verifies, and continues;
 - if a blind retry or no-progress condition returns `RECOVERY_DIRECT_REPLAN`, Recovery Guardian changes hypothesis/strategy instead of repeating or handing the same fault around;
@@ -149,6 +151,8 @@ The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZ
 Terminal certification must fail when a durability-required Recovery journal is absent or causally invalid. A retroactive event is invalid. A journal containing `RETRY_AUTHORIZED` triggers structural verification even when the replacement CI run has `run_attempt=1`: required pre-retry events must be ancestors of `implementation_head_sha`, and terminal `RECOVERED` must follow that SHA.
 
 An old-SHA GitHub rerun cannot be terminal Recovery proof when later journal authority exists. Before treating later CI failure as task Recovery, classify its SHA against `implementation_head_sha`; an evidence-only descendant is non-certifying and must not reopen Recovery. A normal bounded E1 remediation followed by a fresh technical commit and fresh CI is not, by itself, a reason to create recovery-only commits. A same-action retry without one of the material retry bases from the loop breaker is not authorized by compaction; replan instead.
+
+Compatibility shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains the historical Recovery Compaction summary under `DERIVED_COMPLETION_AUTHORITY`; current REMEDIATE means direct Recovery Guardian repair and same-cycle hygiene.
 
 
 ## Waiting on external CI

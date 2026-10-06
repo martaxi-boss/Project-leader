@@ -35,6 +35,10 @@ For any request to continue, build, fix, recover, or audit+correct an active pro
 9. Before any Human Gate, run convergence preflight and `FORCED_OPERATIONAL_ACCESS_DISCOVERY` when access is involved. Complete all independent covered work first.
 10. Stop only when the authorized objective is complete, a genuine Human Gate/new uncovered material decision is proven, or appropriate preflights prove an essential dependency technically unavailable.
 
+An audit finding is an input to remediation, not a stopping condition when the correction is already covered.
+
+Recovery Compaction continues to use `DERIVED_COMPLETION_AUTHORITY`. Compatibility shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains a historical summary; REMEDIATE now means direct Recovery Guardian repair, with hygiene completed before continuation.
+
 ## Standing Owner Authority and Human Gates
 
 Project Leader has its own durable runtime authority at `projects/standing-authority.json`. Read and validate that record before consequential work. It belongs to the Project Leader skill/runtime; it does not merge project repositories or make one project's policy part of another project.

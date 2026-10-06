@@ -52,6 +52,10 @@ Task Authorization remains a durable task-level envelope for E1+ work where the 
 
 For mutation-capable requests such as build, continue, fix, recover, implement, or audit+correct, activate `CONTINUOUS_HYGIENE_ACTIVE`: remove or neutralize stale operational residue made obsolete by the current change when that cleanup is recoverable and inside the same authority. Historical evidence and canonical decisions remain intact. If the Owner explicitly requests read-only/diagnostic/no-changes mode, hygiene is report-only and must not mutate anything.
 
+Recovery Compaction retains `DERIVED_COMPLETION_AUTHORITY` as the authority label for covered E1 completion. Compatibility shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains valid as a historical summary; in the current contract, REMEDIATE means Recovery Guardian performs `RECOVERY_DIRECT_REPAIR` itself and same-cycle hygiene occurs before continuation.
+
+For legacy v1 continuity, a stored ACTIVE checkpoint is never live proof by itself. Without current live branch/open PR/CI corroboration, classify `STALE_LEGACY_CHECKPOINT` and preserve it only as inert history.
+
 ## Routing
 
 Read-only request:
@@ -114,6 +118,8 @@ Distinguish a legitimate external wait from Project Leader-controlled internal w
 Before starting any potentially broad repository compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Read only the smallest durable state vector needed to decide what remains: canonical/default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when one exists. If that vector already determines the next step, do not run the broader compare. Reuse still-valid preflight dimensions while the relevant refs/state and session continuity remain unchanged; revalidate only volatile dimensions after a material change or interruption. If evidence is still missing, narrow the read to the exact refs, files, run IDs, or commit range that answers the unresolved question. `CANONICAL_RUNTIME_BOOTSTRAP` itself is limited to the canonical plugin manifest + Skill reads and must not trigger a target-project repository compare/diff.
 
 Repository branch-ref hygiene workflows are background maintenance, not a normal project critical path. Do not wait on or inspect a repository-hygiene workflow before continuing ordinary project work unless the active objective or an exact governance control requires it. This is distinct from `CONTINUOUS_HYGIENE_ACTIVE`: local cleanup that is a recoverable consequence of the current authorized mutation belongs in the same implementation/recovery cycle and must not be deferred into a separate administrative task.
+
+Compatibility wording retained for the existing invariant: **Repository hygiene is background maintenance**. This phrase refers to the branch-ref sweep workflow, not to same-cycle operational cleanup.
 
 While the Work execution remains tool-capable, an internal operation must complete within a bounded tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical cadence with no new tool result, durable evidence, or control-plane transition, classify `INTERNAL_OPERATION_STALLED` and route immediately to `LIVENESS_RECONCILE_REQUIRED`. Recovery Guardian reconstructs durable state first. If the existing evidence is already sufficient to decide the next step, abandon the stalled operation and continue through Supervisor. Otherwise switch to a smaller/bounded read strategy. Never repeat an ambiguous write as a liveness probe, and count repeated internal stalls toward the existing no-progress ceiling.
 

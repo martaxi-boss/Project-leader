@@ -58,6 +58,14 @@ A same-action retry without a material retry basis is `BLIND_RETRY_BLOCKED` and 
 
 For mutation-capable recovery, `CONTINUOUS_HYGIENE_ACTIVE` removes/neutralizes related stale operational residue in the same cycle when cleanup is recoverable and covered. Preserve inert history and mandatory audit evidence.
 
+Compatibility and preserved recovery invariants:
+- Recovery Compaction continues under `DERIVED_COMPLETION_AUTHORITY`. Historical shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains a compatibility summary; REMEDIATE now means direct Recovery Guardian repair and includes same-cycle hygiene.
+- A legacy ACTIVE checkpoint without live branch/open PR/CI corroboration is `STALE_LEGACY_CHECKPOINT`.
+- For bound external CI, terminal live state invalidates stale waiting as `STALE_WAIT_STATE`; do not dispatch replacement CI because chat/UI state was lost.
+- If an internal read/reconcile remains unchanged across the liveness ceiling, classify `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED` and change to a smaller bounded strategy.
+- Preserve the non-interactive routes `NONINTERACTIVE_FALLBACK_INCOMPLETE`, `NONINTERACTIVE_PATH_FOUND`, `DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK`, `DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION`, `NONINTERACTIVE_FALLBACK_EXHAUSTED`, and `PLATFORM_CONSENT_REQUIRED`.
+- An automatic run on an allowed **evidence-only descendant** is non-certifying task CI and must not reopen Recovery solely because that incidental run is active or failed.
+
 ## Platform outage limitation
 
 Do not claim to monitor another ChatGPT chat while it is unreachable. A ChatGPT-wide or session-level outage cannot be repaired from inside another ChatGPT agent while the platform itself is unavailable.
