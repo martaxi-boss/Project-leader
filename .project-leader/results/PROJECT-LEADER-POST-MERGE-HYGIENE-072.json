@@ -5,7 +5,6 @@
   "repository": "martaxi-boss/Project-leader",
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-POST-MERGE-HYGIENE-072.json",
-  "authorization_commit_sha": "9ac186b3fb60590b136beaaa69539b9d45378adf",
   "implementation_head_sha": "793751a95b3f6b886bc0adef908d2ea6dc9f31f4",
   "branch": "builder/post-merge-hygiene-072",
   "pr_number": 74,
