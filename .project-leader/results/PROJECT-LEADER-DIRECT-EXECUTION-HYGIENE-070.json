@@ -1,0 +1,91 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-DIRECT-EXECUTION-HYGIENE-070",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E1_RECOVERABLE_PROJECT_LOCAL",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-DIRECT-EXECUTION-HYGIENE-070.json",
+  "authorization_commit_sha": "3d7b8a41a3def409af4bf263bfb6fc5547904efa",
+  "authorization_sha256": "29d60d17b8e27b1e182d20390346a9963696fa91baf2d63963d6e8e78ac42a3f",
+  "implementation_head_sha": "96f63e6bfbbcc55c022545970ae16f7ebdcd6738",
+  "branch": "builder/direct-execution-hygiene-070",
+  "pr_number": 72,
+  "changes": [
+    "Project Leader operational loop is compacted so Consultant, Supervisor, Builder and Recovery Guardian remain distinct capabilities without a mandatory handoff chain between ordinary covered operations.",
+    "Covered E1 recovery now resolves to RECOVERY_DIRECT_REPAIR with Recovery Guardian as direct executor; blind same-action retry without a material basis resolves to RECOVERY_DIRECT_REPLAN.",
+    "CONTINUOUS_HYGIENE_ACTIVE is now an explicit bounded resolver contract; explicit read-only resolves to HYGIENE_REPORT_ONLY and forbids writes.",
+    "Standing/task authority is documented as a durable envelope for subordinate covered E1 work, while consequential transitions and genuine Human Gates retain existing controls.",
+    "Bounded-state preflight reuse and proportional evidence rules reduce repeated reconciliation/proof without weakening exact-state certification.",
+    "Legacy recovery, liveness, access-discovery, CI-wait, transition and audit invariants remain preserved as compatibility guarantees.",
+    "Project Leader plugin version advances 0.6.7 to 0.6.8; Recovery Guardian advances 0.5.5 to 0.5.6; version regression assertions are aligned without removing behavioral assertions."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Canonical main 8efecaccfb5708d3689f9fcd0ad3bb77ec8e40db -> implementation 96f63e6bfbbcc55c022545970ae16f7ebdcd6738 changes exactly one Task Authorization plus the 19 explicitly authorized Project Leader code/doc/test paths; no external repository is mutated."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation SHA 96f63e6bfbbcc55c022545970ae16f7ebdcd6738 has Control contract tests run 37510578881 SUCCESS, Validate control plane run 37510578981 SUCCESS, and Package ChatGPT plugins run 37510578818 SUCCESS."
+    },
+    {
+      "name": "Role and Skill coherence audit",
+      "status": "PASS",
+      "evidence": "Project Leader Skill, PROJECT_LEADER.md, RUNBOOK.md and all four role contracts agree that roles are internal capabilities, planned implementation remains Builder work, covered recoverable E1 repair is direct Recovery work, and material boundaries return to Supervisor. Canonical RECOVERY_PROTOCOL.md and both packaged recovery references are byte-identical by shared blob 25a5f8e7f20ea12ea1eb13e552422d2d937f608d."
+    },
+    {
+      "name": "Recovery directness regression",
+      "status": "PASS",
+      "evidence": "tests/test_standing_authority.py asserts COMPACT_RECOVERY + RECOVERY_DIRECT_REPAIR + executor RECOVERY_GUARDIAN for covered E1 recovery; the full Control contract tests workflow 37510578881 passed."
+    },
+    {
+      "name": "Retry anti-loop regression",
+      "status": "PASS",
+      "evidence": "Blind same-action retry now returns BLIND_RETRY_BLOCKED + RECOVERY_DIRECT_REPLAN; retry with NEW_EVIDENCE remains permitted and durably causal when required. Full contract suite passed in run 37510578881."
+    },
+    {
+      "name": "Read-only hygiene boundary regression",
+      "status": "PASS",
+      "evidence": "resolve_hygiene_action returns CONTINUOUS_HYGIENE_ACTIVE only for covered mutation-capable cleanup and HYGIENE_REPORT_ONLY with write_allowed=false for explicit read-only; executable tests passed in run 37510578881."
+    },
+    {
+      "name": "Legacy protection preservation",
+      "status": "PASS",
+      "evidence": "Control contract tests 37510578881 passed preserved assertions for Human Gate convergence, FORCED_OPERATIONAL_ACCESS_DISCOVERY, self-provisioned diagnostics, stale CI wait recovery, INTERNAL_OPERATION_STALLED liveness, BOUNDED_STATE_PREFLIGHT, legacy checkpoint handling, immutable transition evidence and bounded repository hygiene."
+    },
+    {
+      "name": "Version regression alignment",
+      "status": "PASS",
+      "evidence": "The only test_control_contract.py change is the two expected version literals: Project Leader 0.6.8 and Recovery Guardian 0.5.6; no behavioral assertion was removed or weakened. Run 37510578881 passed."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37510578881
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37510578981
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37510578818
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/72"
+  ],
+  "material_non_effects": [
+    "No PINK IPTV, VCAM-PRO, FADEGO, VPS or other Owner project was mutated.",
+    "No product strategy, material architecture, security boundary, credential, permission, branch protection, release, deploy, paid service or production state was changed.",
+    "Human Gates, evidence-first, standing authority, project isolation, consequential-transition controls, anti-loop protection and required CI remain active.",
+    "No historical ADR/audit evidence was deleted; obsolete active-state semantics were compacted or explicitly marked as compatibility-only."
+  ],
+  "residual_blockers": []
+}
