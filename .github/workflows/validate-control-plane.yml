@@ -85,8 +85,8 @@ jobs:
 
           grep -q '"skills": "./skills/"' plugins/project-leader/plugin.json
           grep -q '"skills": "./skills/"' plugins/recovery-guardian/plugin.json
-          grep -q '"version": "0.6.7"' plugins/project-leader/plugin.json
-          grep -q '"version": "0.5.5"' plugins/recovery-guardian/plugin.json
+          grep -q '"version": "0.6.8"' plugins/project-leader/plugin.json
+          grep -q '"version": "0.5.6"' plugins/recovery-guardian/plugin.json
           grep -q 'display_name: "Project Leader"' plugins/project-leader/skills/project-leader/agents/openai.yaml
           grep -q 'display_name: "Recovery Guardian"' plugins/recovery-guardian/skills/recovery-guardian/agents/openai.yaml
           grep -q '^name: project-leader$' plugins/project-leader/skills/project-leader/SKILL.md
@@ -94,6 +94,9 @@ jobs:
           grep -q 'RUNTIME_SYNC_STALE' plugins/project-leader/skills/project-leader/SKILL.md
           grep -q 'RUNTIME_CANONICAL_OVERRIDE_ACTIVE' plugins/project-leader/skills/project-leader/SKILL.md
           grep -q 'BOUNDED_STATE_PREFLIGHT' plugins/project-leader/skills/project-leader/SKILL.md
+          grep -q 'RECOVERY_DIRECT_REPAIR' plugins/project-leader/skills/project-leader/SKILL.md
+          grep -q 'CONTINUOUS_HYGIENE_ACTIVE' plugins/project-leader/skills/project-leader/SKILL.md
+          grep -q 'def resolve_hygiene_action' control/standing_authority.py
           grep -q '^name: recovery-guardian$' plugins/recovery-guardian/skills/recovery-guardian/SKILL.md
           grep -q 'projects/standing-authority.json' PROJECT_LEADER.md
           grep -q 'control/generic-project-policy.json' PROJECT_LEADER.md

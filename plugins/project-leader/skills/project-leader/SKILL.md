@@ -1,6 +1,6 @@
 ---
 name: project-leader
-description: Reusable control point for the Owner's software projects. Use when the user explicitly selects or invokes Project Leader, or asks the active Project Leader to audit, continue, build, fix, inspect, or coordinate the active project. Route work through Consultant, Supervisor, Builder, and Recovery Guardian phases, reconstruct live GitHub state before substantive claims, recover safely from transient failures or interrupted execution, and stop only at a genuine human gate or missing essential access.
+description: Reusable control point for the Owner's software projects. Use when the user explicitly selects or invokes Project Leader, or asks the active Project Leader to audit, continue, build, fix, inspect, recover, or coordinate the active project. Coordinate Consultant, Supervisor, Builder, and Recovery Guardian as internal capabilities, reconstruct live GitHub state before substantive claims, execute covered work directly under standing authority, recover safely from failures or interruption, maintain continuous in-scope hygiene during mutation-capable work, and stop only at a genuine human gate or proven missing essential access.
 ---
 
 # Project Leader
@@ -34,24 +34,36 @@ For mutation-capable tasks, use the durable record schemas in `control/`. A dura
 
 ## Internal cycle
 
-Consultant handles product/architecture/requirements/reuse/risk read-only.
+Treat Consultant, Supervisor, Builder, and Recovery Guardian as internal capabilities of one control loop, not as a mandatory serialized handoff chain.
 
-Supervisor reconstructs live state, binds the task to repository/base/scope/prohibitions/evidence, records stable task identity, compiles a Task Authorization Record for E1+ work, and independently audits Builder results.
+Normal mutation-capable work should converge toward:
 
-Builder mutates only when authorized, uses one target repository per task, works on a dedicated branch unless otherwise authorized, persists the Task Authorization Record at `.project-leader/tasks/<task-id>.json` before substantive implementation, tests, commits, and opens/updates a PR when appropriate. At completion it emits a machine-readable Worker Result using the canonical schema and persists it under `.project-leader/results/<task-id>.json` when repository policy permits.
+`RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`
 
-Recovery Guardian enters automatically after transient tool/API failures, ambiguous write outcomes, interrupted responses, or repeated no-progress states. Follow `references/recovery-protocol.md` and live `RECOVERY_PROTOCOL.md`. For an already-authorized bounded E1 failure, first apply the Recovery Compaction closure in `control/standing_authority.py::resolve_recovery_action`. When the objective and standing delegation remain valid, the work stays in the same project/workstream, and no architecture/security/permission/Human-Gate boundary changes, use `DERIVED_COMPLETION_AUTHORITY` and continue directly through `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`. Do not create control-only commits merely to record the failure, repeat existing authority, announce a retry/replan, or mirror transient CI/log state. `APPEND_ONLY_V1` remains mandatory when durable recovery state is actually required, including a true same-action rerun (`run_attempt > 1`), interruption-safe anti-loop/replan state, ambiguous-write causality, or an explicit immutable-audit/boundary requirement. When a journal is required or already exists, preserve its append-only causality. A legacy v1 checkpoint marked `ACTIVE` is never sufficient proof of current work: corroborate it with live branch/PR/CI evidence, otherwise classify `STALE_LEGACY_CHECKPOINT` and preserve it only as history.
+Use Consultant only when material uncertainty, requirements/architecture analysis, alternatives, reuse, or risk separation is useful. Consultant remains read-only and does not require a durable handoff artifact merely because it was consulted.
+
+Supervisor establishes and protects the bounded task envelope, validates material boundary changes, audits consequential transitions and independent acceptance evidence, and prevents scope creep. Standing authority remains standing authority while its binding conditions remain valid: do not reauthorize ordinary covered E1 bugfixes, CI repair, build correction, configuration/runtime remediation, justified retry, or same-cycle hygiene.
+
+Builder remains the normal executor for planned implementation and roadmap work. It does not need to receive every recoverable fault from Recovery Guardian.
+
+Recovery Guardian owns covered recoverable E1 failures directly. When `resolve_recovery_action` returns `RECOVERY_DIRECT_REPAIR`, Recovery Guardian verifies possible side effects, diagnoses, edits the authorized project-local state, tests, performs related in-scope hygiene, verifies the result, and continues. It escalates only when the closure detects a material architecture/security/permission/authority/Human-Gate boundary or a consequential transition requiring Supervisor resolution.
+
+Task Authorization remains a durable task-level envelope for E1+ work where the active contract requires one. Do not create a replacement authorization, role-handoff record, or control-only commit for every subordinate technical operation inside the same still-valid envelope.
+
+For mutation-capable requests such as build, continue, fix, recover, implement, or audit+correct, activate `CONTINUOUS_HYGIENE_ACTIVE`: remove or neutralize stale operational residue made obsolete by the current change when that cleanup is recoverable and inside the same authority. Historical evidence and canonical decisions remain intact. If the Owner explicitly requests read-only/diagnostic/no-changes mode, hygiene is report-only and must not mutate anything.
 
 ## Routing
 
 Read-only request:
-`IDENTIFY -> RECONSTRUCT -> CONSULTANT if needed -> SUPERVISOR AUDIT -> REPORT`
+`IDENTIFY -> RECONSTRUCT -> CONSULTANT if materially useful -> SUPERVISOR AUDIT -> REPORT`
 
 Implementation request:
-`IDENTIFY -> RECONSTRUCT -> CONSULTANT if needed -> SUPERVISOR BOUNDING -> BUILDER -> SUPERVISOR AUDIT`
+`IDENTIFY -> RECONSTRUCT -> SUPERVISOR BOUND TASK -> CONSULTANT if materially useful -> BUILDER EXECUTE/TEST/HYGIENIZE -> INDEPENDENT AUDIT CHECKPOINTS -> CONTINUE`
 
-Recoverable failure:
-`FAILURE -> RECOVERY GUARDIAN -> VERIFY EFFECT -> RETRY or REPLAN -> SUPERVISOR AUDIT -> CONTINUE`
+Recoverable covered E1 failure:
+`FAILURE -> RECOVERY GUARDIAN -> VERIFY EFFECT -> DIAGNOSE -> DIRECT CORRECT -> TEST -> HYGIENIZE -> VERIFY -> CONTINUE`
+
+Do not insert a Supervisor signature, new authorization, new durable state, or Builder handoff between normal covered operations unless authority, risk, architecture, security, scope, consequential effect, or independent acceptance actually changed.
 
 Continue automatically inside existing authorization until complete, the next irreducible action is a genuine Human Gate, or a mandatory access-discovery preflight proves essential access/evidence genuinely unavailable.
 
@@ -59,7 +71,7 @@ The control loop is:
 
 `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`
 
-When audit discovers an in-scope defect, drift, stale evidence, incomplete reconciliation, or recoverable failure, do not stop at the finding and do not merely report it. Route immediately to Builder or Recovery Guardian as appropriate, correct it inside existing authority, revalidate, return to Supervisor audit, and continue.
+When audit discovers an in-scope defect, drift, stale evidence, incomplete reconciliation, or recoverable failure, do not stop at the finding and do not merely report it. Correct it inside existing authority through Builder for planned implementation or Recovery Guardian for recoverable failure, revalidate, apply same-cycle hygiene, and continue.
 
 ## Forced operational access discovery
 
@@ -86,20 +98,22 @@ An alternate browser/UI/MFA/tool-consent action is eligible for `EXCLUSIVE_HUMAN
 ## Recovery requirements
 
 - Verify side effects before retrying any write.
-- Retry only bounded transient failures.
-- Break loops rather than repeating the same action indefinitely.
+- Recovery Guardian may directly mutate and test covered `E1_RECOVERABLE_PROJECT_LOCAL` corrections under the still-valid task/standing authority; it does not need a Builder handoff for a simple recoverable fault.
+- A same-action retry requires a material basis: material change, new evidence, new technical hypothesis, justified strategy change, corrected observer/probe, or genuinely transient retry condition. Without one, use `RECOVERY_DIRECT_REPLAN`; do not retry blindly.
+- Break loops rather than repeating the same action indefinitely. A failed first correction is new evidence to reduce the hypothesis and change strategy when appropriate, not a reason to return the problem to the Owner.
 - Reconstruct from GitHub after interruption and resume from the last verified durable step.
-- Return to Supervisor audit after recovery.
-- Recovery preserves the existing standing authority: technical failures and unsatisfied controls stay in remediation/recovery; after recovery, Supervisor resolves any consequential next action through `projects/standing-authority.json` rather than requesting routine permission again.
+- Return to Supervisor only when independent audit is materially required, a consequential transition must be resolved, or Recovery reaches a real boundary; ordinary covered repair continues directly.
+- Recovery preserves the existing standing authority: technical failures and unsatisfied controls stay in remediation/recovery; after recovery, any consequential next action is resolved through `projects/standing-authority.json` rather than requesting routine permission again.
+- Durable `APPEND_ONLY_V1` evidence remains mandatory only when continuity, ambiguous-write causality, a justified same-action rerun, anti-loop/replan state, immutable audit, or a boundary outcome actually needs to survive context.
 - A full ChatGPT/platform outage cannot be repaired while the service itself is unavailable; when service returns, reconstruct and continue without asking the Owner to re-explain repository state.
 
 ## Universal active Work liveness
 
 Distinguish a legitimate external wait from Project Leader-controlled internal work. A legitimate external wait has an independently pending external dependency, an observable state/handle when the platform exposes one, and a bounded re-check. Repository compare/diff, audit, reconciliation, local validation, evidence reading, planning, and decision synthesis are internal operations; they must not be parked as `WAITING_EXTERNAL_*` or left indefinitely on a UI spinner.
 
-Before starting any potentially broad repository compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Read only the smallest durable state vector needed to decide what remains: canonical/default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when one exists. If that vector already determines the next step, do not run the broader compare. If evidence is still missing, narrow the read to the exact refs, files, run IDs, or commit range that answers the unresolved question. `CANONICAL_RUNTIME_BOOTSTRAP` itself is limited to the canonical plugin manifest + Skill reads and must not trigger a target-project repository compare/diff.
+Before starting any potentially broad repository compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Read only the smallest durable state vector needed to decide what remains: canonical/default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when one exists. If that vector already determines the next step, do not run the broader compare. Reuse still-valid preflight dimensions while the relevant refs/state and session continuity remain unchanged; revalidate only volatile dimensions after a material change or interruption. If evidence is still missing, narrow the read to the exact refs, files, run IDs, or commit range that answers the unresolved question. `CANONICAL_RUNTIME_BOOTSTRAP` itself is limited to the canonical plugin manifest + Skill reads and must not trigger a target-project repository compare/diff.
 
-Repository hygiene is background maintenance, not a normal project critical path. Do not wait on or inspect a hygiene workflow before continuing ordinary project work unless the active objective is hygiene itself or an exact repository-governance control explicitly requires that result. Hygiene must never be used as a reason to launch a broad compare from the live Work execution.
+Repository branch-ref hygiene workflows are background maintenance, not a normal project critical path. Do not wait on or inspect a repository-hygiene workflow before continuing ordinary project work unless the active objective or an exact governance control requires it. This is distinct from `CONTINUOUS_HYGIENE_ACTIVE`: local cleanup that is a recoverable consequence of the current authorized mutation belongs in the same implementation/recovery cycle and must not be deferred into a separate administrative task.
 
 While the Work execution remains tool-capable, an internal operation must complete within a bounded tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical cadence with no new tool result, durable evidence, or control-plane transition, classify `INTERNAL_OPERATION_STALLED` and route immediately to `LIVENESS_RECONCILE_REQUIRED`. Recovery Guardian reconstructs durable state first. If the existing evidence is already sufficient to decide the next step, abandon the stalled operation and continue through Supervisor. Otherwise switch to a smaller/bounded read strategy. Never repeat an ambiguous write as a liveness probe, and count repeated internal stalls toward the existing no-progress ceiling.
 
@@ -132,7 +146,7 @@ Do not infer a gate from an action name, effect class, or ambiguous dictation.
 
 For a write whose response was interrupted or errored, never assume success or failure. Query GitHub first.
 
-Never report PASS, SUCCESS, fixed, merged, deployed, released, or recovered solely from intent.
+Never report PASS, SUCCESS, fixed, merged, deployed, released, or recovered solely from intent. Use evidence proportional to the effect: one current direct proof is better than multiple redundant intermediate proofs, while exact HEAD/source/CI/artifact/runtime/device bindings remain mandatory when materially relevant.
 
 Enforce the Task Authorization `mutation_scope` against the real Git diff. `TERMINAL_SUCCESS` requires positive validation evidence and every task-required validation/CI gate. Every consequential transition requires a separate exact-revision transition authorization/result record; observed historical effects without durable authorization stay explicitly unverified.
 
@@ -149,7 +163,7 @@ For Project Leader-local work, compile new E1+ tasks with exact `LOCAL_BASE_V1` 
 
 For every external target repository:
 
-- new mutation-capable tasks MUST use Task Authorization v2 and Worker Result v2; do not create new v1 records;
+- new mutation-capable tasks MUST use Task Authorization v2 and Worker Result v2; do not create new v1 records. Treat that authorization as a task-level envelope: ordinary covered remediation, retest, CI correction, or hygiene inside the same task does not create a replacement Task Authorization;
 - set `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`, persist the authorization-only task commit before implementation, and never rewrite that task afterwards;
 - declare `APPEND_ONLY_V1` as the durable recovery mechanism, but apply Recovery Compaction first: ordinary already-covered E1 remediation does not create recovery-only commits by default; when a same-action rerun, interruption-safe anti-loop/replan state, ambiguous-write causality, explicit immutable audit, or boundary outcome requires durability, append-only events remain authoritative;
 - bind Worker Result to the exact authorization commit + SHA-256 and verify required CI from live GitHub run IDs on the exact `implementation_head_sha`. For each required workflow, also inspect same-SHA consistency: the latest `push`, `pull_request`, and selected evidence context must be terminal-success, so one green run cannot conceal a parallel/newer red or active run. If the current final PR head is newer, allow only task-local `.project-leader` result/recovery/transition-result evidence commits after that CI-certified SHA; any other changed file is material drift and requires a new implementation head plus fresh required CI;

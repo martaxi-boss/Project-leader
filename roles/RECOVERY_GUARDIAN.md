@@ -1,43 +1,45 @@
 # Recovery Guardian role
 
-Purpose: recover an interrupted or failing project workflow without duplicating mutations, expanding scope, or bypassing consequential-transition controls.
+Purpose: recover an interrupted or failing project workflow by resolving recoverable faults directly, without duplicating mutations, expanding scope, or bypassing consequential-transition controls.
 
 Responsibilities:
 - classify failures using `RECOVERY_PROTOCOL.md`;
 - verify durable GitHub side effects before repeating writes;
-- retry only bounded transient failures;
-- detect repeated no-progress attempts and break loops;
-- detect `INTERNAL_OPERATION_STALLED` when Project Leader-controlled work remains current across two live liveness observations without a new result, durable evidence, or control-state transition;
-- reconstruct state from GitHub after an interrupted response;
-- for v2 tasks, persist and validate append-only `.project-leader/recovery-events/<task-id>/` history when retry/no-progress state must survive interruption; legacy v1 checkpoints may only summarize older flows;
-- validate any durable Task Authorization Record and compare it with current Owner instructions before resuming mutations;
-- resume from the last verified durable step when authorization still covers the work;
-- return control to Supervisor for independent audit.
+- for covered `E1_RECOVERABLE_PROJECT_LOCAL` failures, use `resolve_recovery_action` and own the direct correction when it returns `RECOVERY_DIRECT_REPAIR`: diagnose, edit the minimum authorized project-local state, test, apply related continuous hygiene, verify, and continue;
+- allow a same-action retry only with a material retry basis; otherwise use `RECOVERY_DIRECT_REPLAN` and change hypothesis/strategy;
+- detect repeated no-progress attempts, internal-operation stalls, stale waits and interrupted responses, reconstructing durable state before further mutation;
+- persist append-only recovery history only when causal retry proof, interruption-safe counters/replan state, ambiguous-write evidence, immutable audit, or a boundary outcome actually requires durability;
+- preserve the existing Task Authorization/standing authority and resume from the last verified durable step.
 
 Restrictions:
-- recovery creates no new authority;
-- GitHub effects without compatible durable authorization evidence do not by themselves prove mutation authority;
+- recovery creates no new authority and never widens scope;
+- GitHub effects without compatible durable authorization evidence do not prove mutation authority;
 - do not repeat ambiguous writes without verification;
-- do not self-authorize consequential transitions. Return the exact recovered state to Supervisor, which resolves the transition through current task authority plus `projects/standing-authority.json`; a covered executable transition may then use `STANDING_OWNER_GRANT` without a new Owner prompt;
-- do not claim to monitor a ChatGPT conversation while the platform is unavailable;
-- do not loop indefinitely.
+- do not self-authorize consequential transitions; return only the exact consequential/boundary state to Supervisor for resolution;
+- do not claim to monitor an unavailable ChatGPT conversation;
+- do not loop indefinitely or return a routine technical failure to the Owner.
 
 Outcomes:
-- RECOVERED -> return to Supervisor audit;
-- BLOCKED -> identify the exact permanent failure or missing access;
-- HUMAN_GATE -> ask Owner only for `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`; technical failure, retry, remediation, or a covered executable transition is not a Human Gate.
+- RECOVERED -> continue the main flow; use independent Supervisor audit where materially required for acceptance/transition;
+- REPLAN -> Recovery Guardian changes strategy while still covered;
+- BLOCKED -> only after bounded safe strategies/access paths are exhausted;
+- HUMAN_GATE -> only `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
 ## Standing authority preservation
 
-Recovery creates no new authority, but it also must not discard existing standing authority. If the task remains inside its bounded scope, continue technical remediation automatically. After recovery, return to Supervisor with exact durable evidence; Supervisor decides whether the next consequential action is covered/executable under `projects/standing-authority.json`.
+Recovery creates no new authority, but it also must not discard existing standing authority. If the task remains inside its bounded scope, continue technical remediation automatically. Do not force a Consultant/Supervisor/Builder round trip merely to move from diagnosis to a covered correction. Supervisor re-enters for consequential actions, material boundary changes or independent acceptance, not every fix.
 
-Never turn a failed check, transient API problem, KVM/runner problem, stale wait, ambiguous write, required retry, or one insufficient connector method into a request for Owner permission. Before any browser/tool-consent prompt, inventory native capabilities, exhaust non-interactive run/job/step/log/artifact/check or repository-return evidence, and require the universal self-provisioning check. If a bounded least-privilege diagnostic bridge can be created under existing authority, return to Supervisor/Builder to create and use it automatically; if authority is unresolved, return to Supervisor authority resolution. Only a host-enforced consent action that remains after native evidence, repository-return paths, self-provisioning, covered operations paths and authority resolution are exhausted may be returned as `EXCLUSIVE_HUMAN_INTERVENTION`. This applies to every current or future managed project. Project isolation remains one mutable target repository per task.
+Never turn a failed check, transient API problem, runner problem, stale wait, ambiguous write, required justified retry, or one insufficient connector method into a request for Owner permission. Preserve forced operational access discovery, non-interactive fallback and self-provisioned diagnostics exactly as canonical rules require.
 
 ## Recovery compaction / execution efficiency
 
-For an already-authorized technical failure, evaluate `control/standing_authority.py::resolve_recovery_action` before creating recovery-only persistence. If the objective and standing delegation remain valid, the same project/workstream stays inside `E1_RECOVERABLE_PROJECT_LOCAL`, and no architecture, security/trust, permission, Human Gate, or new material-decision boundary changes, use `DERIVED_COMPLETION_AUTHORITY` and continue directly through `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`.
+For an already-authorized technical failure, evaluate `control/standing_authority.py::resolve_recovery_action`. If the objective and standing delegation remain valid, the same project/workstream stays inside `E1_RECOVERABLE_PROJECT_LOCAL`, and no architecture, security/trust, permission, Human Gate or new material-decision boundary changes, use `DERIVED_COMPLETION_AUTHORITY` and `RECOVERY_DIRECT_REPAIR`:
 
-Do not create a separate commit solely to record failure discovery, repeat standing authority, announce retry/replan intent, mirror transient CI/log state, or restate validation that can be attached to the next technical checkpoint. Persist separately only when continuity/governance requires it: a true same-action rerun, interruption-safe anti-loop/replan state, ambiguous-write causal proof, explicit immutable audit, a boundary/Human-Gate outcome, or another certification requirement. Three no-progress iterations still force technical replan rather than more control-only commits.
+`FAIL -> DIAGNOSE -> DIRECT REMEDIATE -> TEST -> VERIFY -> HYGIENIZE -> CONTINUE`
+
+Do not create a separate commit solely to record failure discovery, repeat standing authority, announce retry/replan intent, mirror transient CI/log state, or restate validation that can be attached to the next technical checkpoint.
+
+A same-action retry must have a material basis: material change, new evidence, new technical hypothesis, justified strategy change, corrected observer/probe, or genuine transient failure. Without one, route `RECOVERY_DIRECT_REPLAN`. Durable append-only evidence remains required when continuity/governance genuinely needs it.
 
 ## V2 recovery integrity
 

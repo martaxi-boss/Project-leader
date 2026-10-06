@@ -12,7 +12,12 @@ from control.standing_authority import (
     NEW_UNCOVERED_MATERIAL_DECISION,
     NORMAL_AUTHORITY_RESOLUTION,
     RECOVERY_REPLAN_REQUIRED,
+    RECOVERY_DIRECT_REPAIR,
+    RECOVERY_DIRECT_REPLAN,
+    CONTINUOUS_HYGIENE_ACTIVE,
+    HYGIENE_REPORT_ONLY,
     STANDING_OWNER_GRANT,
+    resolve_hygiene_action,
     resolve_next_action,
     resolve_recovery_action,
 )
@@ -81,15 +86,20 @@ class StandingAuthorityTests(unittest.TestCase):
         decision = self.compact_recovery()
         self.assertEqual(decision["decision"], COMPACT_RECOVERY)
         self.assertEqual(decision["authority_kind"], DERIVED_COMPLETION_AUTHORITY)
+        self.assertEqual(decision["route"], RECOVERY_DIRECT_REPAIR)
+        self.assertEqual(decision["executor"], "RECOVERY_GUARDIAN")
         self.assertFalse(decision["durable_recovery_required"])
 
     def test_recovery_compaction_b_architecture_change_requires_normal_authority(self):
-        self.assertEqual(self.compact_recovery(architecture_change=True)["decision"], NORMAL_AUTHORITY_RESOLUTION)
+        decision = self.compact_recovery(architecture_change=True)
+        self.assertEqual(decision["decision"], NORMAL_AUTHORITY_RESOLUTION)
+        self.assertIsNone(decision["executor"])
 
     def test_recovery_compaction_c_evident_e1_fix_uses_derived_completion_authority(self):
         decision = self.compact_recovery()
         self.assertEqual(decision["authority_kind"], DERIVED_COMPLETION_AUTHORITY)
         self.assertEqual(decision["authority_source"], STANDING_OWNER_GRANT)
+        self.assertEqual(decision["route"], RECOVERY_DIRECT_REPAIR)
 
     def test_recovery_compaction_d_new_permission_keeps_existing_gate_rules(self):
         self.assertEqual(self.compact_recovery(new_permission_required=True)["decision"], NORMAL_AUTHORITY_RESOLUTION)
@@ -97,12 +107,41 @@ class StandingAuthorityTests(unittest.TestCase):
     def test_recovery_compaction_e_repeated_no_progress_forces_replan(self):
         decision = self.compact_recovery(no_progress_iterations=3)
         self.assertEqual(decision["decision"], RECOVERY_REPLAN_REQUIRED)
+        self.assertEqual(decision["route"], RECOVERY_DIRECT_REPLAN)
+        self.assertEqual(decision["executor"], "RECOVERY_GUARDIAN")
         self.assertTrue(decision["durable_recovery_required"])
 
-    def test_same_action_retry_keeps_durable_causal_journal(self):
+    def test_blind_same_action_retry_is_blocked_and_replanned(self):
         decision = self.compact_recovery(same_action_retry=True)
+        self.assertEqual(decision["decision"], RECOVERY_REPLAN_REQUIRED)
+        self.assertEqual(decision["reason"], "BLIND_RETRY_BLOCKED")
+        self.assertEqual(decision["route"], RECOVERY_DIRECT_REPLAN)
+
+    def test_same_action_retry_with_material_basis_keeps_durable_causal_journal(self):
+        decision = self.compact_recovery(same_action_retry=True, retry_basis="NEW_EVIDENCE")
         self.assertEqual(decision["decision"], COMPACT_RECOVERY)
+        self.assertEqual(decision["route"], RECOVERY_DIRECT_REPAIR)
         self.assertTrue(decision["durable_recovery_required"])
+
+    def test_continuous_hygiene_runs_in_same_mutation_cycle(self):
+        decision = resolve_hygiene_action(
+            mutation_capable=True,
+            explicit_read_only=False,
+            cleanup_needed=True,
+        )
+        self.assertEqual(decision["mode"], CONTINUOUS_HYGIENE_ACTIVE)
+        self.assertTrue(decision["write_allowed"])
+        self.assertTrue(decision["same_cycle"])
+
+    def test_explicit_read_only_hygiene_reports_without_writing(self):
+        decision = resolve_hygiene_action(
+            mutation_capable=True,
+            explicit_read_only=True,
+            cleanup_needed=True,
+        )
+        self.assertEqual(decision["mode"], HYGIENE_REPORT_ONLY)
+        self.assertFalse(decision["write_allowed"])
+        self.assertFalse(decision["same_cycle"])
 
     def test_merge_to_main_is_not_a_human_gate_by_action_name(self):
         decision = resolve_next_action(

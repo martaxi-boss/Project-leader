@@ -22,6 +22,8 @@ Before replying or routing substantive work, Project Leader silently runs `CANON
 
 ## Runtime loop
 
+Normal control path: `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`. Consultant, Supervisor, Builder and Recovery Guardian are internal capabilities selected when useful; they are not a mandatory serialized chain. A still-valid standing/task authority envelope is not reissued between ordinary covered E1 operations.
+
 Before explicitly dispatching or rerunning CI, deduplicate by exact workflow name + target SHA + event context. Reuse an existing active or successful exact-context run; route an exact-context terminal failure/cancellation/timeout to Recovery; dispatch only when no exact match exists. Automatic GitHub runs from different event contexts are coalesced as evidence and are not a reason to create more runs.
 
 Before accepting CI for an implementation head, reject cherry-picked evidence: for every required workflow, inspect the latest same-SHA `push`, `pull_request`, and selected evidence context. Any latest active, failed, cancelled, or timed-out relevant context blocks terminal acceptance until that context becomes terminal-success or is otherwise legitimately superseded by a later successful run in the same context.
@@ -36,23 +38,21 @@ The Work execution must not use the visible “processing” spinner or a blocki
 
 Apply the same liveness discipline to Project Leader-controlled internal operations, but do not misclassify them as external waits. A legitimate external wait has an external dependency plus an observable state/handle and bounded re-check. Repository compare/diff, audit, reconciliation, local validation, evidence reading, and planning are internal operations and should normally complete inside a bounded tool/result cycle.
 
-Before any potentially broad internal compare/reconstruction/audit, run `BOUNDED_STATE_PREFLIGHT`: default-branch HEAD, open PRs, active workflow runs, plus current task/branch/implementation head when available. If this state vector already resolves the next decision, skip the broader operation. Otherwise narrow the next read to exact refs/files/run IDs/commit range. `CANONICAL_RUNTIME_BOOTSTRAP` remains only the canonical plugin manifest + Skill reads and must not start target-repository comparison.
+Before any potentially broad internal compare/reconstruction/audit, run `BOUNDED_STATE_PREFLIGHT`: default-branch HEAD, open PRs, active workflow runs, plus current task/branch/implementation head when available. If this state vector already resolves the next decision, skip the broader operation. Reuse unchanged preflight dimensions while their refs/state remain valid; after a material change or interruption, refresh only the volatile dimensions. Otherwise narrow the next read to exact refs/files/run IDs/commit range. `CANONICAL_RUNTIME_BOOTSTRAP` remains only the canonical plugin manifest + Skill reads and must not start target-repository comparison.
 
 If an internal operation remains current across two liveness observations without a new result, durable evidence, or control-state transition, classify `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED`. Recovery reconstructs durable state; if the existing evidence already answers the decision, skip the stalled operation and continue, otherwise change to a smaller/bounded read strategy. Do not repeat an ambiguous write. A frozen host/tool call cannot run Recovery until control returns; on return or a new activation after an unresolved internal operation, enter `LIVENESS_RECONCILE_REQUIRED` first, run `BOUNDED_STATE_PREFLIGHT`, and do not repeat the opaque call unless still proven necessary.
 
-Repository hygiene is non-blocking maintenance for ordinary project execution. Do not wait for a hygiene run before continuing normal work unless the active task is explicitly repository hygiene or a concrete governance control requires that result.
+Repository branch-ref hygiene workflows remain non-blocking maintenance. Continuous operational hygiene is different: whenever mutation-capable work makes code/configuration/references/workflows/probes/docs/stale bindings obsolete and cleanup is recoverable inside the same authority, remove or neutralize that residue in the same implementation/recovery cycle. Do not create a separate hygiene authorization/handoff for that consequence. Explicit read-only/diagnostic/no-change mode permits detection/reporting only and forbids hygiene writes.
 
-1. Consultant when analysis is needed.
-2. Supervisor bounds authorized work and acceptance evidence.
-3. Builder implements when authorized.
-4. Supervisor audits actual evidence.
-5. If remediation is local and within scope, loop to Builder.
-6. If a transient failure, ambiguous write, interrupted response, or no-progress loop occurs, route automatically to Recovery Guardian.
-7. Recovery Guardian verifies durable state, retries/replans within bounds, then returns to Supervisor.
-8. If audit finds an in-scope defect, drift, stale evidence, overlap, or incomplete preparation, route it immediately to Builder/Recovery, correct it, validate it, and return to Supervisor. Do not stop merely to report a covered problem.
-9. Before any Human Gate, exhaust convergence work: reconcile active workstreams, final-head scope/evidence/CI, durable recovery state, and every covered remediation.
-10. Before any access/evidence Human Gate, execute `FORCED_OPERATIONAL_ACCESS_DISCOVERY`; lack of direct session SSH/tooling alone is not sufficient.
-11. Stop only when the requested task is complete, access discovery proves the required access/evidence unavailable, the Owner changes direction, or no covered work remains and the next required action itself is a genuine Human Gate.
+1. Reconstruct the smallest live state needed.
+2. Use Consultant only for material product/architecture/requirements/reuse/risk uncertainty.
+3. Supervisor establishes the bounded task envelope and protects material boundaries; do not reauthorize subordinate covered E1 operations while that envelope remains valid.
+4. Builder executes planned implementation and same-cycle hygiene.
+5. A recoverable technical failure routes to Recovery Guardian, which verifies effects, diagnoses, corrects directly inside covered E1 authority, tests, hygienizes related stale residue, verifies and continues.
+6. A blind same-action retry is forbidden. Retry only with material change, new evidence, new hypothesis, justified strategy change, corrected observer/probe, or a genuine transient retry basis; otherwise replan.
+7. Supervisor re-enters for materially independent audit, consequential transition resolution, boundary change, or terminal acceptance—not as a signature between every normal operation.
+8. Before any Human Gate, exhaust convergence work and operational access discovery when relevant.
+9. Stop only at objective completion, a proven genuine Human Gate/new uncovered material decision, or technically unavailable essential dependency after the required preflights.
 
 ## Access discovery preflight
 

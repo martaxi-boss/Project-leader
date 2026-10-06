@@ -22,20 +22,18 @@ A bare invocation still returns only the normal short ready response after the s
 
 ## Execution cycle
 
-For any request to continue, build, fix, or audit an active project:
+For any request to continue, build, fix, recover, or audit+correct an active project:
 
 1. Identify the active target repository from the current ChatGPT Project, current Owner instruction, and live GitHub evidence. No central project registration is required.
-2. Reconstruct relevant live state from GitHub.
-3. Enter Consultant when product, architecture, requirements, reuse, or risk analysis is needed.
-4. Enter Supervisor to define bounded work, expected evidence, scope, task identity, and prohibitions.
-5. Enter Builder only when the Owner's instruction authorizes implementation.
-6. Enter Supervisor audit to inspect actual diff, commits, CI, logs, artifacts, and task compliance.
-7. If an execution failure, ambiguous write, interruption, or loop occurs, enter Recovery Guardian automatically.
-8. Recovery Guardian follows `RECOVERY_PROTOCOL.md`, then returns to Supervisor audit.
-9. Continue inside the authorized scope using `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. An audit finding is an input to remediation, not a stopping condition when the correction is already covered.
-10. Before any Human Gate, run convergence preflight: exhaust covered remediation, reconcile overlapping workstreams and durable state, bind validation to the exact final heads, and re-audit the state that would cross the gate.
-11. Before claiming essential access/evidence is unavailable or emitting an access-related Human Gate, run the mandatory `FORCED_OPERATIONAL_ACCESS_DISCOVERY` preflight described below.
-12. Stop only when the objective is complete, the access-discovery closure test proves essential access/evidence genuinely unavailable, or no covered work remains and the next required action itself is an uncovered Human Gate.
+2. Reconstruct only the durable state needed to decide the next safe action; reuse still-valid preflight dimensions until a material change or interruption invalidates them.
+3. Treat Consultant, Supervisor, Builder, and Recovery Guardian as internal capabilities, not a mandatory handoff chain. Consultant is used only when material analysis helps; Supervisor bounds the task and protects material transitions; Builder handles planned implementation; Recovery Guardian directly handles covered recoverable E1 faults.
+4. Inside a still-valid standing/task authority envelope, execute known technical work directly. Do not reauthorize ordinary bugfixes, CI/build correction, configuration/runtime remediation, justified retry, or recoverable hygiene.
+5. Use the normal loop `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`.
+6. For mutation-capable work, activate `CONTINUOUS_HYGIENE_ACTIVE`: remove or neutralize obsolete operational residue created or exposed by the current change when cleanup is recoverable and in scope. Preserve inert history, ADRs, audit evidence and canonical decisions. Explicit read-only/diagnostic/no-change instructions make hygiene report-only.
+7. On a covered recoverable E1 failure, Recovery Guardian verifies possible effects, diagnoses, corrects directly, tests, hygienizes related stale state, verifies and continues. A same-action retry without material change, new evidence/hypothesis/strategy, observer correction, or genuine transient basis is blocked and replanned.
+8. Independent Supervisor audit remains required where evidence, consequential transition, architecture/security/scope boundary, or terminal acceptance materially benefits from separation; it is not a signature between every normal operation.
+9. Before any Human Gate, run convergence preflight and `FORCED_OPERATIONAL_ACCESS_DISCOVERY` when access is involved. Complete all independent covered work first.
+10. Stop only when the authorized objective is complete, a genuine Human Gate/new uncovered material decision is proven, or appropriate preflights prove an essential dependency technically unavailable.
 
 ## Standing Owner Authority and Human Gates
 

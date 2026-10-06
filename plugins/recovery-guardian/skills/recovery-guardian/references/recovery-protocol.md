@@ -16,7 +16,11 @@ This protocol is used automatically by Project Leader and is also the operating 
 
 ## Recovery state machine
 
-`FAILURE -> CLASSIFY -> VERIFY DURABLE STATE -> RETRY/REPLAN -> SUPERVISOR AUDIT -> CONTINUE | BLOCKED | HUMAN_GATE`
+For a covered recoverable E1 failure:
+
+`FAILURE -> CLASSIFY -> VERIFY DURABLE STATE -> DIAGNOSE -> DIRECT REMEDIATE -> TEST -> VERIFY -> HYGIENIZE -> CONTINUE`
+
+Use Supervisor/authority resolution only when the attempted recovery reaches a material scope, architecture, security/trust, permission/credential, consequential-transition, or genuine Human-Gate boundary. `BLOCKED` is terminal only after bounded replan/access paths are exhausted and no safe continuation remains inside the mandate.
 
 ## Transient failures
 
@@ -47,10 +51,12 @@ Fingerprint repeated work as:
 
 `task + target + intended action + observed result`
 
-- After 2 identical failures, switch from retry to reconstruction/replan.
-- After 3 no-progress iterations overall, stop that strategy.
-- Never recurse indefinitely between Builder and Recovery Guardian.
-- Return to Supervisor with a changed plan or `BLOCKED`; use `HUMAN_GATE` only after the standing-authority resolver proves `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
+A same-action retry is allowed only when at least one material basis exists: `MATERIAL_CHANGE`, `NEW_EVIDENCE`, `NEW_HYPOTHESIS`, `STRATEGY_CHANGE`, `OBSERVER_FIX`, or a genuinely `TRANSIENT_FAILURE`. A blind identical retry is `BLIND_RETRY_BLOCKED` and must route to `RECOVERY_DIRECT_REPLAN`.
+
+- After 2 identical failures, reconstruct and materially change the hypothesis/strategy rather than repeat the same action.
+- After 3 no-progress iterations overall, stop that strategy and persist replan state when continuity requires it.
+- Recovery Guardian owns that technical replan while the task remains covered E1; do not bounce between Builder/Consultant/Supervisor merely to restate the same fault.
+- Escalate to Supervisor only when the new plan crosses a real authority/architecture/security/consequential boundary. Use `HUMAN_GATE` only after the standing-authority resolver proves `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
 ## Durable recovery checkpoint (legacy v1)
 
@@ -95,12 +101,16 @@ Never infer a materially expanded scope, architecture/strategy change, trust/env
 Recovery Guardian never creates authority, but it must preserve and reuse authority that already exists.
 
 When a failure occurs inside a covered task:
-- technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded retries are recovery/remediation work, not Owner authorization requests;
-- after recovery makes the transition controls satisfiable, return to Supervisor, which resolves the exact next action through `projects/standing-authority.json`;
-- if canonical project state covers the effect and the system can execute it, Supervisor may issue an exact `STANDING_OWNER_GRANT` transition authorization and the flow continues autonomously;
+- technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded justified retries are recovery/remediation work, not Owner authorization requests;
+- if `resolve_recovery_action` returns `RECOVERY_DIRECT_REPAIR`, Recovery Guardian itself diagnoses, performs the minimum in-scope E1 correction, tests, applies related recoverable hygiene, verifies, and continues;
+- if a blind retry or no-progress condition returns `RECOVERY_DIRECT_REPLAN`, Recovery Guardian changes hypothesis/strategy instead of repeating or handing the same fault around;
+- Supervisor is required when recovery encounters a consequential next action, material boundary change, or independent acceptance checkpoint. It is not a mandatory handoff after every technical correction;
+- if canonical project state covers a consequential effect and the system can execute it, Supervisor may issue an exact `STANDING_OWNER_GRANT` transition authorization and the flow continues autonomously;
 - use `HUMAN_GATE` only when the next irreducible step is `EXCLUSIVE_HUMAN_INTERVENTION` or `NEW_UNCOVERED_MATERIAL_DECISION`.
 
 Recovery must not widen project scope or cross into another mutable repository. One mutable target repository per task remains mandatory.
+
+For mutation-capable recovery, `CONTINUOUS_HYGIENE_ACTIVE` is implicit. Remove or neutralize stale project-local operational residue made obsolete by the correction when that cleanup is recoverable and covered. Preserve inert history, ADRs, immutable evidence and required audit trails. An explicit read-only/diagnostic/no-change instruction makes hygiene report-only.
 
 Before returning an Owner interruption, apply `control/standing_authority.py::resolve_next_action` and the closure inputs in `control/README.md`. A missing-capability boolean or a claimed exhausted preflight state is insufficient. Recompute access and diagnostic outcomes from raw observations, including self-provisioned bridges and authority resolution. Require convergence of currently executable covered work independent of the human step plus evidence of the exact irreducible action. Physical/device tests, hardware interaction or Owner-held input may bypass operational discovery only when independently evidenced and automated prerequisites pass. Do not require the future manual-test result before asking for that test. New uncovered material decisions require convergence without authorizing their implementation. Unobtainable evidence follows the existing bounded anti-loop path; never fabricate a manual gate to terminate a technical failure.
 
@@ -120,7 +130,7 @@ Before creating recovery-only persistence, evaluate `control/standing_authority.
 
 When the closure passes, use `DERIVED_COMPLETION_AUTHORITY` and execute:
 
-`FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE`
+`FAIL -> DIAGNOSE -> DIRECT REMEDIATE -> TEST -> VERIFY -> HYGIENIZE -> CONTINUE`
 
 Do not create a separate commit merely to record failure discovery, repeat authority already covered by standing delegation, announce retry/replan intent, mirror transient CI/log state, or re-state validation that can be bound to the next technical checkpoint. Keep those observations in live execution, CI/logs/PR evidence, and the eventual Worker Result or one consolidated durable checkpoint after a meaningful technical transition.
 
@@ -138,7 +148,7 @@ The journal is causal evidence, not a retrospective narrative. A `RETRY_AUTHORIZ
 
 Terminal certification must fail when a durability-required Recovery journal is absent or causally invalid. A retroactive event is invalid. A journal containing `RETRY_AUTHORIZED` triggers structural verification even when the replacement CI run has `run_attempt=1`: required pre-retry events must be ancestors of `implementation_head_sha`, and terminal `RECOVERED` must follow that SHA.
 
-An old-SHA GitHub rerun cannot be terminal Recovery proof when later journal authority exists. Before treating later CI failure as task Recovery, classify its SHA against `implementation_head_sha`; an evidence-only descendant is non-certifying and must not reopen Recovery. A normal bounded E1 remediation followed by a fresh technical commit and fresh CI is not, by itself, a reason to create recovery-only commits.
+An old-SHA GitHub rerun cannot be terminal Recovery proof when later journal authority exists. Before treating later CI failure as task Recovery, classify its SHA against `implementation_head_sha`; an evidence-only descendant is non-certifying and must not reopen Recovery. A normal bounded E1 remediation followed by a fresh technical commit and fresh CI is not, by itself, a reason to create recovery-only commits. A same-action retry without one of the material retry bases from the loop breaker is not authorized by compaction; replan instead.
 
 
 ## Waiting on external CI
@@ -172,7 +182,7 @@ A frozen/unavailable ChatGPT Work process cannot execute this guard while frozen
 
 Do not extend external-wait semantics to Project Leader's own internal control work. A legitimate external wait must have an independently pending external dependency (for example an active CI run, approval, provider response, or propagation event), an observable state/handle when available, and a bounded re-check. An internal compare/diff, repository read, audit, reconciliation, local validation, planning step, or evidence synthesis has no such external dependency and must not be parked as `WAITING_EXTERNAL_*` or left indefinitely on a UI spinner.
 
-Before starting or restarting any broad internal compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Reconstruct only the minimal durable state vector first: default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when available. If that evidence is sufficient, abandon the broader operation. Otherwise constrain the next read to the exact refs/files/run IDs/commit range required by the unresolved question. Repository hygiene is not part of this critical path unless hygiene itself is the task or an exact governance control requires it.
+Before starting or restarting any broad internal compare/diff, reconstruction, audit, or history traversal, run `BOUNDED_STATE_PREFLIGHT`. Reconstruct only the minimal durable state vector first: default-branch HEAD, open PRs, active workflow runs, and the current task/branch/implementation head when available. If that evidence is sufficient, abandon the broader operation. Otherwise constrain the next read to the exact refs/files/run IDs/commit range required by the unresolved question. Repository branch-ref hygiene workflows are not part of this critical path unless hygiene itself is the task or an exact governance control requires it. Same-cycle operational cleanup under `CONTINUOUS_HYGIENE_ACTIVE` remains part of the current correction and must not be deferred merely because the background repository-hygiene workflow is separate.
 
 While the Work execution is still tool-capable, internal operations are bounded to a tool/result cycle. If the same internal operation remains current across two liveness observations at the canonical 5-minute cadence with no new tool result, durable evidence, or control-plane state transition, classify `INTERNAL_OPERATION_STALLED`, then route immediately to `LIVENESS_RECONCILE_REQUIRED`. This is Recovery work, not a Human Gate.
 
