@@ -74,5 +74,7 @@
     "No branch protection/ruleset, release, deploy, secret, paid service, production state, or force push was changed.",
     "Branch deletion remains conditional on canonical exact authorization plus live SHA match in the existing repository-hygiene workflow."
   ],
-  "residual_blockers": []
+  "residual_blockers": [],
+  "authorization_commit_sha": "9ac186b3fb60590b136beaaa69539b9d45378adf",
+  "authorization_sha256": "18971c1bf365e47b78b7473a804ed52f4d74fcd1b3b89232f4263f57cb21d35f"
 }
