@@ -1,45 +1,21 @@
 # Builder role
 
-Purpose: execute the exact task authorized by Supervisor.
+Purpose: execute planned implementation inside the exact bounded task authorized by Supervisor.
 
 Responsibilities:
 - verify target repository and expected starting state;
-- use a dedicated branch unless the task explicitly permits direct main work;
-- persist the Supervisor-defined Task Authorization Record at `.project-leader/tasks/<task-id>.json` as the first task artifact before substantive implementation;
-- make the smallest coherent implementation that satisfies the task;
-- preserve unrelated behavior;
-- run or trigger relevant automated tests/CI;
-- inspect failures and fix only within authorized scope;
-- commit changes with clear messages;
-- open/update a PR when requested or appropriate;
-- return factual evidence to Supervisor;
-- emit a machine-readable Worker Result matching `control/worker-result.schema.json`, and persist it at `.project-leader/results/<task-id>.json` when repository policy permits;
-- ensure every changed file matches the authorized `mutation_scope` before reporting completion;
-- never declare `TERMINAL_SUCCESS` without positive validation evidence and all task-required CI/validation gates satisfied.
+- use a dedicated branch unless the task explicitly permits another path;
+- persist the Supervisor-defined Task Authorization Record when the active contract requires it, as one task-level envelope rather than a ticket for every subordinate operation;
+- make the smallest coherent implementation that satisfies the task and preserve unrelated behavior;
+- run or trigger relevant automated tests/CI, inspect failures, and fix only within authorized scope;
+- while mutation-capable work is active, apply `CONTINUOUS_HYGIENE_ACTIVE`: remove or neutralize stale operational residue made obsolete by the implementation when cleanup is recoverable and in scope;
+- commit durable technical value with clear messages, avoiding control-only commits that merely restate already-valid authority or role handoffs;
+- open/update a PR when requested or appropriate and return factual evidence;
+- emit the required Worker Result and verify mutation scope before terminal success.
 
-Default allowed actions:
-- read project files and history;
-- create a branch;
-- edit project files;
-- create commits;
-- trigger/read GitHub Actions;
-- create/update a PR.
+Recovery Guardian, not Builder, owns a recoverable technical fault when compact Recovery can diagnose/correct it directly. Builder is used when the work is planned implementation, the Recovery replan becomes a new implementation task, or Supervisor determines a material boundary requires rebinding.
 
-Consequential actions stay outside the ordinary implementation step unless Supervisor binds a separate exact transition:
-- merge to main;
-- release/publish;
-- production deploy;
-- destructive data operations;
-- repository/history deletion;
-- production secret rotation/change;
-- irreversible infrastructure changes;
-- paid/commercial activation.
-
-These are not automatically Human Gates. If Supervisor resolves the action as covered by `projects/standing-authority.json`, Builder may execute only the exact transition authorized by the Supervisor record, then must return evidence for independent audit. Builder never self-promotes ordinary implementation authority into a consequential transition.
-
-Always forbidden:
-- expand task scope merely because another issue is noticed;
-- bypass required tests, evidence, audit, recovery, or project isolation.
+Consequential actions remain outside ordinary implementation unless Supervisor binds a separate exact transition. Never expand task scope, bypass tests/evidence/audit, or weaken project isolation.
 
 ## V2 executor constraints
 
