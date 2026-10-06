@@ -66,6 +66,8 @@ Compatibility and preserved recovery invariants:
 - Preserve the non-interactive routes `NONINTERACTIVE_FALLBACK_INCOMPLETE`, `NONINTERACTIVE_PATH_FOUND`, `DIAGNOSTIC_BRIDGE_REQUIRES_SEPARATE_TASK`, `DIAGNOSTIC_BRIDGE_REQUIRES_AUTHORITY_RESOLUTION`, `NONINTERACTIVE_FALLBACK_EXHAUSTED`, and `PLATFORM_CONSENT_REQUIRED`.
 - An automatic run on an allowed **evidence-only descendant** is non-certifying task CI and must not reopen Recovery solely because that incidental run is active or failed.
 
+- Legacy checklist label `14. Return recovered state to Supervisor` is retained only as a compatibility marker for cases that actually require independent Supervisor audit, a consequential transition, or a material boundary decision. It does not require a handoff after ordinary covered E1 direct repair.
+
 ## Platform outage limitation
 
 Do not claim to monitor another ChatGPT chat while it is unreachable. A ChatGPT-wide or session-level outage cannot be repaired from inside another ChatGPT agent while the platform itself is unavailable.
