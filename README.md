@@ -13,13 +13,13 @@ Project Leader is an independent control project. External projects keep their a
 
 Invocation activates the controller. The Owner then gives the concrete instruction to audit, build, fix, recover or continue.
 
-Project Leader reconstructs live GitHub state, routes through Consultant, Supervisor and Builder, and independently audits actual evidence. Recovery Guardian enters when execution fails or a write has an uncertain outcome.
+Project Leader reconstructs live GitHub state and coordinates Consultant, Supervisor, Builder and Recovery Guardian as internal capabilities rather than a mandatory handoff chain. Builder handles planned implementation; Recovery Guardian directly fixes covered recoverable E1 failures and only returns to Supervisor for material boundaries, consequential transitions or independent acceptance checkpoints.
 
 Every invocation now performs a silent canonical runtime bootstrap against the live Project Leader `main` contract when GitHub is readable. If the locally loaded Skill copy is stale, execution switches immediately to the canonical contract for that invocation instead of waiting for marketplace propagation.
 
-Before broad repository compare/reconstruction work, Project Leader now checks a bounded durable state vector first and only expands to exact refs/files/run IDs when still necessary. Repository hygiene remains autonomous maintenance but is not part of the ordinary execution critical path.
+Before broad repository compare/reconstruction work, Project Leader checks a bounded durable state vector first, reuses still-valid preflight dimensions, and expands only to exact refs/files/run IDs when necessary. Background repository branch hygiene remains non-blocking, while `CONTINUOUS_HYGIENE_ACTIVE` makes recoverable cleanup caused by the current mutation part of the same work cycle. Explicit read-only remains strictly non-mutating.
 
-Covered work follows `DETECT -> AUDIT -> CORRECT -> VALIDATE -> CONTINUE`. A failed check routes to bounded remediation, rather than a routine request for permission.
+Covered work converges through `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`. A failed check routes to direct bounded recovery when covered, rather than a routine permission request or role handoff.
 
 ## Authority and transitions
 
@@ -49,8 +49,8 @@ New tasks use v2 records, immutable authorization before implementation, exact p
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.7**.
-- Recovery Guardian: **0.5.5**.
+- Project Leader: **0.6.8**.
+- Recovery Guardian: **0.5.6**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
@@ -60,6 +60,6 @@ Both plugins use the OpenAI GitHub connector, limited to the repositories and ac
 
 GitHub stores task authority, commits, PRs, CI, results and transition evidence. Verify a potentially completed write before repeating it. Reconstruct from the last verified durable state after an interruption.
 
-Repository hygiene removes obsolete runtime/configuration dependencies and audited obsolete branch refs. Preserve useful audit evidence before deleting refs; never delete unique valuable history merely because a branch is old.
+Continuous hygiene removes or neutralizes stale operational code/configuration/references/probes created or exposed by the current authorized change when cleanup is recoverable and in scope. Background repository hygiene separately removes audited obsolete refs. Preserve useful audit evidence, ADRs and inert history; explicit read-only requests only report hygiene debt and never mutate.
 
 A ChatGPT-wide outage prevents execution while the service is unavailable. Resume by reconstructing GitHub state after service returns.

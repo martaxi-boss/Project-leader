@@ -28,6 +28,22 @@ DERIVED_COMPLETION_AUTHORITY = "DERIVED_COMPLETION_AUTHORITY"
 COMPACT_RECOVERY = "COMPACT_RECOVERY"
 RECOVERY_REPLAN_REQUIRED = "RECOVERY_REPLAN_REQUIRED"
 NORMAL_AUTHORITY_RESOLUTION = "NORMAL_AUTHORITY_RESOLUTION"
+RECOVERY_DIRECT_REPAIR = "RECOVERY_DIRECT_REPAIR"
+RECOVERY_DIRECT_REPLAN = "RECOVERY_DIRECT_REPLAN"
+
+CONTINUOUS_HYGIENE_ACTIVE = "CONTINUOUS_HYGIENE_ACTIVE"
+HYGIENE_REPORT_ONLY = "HYGIENE_REPORT_ONLY"
+HYGIENE_DEFER_UNCOVERED = "HYGIENE_DEFER_UNCOVERED"
+HYGIENE_NOT_REQUIRED = "HYGIENE_NOT_REQUIRED"
+
+RETRY_BASES = frozenset({
+    "MATERIAL_CHANGE",
+    "NEW_EVIDENCE",
+    "NEW_HYPOTHESIS",
+    "STRATEGY_CHANGE",
+    "OBSERVER_FIX",
+    "TRANSIENT_FAILURE",
+})
 
 DIRECT_MANUAL_KINDS = frozenset({
     "PHYSICAL_DEVICE_TEST", "HARDWARE_INTERACTION", "OWNER_HELD_INPUT",
@@ -71,6 +87,7 @@ def resolve_recovery_action(
     durable_continuity_required=False,
     immutable_audit_required=False,
     no_progress_iterations=0,
+    retry_basis=None,
 ):
     """Resolve compact completion authority for already-covered E1 Recovery."""
     for name, value in (
@@ -92,6 +109,8 @@ def resolve_recovery_action(
         raise ValueError("effect_class must be a non-empty string")
     if not isinstance(no_progress_iterations, int) or isinstance(no_progress_iterations, bool) or no_progress_iterations < 0:
         raise ValueError("no_progress_iterations must be a non-negative integer")
+    if retry_basis is not None and retry_basis not in RETRY_BASES:
+        raise ValueError("retry_basis must be a recognized material retry basis")
 
     covered_e1 = (
         objective_authorized
@@ -113,6 +132,19 @@ def resolve_recovery_action(
             "authority_kind": None,
             "authority_source": None,
             "durable_recovery_required": True,
+            "route": "AUTHORITY_RESOLUTION",
+            "executor": None,
+        }
+
+    if same_action_retry and retry_basis is None:
+        return {
+            "decision": RECOVERY_REPLAN_REQUIRED,
+            "reason": "BLIND_RETRY_BLOCKED",
+            "authority_kind": DERIVED_COMPLETION_AUTHORITY,
+            "authority_source": STANDING_OWNER_GRANT,
+            "durable_recovery_required": True,
+            "route": RECOVERY_DIRECT_REPLAN,
+            "executor": "RECOVERY_GUARDIAN",
         }
 
     if no_progress_iterations >= 3:
@@ -122,6 +154,8 @@ def resolve_recovery_action(
             "authority_kind": DERIVED_COMPLETION_AUTHORITY,
             "authority_source": STANDING_OWNER_GRANT,
             "durable_recovery_required": True,
+            "route": RECOVERY_DIRECT_REPLAN,
+            "executor": "RECOVERY_GUARDIAN",
         }
 
     return {
@@ -134,7 +168,58 @@ def resolve_recovery_action(
             or durable_continuity_required
             or immutable_audit_required
         ),
+        "route": RECOVERY_DIRECT_REPAIR,
+        "executor": "RECOVERY_GUARDIAN",
     }
+
+
+def resolve_hygiene_action(
+    *,
+    mutation_capable,
+    explicit_read_only,
+    cleanup_needed,
+    cleanup_within_scope=True,
+    cleanup_recoverable=True,
+):
+    """Resolve continuous hygiene without widening mutation authority."""
+    for name, value in (
+        ("mutation_capable", mutation_capable),
+        ("explicit_read_only", explicit_read_only),
+        ("cleanup_needed", cleanup_needed),
+        ("cleanup_within_scope", cleanup_within_scope),
+        ("cleanup_recoverable", cleanup_recoverable),
+    ):
+        if not isinstance(value, bool):
+            raise ValueError(f"{name} must be boolean")
+
+    if explicit_read_only:
+        return {
+            "mode": HYGIENE_REPORT_ONLY,
+            "write_allowed": False,
+            "same_cycle": False,
+            "reason": "EXPLICIT_READ_ONLY",
+        }
+    if not mutation_capable or not cleanup_needed:
+        return {
+            "mode": HYGIENE_NOT_REQUIRED,
+            "write_allowed": False,
+            "same_cycle": False,
+            "reason": "NO_MUTATION_HYGIENE_WORK",
+        }
+    if cleanup_within_scope and cleanup_recoverable:
+        return {
+            "mode": CONTINUOUS_HYGIENE_ACTIVE,
+            "write_allowed": True,
+            "same_cycle": True,
+            "reason": "COVERED_RECOVERABLE_CLEANUP",
+        }
+    return {
+        "mode": HYGIENE_DEFER_UNCOVERED,
+        "write_allowed": False,
+        "same_cycle": False,
+        "reason": "HYGIENE_OUTSIDE_CURRENT_AUTHORITY",
+    }
+
 
 def resolve_next_action(
     action,
