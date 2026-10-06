@@ -291,3 +291,21 @@ This section is closed only when:
 - no active runtime file still requires a central target-project registry or routine Owner approval by action name;
 - no obsolete superseded branch is left as an active workstream;
 - `main` post-merge is independently re-audited.
+
+
+## Direct execution and continuous hygiene regression
+
+The incremental direct-execution correction must preserve all earlier smoke tests and additionally prove:
+
+1. Covered recoverable E1 bug -> `resolve_recovery_action` returns `COMPACT_RECOVERY + RECOVERY_DIRECT_REPAIR`; Recovery Guardian is the executor and may diagnose/correct/test/hygienize without a mandatory Builder/Supervisor handoff.
+2. Same-action retry with no material basis -> `BLIND_RETRY_BLOCKED + RECOVERY_DIRECT_REPLAN`; no identical blind retry.
+3. Material architecture/security/permission/Human-Gate change -> normal authority resolution; Recovery does not cross the boundary.
+4. Mutation makes an operational path/reference obsolete -> `CONTINUOUS_HYGIENE_ACTIVE` performs covered recoverable cleanup in the same cycle.
+5. Explicit read-only/diagnostic/no-change instruction -> hygiene is `HYGIENE_REPORT_ONLY`; no mutation.
+6. Terminal-success bound CI invalidates stale `WAITING_EXTERNAL_CI` and routes immediately to audit/continue.
+7. Terminal-failure bound CI routes to Recovery rather than Owner.
+8. Missing direct SSH/tool with a usable Actions/non-interactive path continues automatically through access discovery.
+9. One mutable target repository per task remains enforced.
+10. Genuine physical/manual gate is requested only after independent automatable prerequisites and convergence are complete.
+
+The existing executable suites in `tests/test_managed_project_contract.py`, `tests/test_managed_cross_repo.py`, and `tests/test_standing_authority.py` provide the corresponding regression evidence.
