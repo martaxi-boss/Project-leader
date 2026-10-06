@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-POST-MERGE-HYGIENE-072-MERGE",
+  "task_id": "PROJECT-LEADER-POST-MERGE-HYGIENE-072",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-06T19:05:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Owner explicitly instructed completion of the pending Project Leader repository hygiene. PR 74 is the bounded evidence-only closeout at exact head bc31c0a636a454d47a5539cee242f99f1fbccf4a against canonical main/base 1760cf8a80c3df7c1f3296053b55ef6f9716ca8a. Final-head Control contract tests 37516145346, Validate control plane 37516145338, Package ChatGPT plugins 37516145489, and Trusted authorization gate 37516140572 all completed SUCCESS. Scope preserves missing transition evidence and exact obsolete-ref purge authorizations only; no runtime, architecture, policy, role, external project, VPS, release, deployment, secret, paid service, branch protection, or force-push effect is included. Authorize only a regular history-preserving merge of this exact head after immediate head/base revalidation.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/74",
+    "revision": "bc31c0a636a454d47a5539cee242f99f1fbccf4a",
+    "base_revision": "1760cf8a80c3df7c1f3296053b55ef6f9716ca8a",
+    "environment": null
+  }
+}
