@@ -342,8 +342,13 @@ def validate_transition_authorization(record):
     if record["authority"]["binding_mode"] == "EXACT_REVISION_BOUND":
         target = record["target"]
         revision = target.get("revision")
-        if not isinstance(revision, str) or re.fullmatch(r"[0-9a-f]{40}", revision) is None:
-            raise ValueError("EXACT_REVISION_BOUND requires an exact 40-hex target revision")
+        if not isinstance(revision, str) or not revision:
+            raise ValueError("EXACT_REVISION_BOUND requires a non-empty target revision")
+        if target.get("kind") in {"pull_request", "repository_branch", "git_commit"}:
+            if re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+                raise ValueError(
+                    "Git EXACT_REVISION_BOUND targets require an exact 40-hex revision"
+                )
         if target.get("kind") in {"pull_request", "repository_branch"}:
             base_revision = target.get("base_revision")
             if (
