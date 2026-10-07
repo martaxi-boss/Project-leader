@@ -357,17 +357,17 @@ class ManagedProjectContractTests(unittest.TestCase):
         self.assertEqual(decision["decision"], "DISPATCH_REQUIRED")
 
     def test_recent_in_progress_ci_is_wait_not_failure(self):
-        run = {"status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:25:12Z"}
+        run = {"id": 101, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-03T00:25:12Z"}
         now = datetime(2026, 10, 3, 0, 33, 0, tzinfo=timezone.utc)
         self.assertEqual(classify_external_ci(run, now), "WAITING_EXTERNAL_CI")
 
     def test_old_in_progress_ci_requires_investigation_not_retry(self):
-        run = {"status": "in_progress", "conclusion": None, "updated_at": "2026-10-02T22:00:00Z"}
+        run = {"id": 101, "status": "in_progress", "conclusion": None, "updated_at": "2026-10-02T22:00:00Z"}
         now = datetime(2026, 10, 3, 0, 33, 0, tzinfo=timezone.utc)
         self.assertEqual(classify_external_ci(run, now), "INVESTIGATE_STALE_CI")
 
     def test_completed_success_is_terminal_success(self):
-        self.assertEqual(classify_external_ci({"status": "completed", "conclusion": "success"}), "COMPLETED_SUCCESS")
+        self.assertEqual(classify_external_ci({"id": 101, "status": "completed", "conclusion": "success"}), "COMPLETED_SUCCESS")
 
 
     def test_external_ci_wait_remains_wait_only_while_bound_run_is_active(self):

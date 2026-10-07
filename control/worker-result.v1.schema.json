@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/martaxi-boss/Project-leader/control/worker-result.schema.json",
+  "$id": "https://github.com/martaxi-boss/Project-leader/control/worker-result.v1.schema.json",
   "title": "Project Leader Worker Result",
   "type": "object",
   "additionalProperties": false,

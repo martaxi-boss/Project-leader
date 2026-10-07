@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/martaxi-boss/Project-leader/control/task-authorization.schema.json",
+  "$id": "https://github.com/martaxi-boss/Project-leader/control/task-authorization.v1.schema.json",
   "title": "Project Leader Task Authorization Record",
   "type": "object",
   "additionalProperties": false,

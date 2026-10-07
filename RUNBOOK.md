@@ -167,3 +167,10 @@ Recovery append-only state is historical, not merely the current directory listi
 Consequential `FAILURE` and `NOT_EXECUTED` outcomes remain normal auditable records when bound to prior authorization and blockers; they never certify promotion. New `SUCCESS` evidence cannot carry residual blockers. Legacy evidence remains readable rather than being rewritten to fit the current contract.
 
 Plugin packages must pass allowlist/metadata checks and expose source/build provenance in the generated manifest before artifacts are uploaded.
+
+## GitHub Actions event-policy readiness
+
+Checked against GitHub documentation on 2026-10-07: the default policy for `pull_request_target` on affected public repositories is in evaluate mode and GitHub states enforcement begins on 2026-11-02. This repository intentionally uses `pull_request_target` for trusted-base PR governance, so the trigger must not be changed casually to `pull_request` merely to avoid the policy.
+
+Before 2026-11-02, repository governance must verify the applicable Actions event-policy insight and either explicitly allow the required `pull_request_target` workflows or safely migrate them with equivalent trusted-base guarantees. This check is external GitHub governance state, not evidence that the current workflow is broken today. Project Leader may document and re-check the state automatically, but changing the repository Actions event policy requires its own exact consequential-transition authority and an available administrative capability.
+

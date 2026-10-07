@@ -169,6 +169,25 @@ jobs:
                 entry.path?.startsWith('.project-leader/transitions/') &&
                 entry.path?.endsWith('.authorization.json'),
             );
+            const taskCache = new Map();
+
+            async function readTaskOnce(taskPath) {
+              if (!taskPath) return null;
+              if (taskCache.has(taskPath)) return taskCache.get(taskPath);
+              const taskEntry = treeByPath.get(taskPath);
+              if (!taskEntry) {
+                taskCache.set(taskPath, null);
+                return null;
+              }
+              try {
+                const task = await readJsonEntry(taskEntry);
+                taskCache.set(taskPath, task);
+                return task;
+              } catch {
+                taskCache.set(taskPath, null);
+                return null;
+              }
+            }
 
             for (const entry of authPaths) {
               let record;
@@ -184,15 +203,7 @@ jobs:
                 typeof record?.task_id === 'string'
                   ? `.project-leader/tasks/${record.task_id}.json`
                   : null;
-              const taskEntry = taskPath ? treeByPath.get(taskPath) : null;
-              let task = null;
-              if (taskEntry) {
-                try {
-                  task = await readJsonEntry(taskEntry);
-                } catch {
-                  task = null;
-                }
-              }
+              const task = await readTaskOnce(taskPath);
 
               if (
                 entry.path !== canonicalPath ||
