@@ -25,7 +25,10 @@
         "roles/**",
         "plugins/**",
         "README.md",
-        "PLUGIN_SETUP.md"
+        "PLUGIN_SETUP.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "SOURCES.md"
       ],
       "allowed_actions": [
         "create_branch",
@@ -82,7 +85,10 @@
         "roles/**",
         "plugins/**",
         "README.md",
-        "PLUGIN_SETUP.md"
+        "PLUGIN_SETUP.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "SOURCES.md"
       ],
       "allowed_actions": [
         "create_branch",
