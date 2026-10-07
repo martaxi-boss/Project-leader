@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-TRANSITION-TIME-PROVENANCE-080-MERGE-84",
+  "task_id": "PROJECT-LEADER-TRANSITION-TIME-PROVENANCE-080",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T10:46:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Canonical standing authority covers merge of the bounded CS-10 transition-time provenance fix. PR 84 is open, non-draft and mergeable at exact head 95a72200d06d0b523b348b08dbbc0e095c212584 on exact main 4e3a6094a77000ec3089bcd86fa3a59484acdd23; Trusted authorization gate and all required final-head CI are terminal-success.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/84",
+    "revision": "95a72200d06d0b523b348b08dbbc0e095c212584",
+    "base_revision": "4e3a6094a77000ec3089bcd86fa3a59484acdd23",
+    "environment": null
+  }
+}
