@@ -180,6 +180,7 @@ class ControlContractTests(unittest.TestCase):
         transition_result = json.loads((ROOT / "control/transition-result.schema.json").read_text())
         self.assertIn("task_id", task["required"])
         self.assertIn("transition_controls", task["required"])
+        self.assertIn("integrity_mode", task["required"])
         self.assertNotIn("human_gates", task["properties"])
         self.assertIn("implementation_head_sha", result["required"])
         self.assertIn("material_non_effects", result["required"])
