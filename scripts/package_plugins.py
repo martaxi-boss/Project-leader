@@ -132,13 +132,21 @@ def package_plugin(plugin_dir, output_zip, expected_name):
     return output_zip, metadata, connector_id, contents
 
 
-def build(root, output_dir, source_revision=None, build_run_id=None):
+def build(
+    root,
+    output_dir,
+    source_revision=None,
+    build_revision=None,
+    build_run_id=None,
+):
     root = Path(root)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if source_revision is not None and SHA_RE.fullmatch(source_revision) is None:
         raise ValueError("source_revision must be an exact 40-hex Git commit SHA")
+    if build_revision is not None and SHA_RE.fullmatch(build_revision) is None:
+        raise ValueError("build_revision must be an exact 40-hex Git commit SHA")
     if build_run_id is not None and not str(build_run_id).strip():
         raise ValueError("build_run_id must be non-empty when supplied")
 
@@ -173,6 +181,7 @@ def build(root, output_dir, source_revision=None, build_run_id=None):
         "provenance": {
             "repository": SOURCE_REPOSITORY,
             "source_revision": source_revision or "UNBOUND_LOCAL_BUILD",
+            "build_revision": build_revision or source_revision or "UNBOUND_LOCAL_BUILD",
             "workflow_path": PACKAGE_WORKFLOW_PATH,
             "build_run_id": str(build_run_id) if build_run_id is not None else "LOCAL",
         },
@@ -194,12 +203,14 @@ def main():
     parser.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--source-revision", default=os.environ.get("GITHUB_SHA"))
+    parser.add_argument("--build-revision", default=os.environ.get("GITHUB_SHA"))
     parser.add_argument("--build-run-id", default=os.environ.get("GITHUB_RUN_ID"))
     args = parser.parse_args()
     build(
         args.root,
         args.output_dir,
         source_revision=args.source_revision,
+        build_revision=args.build_revision,
         build_run_id=args.build_run_id,
     )
 
