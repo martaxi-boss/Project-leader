@@ -21,7 +21,6 @@
     "policy",
     "recovery",
     "terminal_condition",
-    "integrity_mode",
     "transition_controls"
   ],
   "properties": {
