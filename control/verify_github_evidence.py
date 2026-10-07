@@ -15,7 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from control.validate_records import validate_recovery_journal, validate_result
+from control.validate_records import (
+    validate_recovery_journal,
+    validate_result,
+    validate_transition_pair,
+    validate_transition_result,
+)
 
 
 GITHUB_COMPARE_FILES_LIMIT = 300
@@ -429,20 +434,23 @@ def verify_authorization_payloads(result, authorization_payload, current_payload
     return True
 
 
-def _is_task_local_post_ci_evidence_path(path, task_id):
+def _is_task_local_post_ci_evidence_path(
+    path, task_id, task_local_transition_paths=None
+):
     if path == f".project-leader/results/{task_id}.json":
         return True
     if path.startswith(f".project-leader/recovery-events/{task_id}/") and path.endswith(".json"):
         return True
-    if (
-        path.startswith(f".project-leader/transitions/{task_id}-")
-        and path.endswith(".result.json")
-    ):
-        return True
-    return False
+    return path in set(task_local_transition_paths or ())
 
 
-def verify_compare_payload(payload, implementation_head_sha, current_head_sha, task_id=None):
+def verify_compare_payload(
+    payload,
+    implementation_head_sha,
+    current_head_sha,
+    task_id=None,
+    task_local_transition_paths=None,
+):
     if payload.get("status") not in {"ahead", "identical"}:
         raise ValueError("implementation_head_sha is not an ancestor of the current PR head")
     base_sha = (payload.get("base_commit") or {}).get("sha")
@@ -463,23 +471,101 @@ def verify_compare_payload(payload, implementation_head_sha, current_head_sha, t
                 "post-implementation compare changed-file evidence reached GitHub's "
                 f"{GITHUB_COMPARE_FILES_LIMIT}-file limit and may be truncated"
             )
-        material = sorted(
-            item.get("filename")
-            for item in files
-            if isinstance(item, dict)
-            and isinstance(item.get("filename"), str)
-            and not _is_task_local_post_ci_evidence_path(item["filename"], task_id)
-        )
+        material = set()
+        for item in files:
+            if not isinstance(item, dict):
+                continue
+            for key in ("filename", "previous_filename"):
+                path = item.get(key)
+                if (
+                    isinstance(path, str)
+                    and not _is_task_local_post_ci_evidence_path(
+                        path, task_id, task_local_transition_paths
+                    )
+                ):
+                    material.add(path)
         if material:
             raise ValueError(
                 "material changes exist after CI-certified implementation_head_sha: "
-                + ", ".join(material)
+                + ", ".join(sorted(material))
             )
     return True
 
 
+def _decode_contents_json(payload, label):
+    if payload.get("encoding") != "base64":
+        raise ValueError(f"{label} contents payload is not base64")
+    raw = base64.b64decode(payload.get("content", "").encode("ascii"))
+    return json.loads(raw.decode("utf-8"))
+
+
+def validated_task_local_transition_paths(
+    compare_payload,
+    result,
+    repository,
+    token,
+    current_head_sha,
+    api_base,
+):
+    """Validate flat transition filenames by record identity before treating them as task-local."""
+    task_id = result.get("task_id")
+    allowed = set()
+    for item in compare_payload.get("files") or []:
+        if not isinstance(item, dict):
+            continue
+        path = item.get("filename")
+        if (
+            not isinstance(path, str)
+            or not path.startswith(".project-leader/transitions/")
+            or not path.endswith(".result.json")
+        ):
+            continue
+
+        quoted_path = urllib.parse.quote(path, safe="/")
+        payload = api_get(
+            f"{api_base}/repos/{repository}/contents/{quoted_path}?ref={current_head_sha}",
+            token,
+        )
+        record = _decode_contents_json(payload, "transition result")
+        validate_transition_result(record)
+
+        canonical = (
+            f".project-leader/transitions/{record.get('transition_id')}.result.json"
+        )
+        if (
+            record.get("task_id") != task_id
+            or record.get("repository") != repository
+            or path != canonical
+            or record.get("terminal_status") == "HISTORICAL_OBSERVED"
+        ):
+            continue
+
+        auth_path = record.get("authorization_record")
+        if not isinstance(auth_path, str):
+            continue
+        quoted_auth = urllib.parse.quote(auth_path, safe="/")
+        auth_payload = api_get_optional(
+            f"{api_base}/repos/{repository}/contents/{quoted_auth}?ref={current_head_sha}",
+            token,
+        )
+        if auth_payload is None:
+            continue
+        authorization = _decode_contents_json(
+            auth_payload, "transition authorization"
+        )
+        validate_transition_pair(authorization, record)
+        if authorization.get("task_id") != task_id:
+            continue
+        allowed.add(path)
+    return allowed
+
+
 def verify_github_evidence(result, repository, token, current_head_sha, api_base="https://api.github.com"):
     validate_result(result)
+    if result.get("terminal_status") != "TERMINAL_SUCCESS":
+        raise ValueError(
+            "external GitHub promotion evidence requires TERMINAL_SUCCESS"
+        )
     if result["schema_version"] != "2.0":
         raise ValueError("external GitHub evidence verification requires Worker Result schema_version 2.0")
     if result["repository"] != repository:
@@ -540,7 +626,21 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         f"{api_base}/repos/{repository}/compare/{result['implementation_head_sha']}...{current_head_sha}",
         token,
     )
-    verify_compare_payload(compare, result["implementation_head_sha"], current_head_sha, result.get("task_id"))
+    task_local_transition_paths = validated_task_local_transition_paths(
+        compare,
+        result,
+        repository,
+        token,
+        current_head_sha,
+        api_base,
+    )
+    verify_compare_payload(
+        compare,
+        result["implementation_head_sha"],
+        current_head_sha,
+        result.get("task_id"),
+        task_local_transition_paths=task_local_transition_paths,
+    )
     return True
 
 
