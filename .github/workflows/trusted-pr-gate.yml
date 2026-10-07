@@ -78,6 +78,22 @@ jobs:
       - name: Verify task/result contract
         run: python control/validate_records.py pair /tmp/task.json /tmp/result.json
 
+      - name: Verify current transition-result semantics
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+          mapfile -t transition_results < <(
+            jq -r '.[].filename | select(test("^\\.project-leader/transitions/[^/]+\\.result\\.json$"))'               /tmp/project-leader-changed.json
+          )
+          for transition_path in "${transition_results[@]}"; do
+            gh api -H "Accept: application/vnd.github.raw+json"               "/repos/$HEAD_REPO/contents/$transition_path?ref=$HEAD_SHA"               > /tmp/current-transition-result.json
+            python control/validate_records.py transition-result-current               /tmp/current-transition-result.json
+          done
+
       - name: Verify GitHub CI evidence externally
         env:
           GITHUB_TOKEN: ${{ github.token }}
