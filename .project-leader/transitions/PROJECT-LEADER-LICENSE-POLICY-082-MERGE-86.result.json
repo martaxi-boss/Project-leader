@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-LICENSE-POLICY-082-MERGE-86",
+  "task_id": "PROJECT-LEADER-LICENSE-POLICY-082",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-LICENSE-POLICY-082-MERGE-86.authorization.json",
+  "action": "merge_to_main",
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/86",
+    "revision": "86a9425055381ce328ee2a60a300e0775e9b3e6a",
+    "base_revision": "519f132f74955f7d7f148b1564ae0a95d158c795",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T11:03:00Z",
+  "final_state": {
+    "status": "MERGED",
+    "revision": "faec539991007889f7f0a6252ebf45bd084b6141"
+  },
+  "evidence": [
+    "PR 86 merged at exact authorized head 86a9425055381ce328ee2a60a300e0775e9b3e6a into exact authorized base 519f132f74955f7d7f148b1564ae0a95d158c795.",
+    "Final-head checks were terminal-success: Trusted authorization gate 37611235677, Control contract tests 37611238203, Validate control plane 37611238213, Package ChatGPT plugins 37611238242.",
+    "Merge commit is faec539991007889f7f0a6252ebf45bd084b6141."
+  ],
+  "residual_blockers": []
+}
