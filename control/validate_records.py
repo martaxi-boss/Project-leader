@@ -304,17 +304,24 @@ def validate_recovery_journal(records):
     task_id = ordered[0].get("task_id")
     repository = ordered[0].get("repository")
     terminal_seen = False
+    fingerprint_state = {}
+
     for index, event in enumerate(ordered, start=1):
         validate_recovery_event(event)
         if event["sequence"] != index:
-            raise ValueError(f"recovery journal sequence must be contiguous from 1; got {event['sequence']} at position {index}")
+            raise ValueError(
+                f"recovery journal sequence must be contiguous from 1; got {event['sequence']} at position {index}"
+            )
         if event["task_id"] != task_id or event["repository"] != repository:
             raise ValueError("recovery journal cannot mix task_id or repository")
         if terminal_seen:
             raise ValueError("recovery journal cannot append after terminal event")
+
         if index == 1:
             if event["previous_event_sha256"] is not None:
-                raise ValueError("first recovery event must have previous_event_sha256=null")
+                raise ValueError(
+                    "first recovery event must have previous_event_sha256=null"
+                )
         else:
             previous = ordered[index - 2]
             expected = canonical_sha256(previous)
@@ -323,16 +330,69 @@ def validate_recovery_journal(records):
             if event["strategy_generation"] < previous["strategy_generation"]:
                 raise ValueError("recovery strategy_generation cannot decrease")
             if event["strategy_generation"] > previous["strategy_generation"]:
-                if event["strategy_generation"] != previous["strategy_generation"] + 1 or event["event"] != "REPLAN":
-                    raise ValueError("strategy_generation may increase only by one on a REPLAN event")
-            else:
-                if event["no_progress_iterations"] < previous["no_progress_iterations"]:
-                    raise ValueError("no_progress_iterations cannot decrease inside one strategy generation")
-                if event["action_fingerprint"] == previous["action_fingerprint"]:
-                    if event["attempt_count"] < previous["attempt_count"]:
-                        raise ValueError("attempt_count cannot decrease for the same action fingerprint")
-                    if event["identical_failure_count"] < previous["identical_failure_count"]:
-                        raise ValueError("identical_failure_count cannot decrease for the same action fingerprint")
+                if (
+                    event["strategy_generation"]
+                    != previous["strategy_generation"] + 1
+                    or event["event"] != "REPLAN"
+                ):
+                    raise ValueError(
+                        "strategy_generation may increase only by one on a REPLAN event"
+                    )
+            elif event["no_progress_iterations"] < previous["no_progress_iterations"]:
+                raise ValueError(
+                    "no_progress_iterations cannot decrease inside one strategy generation"
+                )
+
+        fingerprint = event.get("action_fingerprint")
+        if fingerprint is not None:
+            key = (event["strategy_generation"], fingerprint)
+            prior = fingerprint_state.get(key)
+            if prior is not None:
+                if event["attempt_count"] < prior["attempt_count"]:
+                    raise ValueError(
+                        "attempt_count cannot decrease for a fingerprint within one strategy generation"
+                    )
+                if event["identical_failure_count"] < prior["identical_failure_count"]:
+                    raise ValueError(
+                        "identical_failure_count cannot decrease for a fingerprint within one strategy generation"
+                    )
+                if event["no_progress_iterations"] < prior["no_progress_iterations"]:
+                    raise ValueError(
+                        "no_progress_iterations cannot decrease for a fingerprint within one strategy generation"
+                    )
+
+            if event["event"] == "RETRY_AUTHORIZED":
+                if prior is None:
+                    if event["attempt_count"] != 1:
+                        raise ValueError(
+                            "first authorization for a new action fingerprint must use attempt_count=1"
+                        )
+                else:
+                    if prior["event"] != "FAILURE_OBSERVED":
+                        raise ValueError(
+                            "RETRY_AUTHORIZED requires a preceding FAILURE_OBSERVED for an existing fingerprint"
+                        )
+                    expected_attempt = prior["attempt_count"] + 1
+                    if event["attempt_count"] != expected_attempt:
+                        raise ValueError(
+                            "RETRY_AUTHORIZED must consume exactly one attempt from the same fingerprint budget"
+                        )
+                    if (
+                        prior["attempt_count"] >= 3
+                        or prior["identical_failure_count"] >= 2
+                        or prior["no_progress_iterations"] >= 3
+                    ):
+                        raise ValueError(
+                            "retry budget is exhausted; REPLAN is required before another retry"
+                        )
+
+            fingerprint_state[key] = {
+                "event": event["event"],
+                "attempt_count": event["attempt_count"],
+                "identical_failure_count": event["identical_failure_count"],
+                "no_progress_iterations": event["no_progress_iterations"],
+            }
+
         if event["event"] in {"BLOCKED", "HUMAN_GATE", "COMPLETE"}:
             terminal_seen = True
     return True
@@ -364,14 +424,36 @@ def validate_transition_result(record):
     _validate(record, _load_schema(TRANSITION_RESULT_SCHEMA))
     status = record["terminal_status"]
     authorization_record = record["authorization_record"]
-    if status == "SUCCESS" and not authorization_record:
-        raise ValueError("successful Human-Gate transition requires a durable authorization_record")
+    if status in {"SUCCESS", "FAILURE", "NOT_EXECUTED"} and not authorization_record:
+        raise ValueError(
+            f"{status} transition requires a durable authorization_record"
+        )
+    if status in {"FAILURE", "NOT_EXECUTED"} and not record["residual_blockers"]:
+        raise ValueError(
+            f"{status} transition must record at least one residual_blocker"
+        )
     if status == "HISTORICAL_OBSERVED":
         if authorization_record is not None:
-            raise ValueError("historical observed transition must not invent an authorization_record")
+            raise ValueError(
+                "historical observed transition must not invent an authorization_record"
+            )
         if not record["residual_blockers"]:
-            raise ValueError("historical observed transition must record the authorization-evidence gap")
+            raise ValueError(
+                "historical observed transition must record the authorization-evidence gap"
+            )
     return True
+
+def validate_current_transition_result(record):
+    """Apply current-state semantics to newly created or modified transition results.
+
+    Historical records remain readable under their original contract; admission of
+    new evidence uses this stricter state model.
+    """
+    validate_transition_result(record)
+    if record["terminal_status"] == "SUCCESS" and record["residual_blockers"]:
+        raise ValueError("successful transition cannot retain residual_blockers")
+    return True
+
 
 def validate_transition_pair(authorization, result):
     validate_transition_authorization(authorization)
@@ -395,9 +477,9 @@ def validate_transition_pair(authorization, result):
     return True
 
 def validate_persisted_transition_result(record, repository_root=None):
-    """Validate a transition result and require its durable authorization on SUCCESS."""
+    """Validate transition evidence and require durable authority for authorized outcomes."""
     validate_transition_result(record)
-    if record["terminal_status"] != "SUCCESS":
+    if record["terminal_status"] == "HISTORICAL_OBSERVED":
         return True
 
     expected = (
@@ -405,13 +487,13 @@ def validate_persisted_transition_result(record, repository_root=None):
     )
     if record.get("authorization_record") != expected:
         raise ValueError(
-            "successful transition authorization_record must use the canonical transition path"
+            "authorized transition result must use the canonical authorization path"
         )
     root = Path(repository_root) if repository_root is not None else ROOT.parent
     auth_path = root / expected
     if not auth_path.is_file():
         raise ValueError(
-            "successful transition requires the matching durable authorization file"
+            "authorized transition result requires the matching durable authorization file"
         )
     authorization = json.loads(auth_path.read_text(encoding="utf-8"))
     validate_transition_pair(authorization, record)
@@ -422,7 +504,7 @@ def _read_json(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-pair"])
+    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-result-current","transition-pair"])
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args()
     if args.kind == "pair":
@@ -454,6 +536,8 @@ def main():
         }
         if args.kind == "transition-result":
             validate_persisted_transition_result(data)
+        elif args.kind == "transition-result-current":
+            validate_current_transition_result(data)
         else:
             validators[args.kind](data)
     print("VALID")

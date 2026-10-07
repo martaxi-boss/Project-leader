@@ -18,7 +18,7 @@ A separate **Recovery Guardian** plugin is also available for explicit recovery 
 
 Calling `@Project Leader` only activates it. It does not automatically authorize an audit or construction work.
 
-Before replying or routing substantive work, Project Leader silently runs `CANONICAL_RUNTIME_BOOTSTRAP` when GitHub read access is available: read canonical `main` plugin metadata plus the canonical Project Leader Skill. If the loaded runtime copy is behind, enter `RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE` and continue under the live canonical contract immediately. Do not use marketplace propagation lag as a reason to stop, ask the Owner to sync again, or keep executing obsolete rules. Bare activation remains a short ready response after bootstrap.
+Before replying or routing substantive work, Project Leader silently runs `CANONICAL_RUNTIME_BOOTSTRAP` when GitHub read access is available. Loader contract v1 (minimum loader version 1) resolves canonical `main` exactly once to an exact `RUNTIME_CANONICAL_REVISION`; plugin metadata, Skill and subsequent control-plane documents for that decision are read at that same immutable SHA. If the loaded runtime copy is behind, enter `RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE` and continue under that pinned generation immediately. An incompatible loader refuses the override rather than mixing generations. Do not use marketplace propagation lag as a reason to stop, ask the Owner to sync again, or keep executing obsolete rules. Bare activation remains a short ready response after bootstrap.
 
 ## Runtime loop
 
@@ -26,7 +26,7 @@ Normal control path: `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> C
 
 Before explicitly dispatching or rerunning CI, deduplicate by exact workflow name + target SHA + event context. Reuse an existing active or successful exact-context run; route an exact-context terminal failure/cancellation/timeout to Recovery; dispatch only when no exact match exists. Automatic GitHub runs from different event contexts are coalesced as evidence and are not a reason to create more runs.
 
-Before accepting CI for an implementation head, reject cherry-picked evidence: for every required workflow, inspect the latest same-SHA `push`, `pull_request`, and selected evidence context. Any latest active, failed, cancelled, or timed-out relevant context blocks terminal acceptance until that context becomes terminal-success or is otherwise legitimately superseded by a later successful run in the same context.
+Before accepting CI for an implementation head, reject cherry-picked evidence: for every required workflow, bind the trusted workflow identity (ID/path), repository, implementation SHA and expected event/PR/base context, then inspect the latest same-SHA `push`, `pull_request`, and selected evidence context. A homonymous workflow never substitutes for the required workflow. Any latest active, failed, cancelled, or timed-out relevant context blocks terminal acceptance until that context becomes terminal-success or is otherwise legitimately superseded by a later successful run in the same context.
 
 A CI-certified implementation head is the last material mutation point for that certification. Final evidence commits may follow only when they are task-local `.project-leader` result/recovery/transition-result metadata. Any other file change after `implementation_head_sha` is material drift: invalidate the old certification, choose the new implementation head, and run the required CI again before terminal acceptance.
 
@@ -157,3 +157,13 @@ For a v2 Project Leader task:
 8. Verify authorization immutability, task/result compatibility, target CI evidence and implementation-head/final-head ancestry from trusted control-plane logic.
 
 Repository branch protection/rulesets remain an external GitHub governance layer. The trusted workflow strengthens PR enforcement but does not make an unprotected `main` equivalent to a protected branch.
+
+## P1 audit hardening invariants
+
+For Project Leader-local trusted PRs, compare the PR API's declared changed-file count with the structured file list and fail closed at the 3000-file ceiling. Re-read the live base ref and reject a stale event-base binding. Immutable task authorization must be an authorization-only history point; material implementation in the base-to-authorization range invalidates certification.
+
+Recovery append-only state is historical, not merely the current directory listing. A previously persisted event may not disappear, be renamed or be rewritten. Validate generic journals independently from retry-only causality, and derive anti-loop budgets across interleaved fingerprints.
+
+Consequential `FAILURE` and `NOT_EXECUTED` outcomes remain normal auditable records when bound to prior authorization and blockers; they never certify promotion. New `SUCCESS` evidence cannot carry residual blockers. Legacy evidence remains readable rather than being rewritten to fit the current contract.
+
+Plugin packages must pass allowlist/metadata checks and expose source/build provenance in the generated manifest before artifacts are uploaded.

@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 import hashlib
+import re
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
 from control.validate_records import validate_checkpoint, validate_pair, validate_project_policy, validate_result, validate_scope, validate_task
 from control.scope_policy import scope_pattern_is_bounded, scope_pattern_is_within
+
+RUNTIME_CONTRACT_VERSION = 1
+MIN_LOADER_VERSION = 1
+PINNED_RUNTIME_STATE = "RUNTIME_CANONICAL_PINNED"
+RUNTIME_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 NEW_TASK_SCHEMA_VERSION = "2.0"
 WORKER_RESULT_SCHEMA_VERSION = "2.0"
@@ -71,6 +77,77 @@ POST_CI_DESCENDANT_MATERIAL = "MATERIAL_DESCENDANT"
 POST_CI_ROUTE_CERTIFICATION_UNCHANGED = "CERTIFICATION_UNCHANGED"
 POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE = "FINAL_HEAD_GOVERNANCE_CHECK"
 POST_CI_ROUTE_FRESH_IMPLEMENTATION = "FRESH_IMPLEMENTATION_CI"
+
+
+def validate_loader_version(loader_version):
+    if not isinstance(loader_version, int) or isinstance(loader_version, bool):
+        raise ValueError("loader_version must be an integer")
+    if loader_version < MIN_LOADER_VERSION:
+        raise ValueError(
+            f"loader version {loader_version} is incompatible; "
+            f"minimum is {MIN_LOADER_VERSION}"
+        )
+    return True
+
+
+def pin_runtime_bundle(resolve_main_sha, read_at_revision, *, loader_version=1, paths=None):
+    """Resolve canonical main once and read one coherent contract generation."""
+    validate_loader_version(loader_version)
+    revision = resolve_main_sha()
+    if not isinstance(revision, str) or RUNTIME_SHA_RE.fullmatch(revision) is None:
+        raise ValueError("canonical main resolver must return an exact 40-hex commit SHA")
+
+    selected_paths = tuple(paths or ())
+    if not selected_paths:
+        raise ValueError("runtime bundle requires at least one contract path")
+    if len(selected_paths) != len(set(selected_paths)):
+        raise ValueError("runtime bundle paths must be unique")
+
+    files = {}
+    for path in selected_paths:
+        if not isinstance(path, str) or not path or path.startswith("/"):
+            raise ValueError(f"invalid runtime contract path: {path!r}")
+        files[path] = read_at_revision(path, revision)
+
+    return {
+        "state": PINNED_RUNTIME_STATE,
+        "runtime_contract_version": RUNTIME_CONTRACT_VERSION,
+        "loader_version": loader_version,
+        "revision": revision,
+        "files": files,
+    }
+
+
+def verify_pr_evidence_context(
+    *,
+    declared_changed_count,
+    observed_changes,
+    event_base_sha,
+    live_base_sha,
+    api_limit=3000,
+):
+    """Fail closed on truncated PR-file evidence or a stale trusted base."""
+    if not isinstance(declared_changed_count, int) or isinstance(
+        declared_changed_count, bool
+    ):
+        raise ValueError("declared_changed_count must be an integer")
+    if declared_changed_count < 0:
+        raise ValueError("declared_changed_count must be non-negative")
+    if declared_changed_count >= api_limit:
+        raise ValueError(
+            f"PR changed-file evidence reached GitHub's {api_limit}-file limit "
+            "and is not certifiable"
+        )
+    if declared_changed_count != len(observed_changes):
+        raise ValueError(
+            "PR changed-file evidence is incomplete: "
+            f"declared={declared_changed_count} observed={len(observed_changes)}"
+        )
+    if event_base_sha != live_base_sha:
+        raise ValueError(
+            f"trusted gate base is stale: event={event_base_sha} live={live_base_sha}"
+        )
+    return True
 
 
 def resolve_project_policy_path(explicit_policy_path=None):

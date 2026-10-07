@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from control.validate_records import (
+    validate_pair,
     validate_recovery_journal,
     validate_result,
     validate_transition_pair,
@@ -26,6 +27,24 @@ from control.validate_records import (
 GITHUB_COMPARE_FILES_LIMIT = 300
 GITHUB_ACTIONS_RUNS_PAGE_SIZE = 100
 GITHUB_ACTIONS_RUNS_SEARCH_LIMIT = 1000
+
+PROJECT_LEADER_TRUSTED_WORKFLOWS = {
+    "Control contract tests": {
+        "workflow_id": 373484327,
+        "path": ".github/workflows/contract-tests.yml",
+        "events": {"pull_request", "push"},
+    },
+    "Validate control plane": {
+        "workflow_id": 373409803,
+        "path": ".github/workflows/validate-control-plane.yml",
+        "events": {"pull_request", "push"},
+    },
+    "Package ChatGPT plugins": {
+        "workflow_id": 373452116,
+        "path": ".github/workflows/package-plugins.yml",
+        "events": {"pull_request", "push"},
+    },
+}
 
 
 def api_get(url, token):
@@ -223,9 +242,9 @@ def verify_recovery_structural_causality(result, records, persistence, ancestry_
     return True
 
 
-def verify_recovery_journal_records(result, records):
+def verify_recovery_journal_records(result, records, require_retry=False):
     if not records:
-        raise ValueError("CI retry requires a durable append-only recovery journal")
+        raise ValueError("durable recovery journal requires at least one event")
     validate_recovery_journal(records)
     for record in records:
         if record.get("task_id") != result.get("task_id"):
@@ -234,12 +253,56 @@ def verify_recovery_journal_records(result, records):
             raise ValueError("recovery journal repository does not match Worker Result")
 
     events = {record.get("event") for record in records}
-    for required in ("FAILURE_OBSERVED", "RETRY_AUTHORIZED"):
-        if required not in events:
-            raise ValueError(f"recovery journal is missing required event: {required}")
-    if result.get("terminal_status") == "TERMINAL_SUCCESS" and "RECOVERED" not in events:
-        raise ValueError("successful retry requires a RECOVERED recovery event")
+    retry_mode = require_retry or "RETRY_AUTHORIZED" in events
+    if retry_mode:
+        for required in ("FAILURE_OBSERVED", "RETRY_AUTHORIZED"):
+            if required not in events:
+                raise ValueError(f"recovery retry journal is missing required event: {required}")
+        if result.get("terminal_status") == "TERMINAL_SUCCESS" and "RECOVERED" not in events:
+            raise ValueError("successful retry requires a RECOVERED recovery event")
     return True
+
+
+def list_recovery_journal_history(repository, directory, token, current_head_sha, api_base):
+    """Return task-local recovery files ever touched and reject truncated history."""
+    quoted = urllib.parse.quote(directory, safe="/")
+    commits = []
+    for page in range(1, 11):
+        batch = api_get(
+            f"{api_base}/repos/{repository}/commits"
+            f"?path={quoted}&sha={current_head_sha}&per_page=100&page={page}",
+            token,
+        )
+        if not isinstance(batch, list):
+            raise ValueError("recovery journal history listing is not a list")
+        commits.extend(batch)
+        if len(batch) < 100:
+            break
+    else:
+        raise ValueError("recovery journal history exceeds the bounded 1000-commit audit window")
+
+    touched = {}
+    for commit in commits:
+        sha = commit.get("sha") if isinstance(commit, dict) else None
+        if not isinstance(sha, str):
+            raise ValueError("recovery journal history contains a commit without SHA")
+        detail = api_get(f"{api_base}/repos/{repository}/commits/{sha}", token)
+        for item in detail.get("files") or []:
+            path = item.get("filename") if isinstance(item, dict) else None
+            if not isinstance(path, str) or not path.startswith(directory + "/") or not path.endswith(".json"):
+                continue
+            status = item.get("status")
+            touched.setdefault(path, []).append(status)
+            if status == "removed":
+                raise ValueError(
+                    f"append-only recovery journal file disappeared from history: {path}"
+                )
+            previous = item.get("previous_filename")
+            if isinstance(previous, str) and previous.startswith(directory + "/"):
+                raise ValueError(
+                    f"append-only recovery journal file was renamed: {previous} -> {path}"
+                )
+    return touched
 
 
 def load_recovery_journal(
@@ -253,11 +316,18 @@ def load_recovery_journal(
 ):
     directory = f".project-leader/recovery-events/{result['task_id']}"
     quoted_directory = urllib.parse.quote(directory, safe="/")
+    history = list_recovery_journal_history(
+        repository, directory, token, current_head_sha, api_base
+    )
     listing = api_get_optional(
         f"{api_base}/repos/{repository}/contents/{quoted_directory}?ref={current_head_sha}",
         token,
     )
     if listing is None:
+        if history:
+            raise ValueError(
+                "append-only recovery journal existed in history but is absent at the current head"
+            )
         if required:
             raise ValueError("CI retry requires a durable append-only recovery journal")
         return False
@@ -304,7 +374,7 @@ def load_recovery_journal(
             }
         )
 
-    verify_recovery_journal_records(result, records)
+    verify_recovery_journal_records(result, records, require_retry=required)
 
     ancestry_payloads = {}
     if any(record.get("event") == "RETRY_AUTHORIZED" for record in records):
@@ -340,7 +410,7 @@ def _run_order_key(payload):
     return (created, run_id if isinstance(run_id, int) else -1)
 
 
-def verify_same_sha_ci_consistency(ci_item, result, selected_payload, workflow_runs):
+def verify_same_sha_ci_consistency(ci_item, result, selected_payload, workflow_runs, trusted_workflow=None):
     """Reject cherry-picked green CI when another relevant context disagrees.
 
     For the required workflow name on the exact implementation SHA, inspect the
@@ -362,6 +432,13 @@ def verify_same_sha_ci_consistency(ci_item, result, selected_payload, workflow_r
         and run.get("name") == ci_item.get("name")
         and run.get("head_sha") == result.get("implementation_head_sha")
         and run.get("event") in relevant_events
+        and (
+            trusted_workflow is None
+            or (
+                run.get("workflow_id") == trusted_workflow["workflow_id"]
+                and run.get("path") == trusted_workflow["path"]
+            )
+        )
     ]
 
     by_event = {}
@@ -392,7 +469,7 @@ def verify_same_sha_ci_consistency(ci_item, result, selected_payload, workflow_r
     return True
 
 
-def verify_run_payload(ci_item, result, payload, repository):
+def verify_run_payload(ci_item, result, payload, repository, trusted_workflow=None, task=None):
     if ci_item["status"] != "SUCCESS":
         raise ValueError(f"required CI evidence is not SUCCESS: {ci_item['name']}")
     if payload.get("name") != ci_item["name"]:
@@ -404,6 +481,30 @@ def verify_run_payload(ci_item, result, payload, repository):
     run_repo = (payload.get("repository") or {}).get("full_name")
     if run_repo != repository:
         raise ValueError(f"workflow repository mismatch for run {ci_item['run_id']}")
+
+    if trusted_workflow is not None:
+        if payload.get("workflow_id") != trusted_workflow["workflow_id"]:
+            raise ValueError(f"workflow id mismatch for run {ci_item['run_id']}")
+        if payload.get("path") != trusted_workflow["path"]:
+            raise ValueError(f"workflow path mismatch for run {ci_item['run_id']}")
+        if payload.get("event") not in trusted_workflow["events"]:
+            raise ValueError(f"workflow event mismatch for run {ci_item['run_id']}")
+
+    if task is not None and result.get("pr_number") is not None:
+        if payload.get("event") != "pull_request":
+            raise ValueError(
+                f"PR-bound CI evidence must come from pull_request context: {ci_item['run_id']}"
+            )
+        matches = [
+            pr for pr in payload.get("pull_requests") or []
+            if pr.get("number") == result["pr_number"]
+            and (pr.get("head") or {}).get("sha") == result["implementation_head_sha"]
+            and (pr.get("base") or {}).get("sha") == task["starting_state"]["base_sha"]
+        ]
+        if not matches:
+            raise ValueError(
+                f"workflow run {ci_item['run_id']} is not bound to the expected PR/base context"
+            )
     return True
 
 
@@ -431,6 +532,28 @@ def verify_authorization_payloads(result, authorization_payload, current_payload
         raise ValueError("authorization ancestry base_commit mismatch")
     if result.get("terminal_status") == "TERMINAL_SUCCESS" and ancestry_payload.get("status") != "ahead":
         raise ValueError("terminal success requires implementation after the authorization-only commit")
+    return True
+
+
+def verify_authorization_only_history(task, result, payload):
+    """Prove the immutable authorization commit contains no implementation."""
+    expected_base = task["starting_state"]["base_sha"]
+    auth_sha = result["authorization_commit_sha"]
+    if payload.get("status") != "ahead":
+        raise ValueError("authorization commit must be strictly after the task base")
+    if (payload.get("base_commit") or {}).get("sha") != expected_base:
+        raise ValueError("authorization-only compare base does not match task starting_state")
+    commits = payload.get("commits") or []
+    if not commits or commits[-1].get("sha") != auth_sha:
+        raise ValueError("authorization-only compare does not terminate at authorization_commit_sha")
+    files = payload.get("files")
+    if not isinstance(files, list) or len(files) != 1:
+        raise ValueError("authorization commit history must contain only the Task Authorization file")
+    item = files[0]
+    if item.get("filename") != result["authorization_record"]:
+        raise ValueError("authorization-only history contains material or unrelated changes")
+    if item.get("previous_filename") is not None:
+        raise ValueError("Task Authorization must not be introduced by rename")
     return True
 
 
@@ -560,8 +683,10 @@ def validated_task_local_transition_paths(
     return allowed
 
 
-def verify_github_evidence(result, repository, token, current_head_sha, api_base="https://api.github.com"):
+def verify_github_evidence(result, repository, token, current_head_sha, api_base="https://api.github.com", task=None):
     validate_result(result)
+    if task is not None:
+        validate_pair(task, result)
     if result.get("terminal_status") != "TERMINAL_SUCCESS":
         raise ValueError(
             "external GitHub promotion evidence requires TERMINAL_SUCCESS"
@@ -593,6 +718,12 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
             token,
         )
         verify_authorization_payloads(result, authorization_payload, current_payload, ancestry_payload)
+        if task is not None:
+            authorization_only = api_get(
+                f"{api_base}/repos/{repository}/compare/{task['starting_state']['base_sha']}...{authorization_commit_sha}",
+                token,
+            )
+            verify_authorization_only_history(task, result, authorization_only)
 
     run_payloads = []
     for ci_item in result["ci"]:
@@ -600,7 +731,12 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         if not isinstance(run_id, int):
             raise ValueError(f"CI run_id missing for {ci_item['name']}")
         payload = api_get(f"{api_base}/repos/{repository}/actions/runs/{run_id}", token)
-        verify_run_payload(ci_item, result, payload, repository)
+        trusted = (
+            PROJECT_LEADER_TRUSTED_WORKFLOWS.get(ci_item["name"])
+            if repository == "martaxi-boss/Project-leader"
+            else None
+        )
+        verify_run_payload(ci_item, result, payload, repository, trusted, task)
         run_payloads.append(payload)
 
     same_sha_runs = list_same_sha_workflow_runs(
@@ -610,7 +746,14 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
         api_base,
     )
     for ci_item, payload in zip(result["ci"], run_payloads):
-        verify_same_sha_ci_consistency(ci_item, result, payload, same_sha_runs)
+        trusted = (
+            PROJECT_LEADER_TRUSTED_WORKFLOWS.get(ci_item["name"])
+            if repository == "martaxi-boss/Project-leader"
+            else None
+        )
+        verify_same_sha_ci_consistency(
+            ci_item, result, payload, same_sha_runs, trusted_workflow=trusted
+        )
 
     load_recovery_journal(
         result,
@@ -647,6 +790,7 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--result", required=True)
+    parser.add_argument("--task")
     parser.add_argument("--repository", required=True)
     parser.add_argument("--current-head-sha", required=True)
     parser.add_argument("--token-env", default="GITHUB_TOKEN")
@@ -657,7 +801,15 @@ def main():
     if not token:
         raise SystemExit(f"missing token environment variable: {args.token_env}")
     result = json.loads(Path(args.result).read_text(encoding="utf-8"))
-    verify_github_evidence(result, args.repository, token, args.current_head_sha, args.api_base)
+    task = json.loads(Path(args.task).read_text(encoding="utf-8")) if args.task else None
+    verify_github_evidence(
+        result,
+        args.repository,
+        token,
+        args.current_head_sha,
+        args.api_base,
+        task=task,
+    )
     print("GITHUB_EVIDENCE_VALID")
 
 
