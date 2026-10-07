@@ -92,18 +92,26 @@ class ExecutionFirstContractTests(unittest.TestCase):
             )
 
     def test_stale_base_workflow_invalidates_previous_green_head(self):
-        workflow = (ROOT / ".github/workflows/trusted-pr-gate.yml").read_text(
+        trusted = (ROOT / ".github/workflows/trusted-pr-gate.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("push:", workflow)
-        self.assertNotIn("checks: write", workflow)
-        self.assertIn("statuses: write", workflow)
-        self.assertIn("/statuses/$head_sha", workflow)
-        self.assertIn("context='trusted-authorization'", workflow)
-        self.assertNotIn("/check-runs", workflow)
-        self.assertIn("Base advanced; recertification required", workflow)
-        self.assertIn("live_base_sha", workflow)
-        self.assertIn("trusted-authorization", workflow)
+        stale = (ROOT / ".github/workflows/stale-base-invalidation.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("pull_request_target:", trusted)
+        self.assertNotIn("\n  push:\n", trusted)
+        self.assertNotIn("invalidate-stale-base:", trusted)
+        self.assertIn("live_base_sha", trusted)
+        self.assertIn("trusted-authorization", trusted)
+
+        self.assertIn("\n  push:\n", stale)
+        self.assertNotIn("pull_request_target:", stale)
+        self.assertNotIn("github.event.pull_request", stale)
+        self.assertIn("statuses: write", stale)
+        self.assertIn("/statuses/$head_sha", stale)
+        self.assertIn("context='trusted-authorization'", stale)
+        self.assertNotIn("/check-runs", stale)
+        self.assertIn("Base advanced; recertification required", stale)
 
     def test_skill_is_execution_first_and_progressively_loaded(self):
         skill = (
