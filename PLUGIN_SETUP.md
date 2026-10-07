@@ -103,3 +103,6 @@ The available ChatGPT plugin-management dependency lookup does not resolve `proj
 
 This host observation is runtime evidence, not a cryptographic attestation of the installed ZIP bytes. For distributable artifacts, continue to use the GitHub Actions `plugin-manifest.json` + `SHA256SUMS` provenance path described above.
 
+## License
+
+Project Leader is distributed under a **proprietary / All Rights Reserved** license selected by the repository Owner. The repository does not grant a general open-source reuse license. See `LICENSE` for the complete terms; third-party components and services retain their own licenses and terms.
