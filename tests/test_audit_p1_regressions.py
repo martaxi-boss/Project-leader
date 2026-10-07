@@ -146,6 +146,94 @@ class AuditP1RegressionTests(unittest.TestCase):
                 PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"],
             )
 
+    def test_historical_pr_run_uses_immutable_run_head_and_stable_pr_context(self):
+        implementation = "a" * 40
+        base = "b" * 40
+        current_pr_head = "c" * 40
+        ci = {
+            "name": "Control contract tests",
+            "status": "SUCCESS",
+            "run_id": 42,
+        }
+        result = {
+            "implementation_head_sha": implementation,
+            "pr_number": 79,
+        }
+        task = {
+            "starting_state": {
+                "base_sha": base,
+                "task_branch": "builder/example",
+            }
+        }
+        payload = {
+            "id": 42,
+            "name": "Control contract tests",
+            "workflow_id": PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"]["workflow_id"],
+            "path": PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"]["path"],
+            "event": "pull_request",
+            "head_branch": "builder/example",
+            "head_sha": implementation,
+            "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": "martaxi-boss/Project-leader"},
+            "pull_requests": [{
+                "number": 79,
+                "head": {"ref": "builder/example", "sha": current_pr_head},
+                "base": {"ref": "main", "sha": base},
+            }],
+        }
+        self.assertTrue(
+            verify_run_payload(
+                ci,
+                result,
+                payload,
+                "martaxi-boss/Project-leader",
+                PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"],
+                task,
+            )
+        )
+
+    def test_pr_run_rejects_wrong_task_branch_even_with_matching_pr_number(self):
+        implementation = "a" * 40
+        base = "b" * 40
+        ci = {
+            "name": "Control contract tests",
+            "status": "SUCCESS",
+            "run_id": 43,
+        }
+        result = {"implementation_head_sha": implementation, "pr_number": 79}
+        task = {
+            "starting_state": {
+                "base_sha": base,
+                "task_branch": "builder/expected",
+            }
+        }
+        payload = {
+            "id": 43,
+            "name": "Control contract tests",
+            "workflow_id": PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"]["workflow_id"],
+            "path": PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"]["path"],
+            "event": "pull_request",
+            "head_branch": "builder/other",
+            "head_sha": implementation,
+            "status": "completed",
+            "conclusion": "success",
+            "repository": {"full_name": "martaxi-boss/Project-leader"},
+            "pull_requests": [{
+                "number": 79,
+                "base": {"ref": "main", "sha": base},
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "expected task branch"):
+            verify_run_payload(
+                ci,
+                result,
+                payload,
+                "martaxi-boss/Project-leader",
+                PROJECT_LEADER_TRUSTED_WORKFLOWS["Control contract tests"],
+                task,
+            )
+
     def test_authorization_commit_with_implementation_is_rejected(self):
         task = {"starting_state": {"base_sha": "a" * 40}}
         result = {
