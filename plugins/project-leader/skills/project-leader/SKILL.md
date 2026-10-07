@@ -148,6 +148,10 @@ After `NONINTERACTIVE_FALLBACK_EXHAUSTED`, follow `REENTER_ACCESS_DISCOVERY`; ob
 
 Do not infer a gate from an action name, effect class, or ambiguous dictation.
 
+## Observable execution acceptance
+
+Use `control/runtime_execution.py` as the executable acceptance adapter for failure-sensitive runtime behavior. It makes bounded state preflight, repeated internal no-progress observations, exact external-CI reconciliation, and verify-before/after handling of ambiguous writes observable in tests. It does not replace the host agent or GitHub connector and creates no new authority.
+
 ## Evidence
 
 For a write whose response was interrupted or errored, never assume success or failure. Query GitHub first.

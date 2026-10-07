@@ -20,11 +20,43 @@ STANDING_AUTHORITY_SCHEMA = ROOT / "standing-authority.schema.json"
 TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
+CANONICAL_REQUIRED_CONTROLS = {
+    "canonical_project_scope_must_cover_effect",
+    "exact_target_and_revision_revalidated_before_consequential_transition",
+    "required_ci_validation_and_evidence_must_pass",
+    "supervisor_audits_before_and_after_consequential_transition",
+    "recovery_guardian_verifies_ambiguous_writes_before_retry",
+    "recovery_guardian_changes_strategy_after_repeated_failure",
+    "transition_authorization_and_result_are_durable",
+    "no_silent_scope_architecture_strategy_or_trust_boundary_expansion",
+}
+
 SUPPORTED_SCHEMA_KEYS = {
     "$schema", "$id", "title", "description", "type", "additionalProperties", "required",
     "properties", "const", "enum", "pattern", "minLength", "maxLength",
     "minimum", "minItems", "uniqueItems", "items", "format"
 }
+
+RFC3339_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
+
+
+def _json_equal(left, right):
+    """JSON-semantic equality that never equates booleans with numbers."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left == right
+    if left is None or right is None:
+        return left is None and right is None
+    return left == right
+
+
+def _matches_pattern(pattern, value):
+    """Use whole-string matching for anchored identifier/path patterns."""
+    if pattern.startswith("^") and pattern.endswith("$"):
+        return re.fullmatch(pattern, value) is not None
+    return re.search(pattern, value) is not None
+
 
 def _load_schema(path):
     schema = json.loads(path.read_text(encoding="utf-8"))
@@ -58,6 +90,8 @@ def _is_type(value, expected):
 def _validate_datetime(value, path):
     if not isinstance(value, str):
         raise ValueError(f"{path}: date-time must be a string")
+    if RFC3339_RE.fullmatch(value) is None:
+        raise ValueError(f"{path}: date-time must use RFC3339 extended form")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as exc:
@@ -71,16 +105,16 @@ def _validate(value, schema, path="$"):
         options = expected if isinstance(expected, list) else [expected]
         if not any(_is_type(value, option) for option in options):
             raise ValueError(f"{path}: expected type {expected}")
-    if "const" in schema and value != schema["const"]:
+    if "const" in schema and not _json_equal(value, schema["const"]):
         raise ValueError(f"{path}: expected constant {schema['const']!r}")
-    if "enum" in schema and value not in schema["enum"]:
+    if "enum" in schema and not any(_json_equal(value, item) for item in schema["enum"]):
         raise ValueError(f"{path}: value not in enum")
     if isinstance(value, str):
         if "minLength" in schema and len(value) < schema["minLength"]:
             raise ValueError(f"{path}: shorter than minLength")
         if "maxLength" in schema and len(value) > schema["maxLength"]:
             raise ValueError(f"{path}: longer than maxLength")
-        if "pattern" in schema and re.search(schema["pattern"], value) is None:
+        if "pattern" in schema and not _matches_pattern(schema["pattern"], value):
             raise ValueError(f"{path}: does not match pattern")
         if schema.get("format") == "date-time":
             _validate_datetime(value, path)
@@ -119,13 +153,30 @@ def _reject_duplicate_names(items, label):
 
 def validate_project_policy(record):
     _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
-    fixed_target = bool(record.get("repository")) and bool(record.get("default_branch"))
-    dynamic_target = (
-        record.get("repository_mode") == "ACTIVE_TARGET"
-        and record.get("default_branch_mode") == "ACTIVE_TARGET"
+    has_repository = "repository" in record
+    has_default_branch = "default_branch" in record
+    has_repository_mode = "repository_mode" in record
+    has_default_branch_mode = "default_branch_mode" in record
+
+    fixed_target = (
+        has_repository
+        and has_default_branch
+        and not has_repository_mode
+        and not has_default_branch_mode
     )
-    if fixed_target == dynamic_target:
-        raise ValueError("project policy must declare exactly one target mode: fixed repository/default_branch or ACTIVE_TARGET")
+    dynamic_target = (
+        not has_repository
+        and not has_default_branch
+        and has_repository_mode
+        and has_default_branch_mode
+        and record["repository_mode"] == "ACTIVE_TARGET"
+        and record["default_branch_mode"] == "ACTIVE_TARGET"
+    )
+    if not (fixed_target or dynamic_target):
+        raise ValueError(
+            "project policy target mode must be either fixed repository+default_branch "
+            "or both ACTIVE_TARGET mode fields, never partial or mixed"
+        )
     for effect_name, effect_policy in (record.get("effect_policies") or {}).items():
         legacy = effect_policy.get("required_human_gates")
         current = effect_policy.get("required_transition_controls")
@@ -138,6 +189,14 @@ def validate_project_policy(record):
 
 def validate_standing_authority(record):
     _validate(record, _load_schema(STANDING_AUTHORITY_SCHEMA))
+    controls = record.get("required_controls")
+    if set(controls or ()) != CANONICAL_REQUIRED_CONTROLS:
+        missing = sorted(CANONICAL_REQUIRED_CONTROLS - set(controls or ()))
+        unexpected = sorted(set(controls or ()) - CANONICAL_REQUIRED_CONTROLS)
+        raise ValueError(
+            "standing authority required_controls must equal the canonical invariant set; "
+            f"missing={missing} unexpected={unexpected}"
+        )
     return True
 
 
