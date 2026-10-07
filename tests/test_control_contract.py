@@ -770,6 +770,12 @@ class ControlContractTests(unittest.TestCase):
         e1_scope = set(policy["effect_policies"]["E1_RECOVERABLE_PROJECT_LOCAL"]["allowed_scope_patterns"])
         self.assertIn("README.md", e1_scope)
         self.assertIn("PLUGIN_SETUP.md", e1_scope)
+        for maintenance_doc in ("CHANGELOG.md", "SECURITY.md", "SOURCES.md"):
+            self.assertIn(maintenance_doc, e1_scope)
+            self.assertIn(
+                maintenance_doc,
+                policy["effect_policies"]["E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"]["allowed_scope_patterns"],
+            )
 
 
 if __name__ == "__main__":
