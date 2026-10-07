@@ -126,13 +126,15 @@ Validate a required/present journal with:
 
 `python control/validate_records.py recovery-journal <event-1> <event-2> ...`
 
-The journal remains hash chained and monotonic. Mutable checkpoints remain only for historical/legacy continuity.
+The journal remains hash chained and monotonic. Validation derives attempt, identical-failure and no-progress budgets across the whole task/strategy history, so interleaving fingerprints cannot reset a budget. Generic journal validity is separate from retry certification: a legitimate replan or Human Gate does not invent a retry, while a true retry still requires its causal authorization. External evidence verification also inspects task-local Git history and rejects deletion or rename of previously persisted append-only events, including the case where the final directory is absent. Mutable checkpoints remain only for historical/legacy continuity.
 
 ## Trust model
 
 `control/trusted_gate.py` evaluates untrusted task data against policy loaded from trusted base/control-plane state.
 
-The `pull_request_target` trusted workflow never executes PR-head control code.
+The `pull_request_target` trusted workflow never executes PR-head control code. Before promotion it rejects incomplete PR-file evidence (including the GitHub 3000-file API ceiling), re-reads the live base ref, and requires the event base to remain current.
+
+For Project Leader-local certification, required CI is bound to the trusted workflow identity as well as its display name: workflow ID/path, event context, repository, implementation SHA and expected PR/base context must agree. A homonymous workflow cannot substitute for the required workflow. Immutable authorization proof also verifies that the base-to-authorization history contains only the canonical Task Authorization file; implementation must start after that authorization-only commit.
 
 For external targets, target base SHA and canonical control-policy revision are independent states.
 
@@ -147,7 +149,7 @@ Archived v1 schemas remain because historical records are part of the audit trai
 
 They are not templates for new work.
 
-Historical v2 records that used old `human_gates` terminology remain readable for audit, while current runtime records use `transition_controls`.
+Historical v2 records that used old `human_gates` terminology remain readable for audit, while current runtime records use `transition_controls`. Historical transition results remain readable under their original record contract; newly created/modified transition results use the current state semantics, so `SUCCESS` cannot retain blockers and `FAILURE`/`NOT_EXECUTED` remain authorized, auditable, non-promotable outcomes.
 
 ## Validation commands
 
@@ -168,3 +170,9 @@ Examples:
 `python control/validate_records.py transition-pair <authorization-path> <result-path>`
 
 GitHub Actions execute positive and negative contract tests on pull requests and pushes to `main`.
+
+## Runtime generation and package provenance
+
+Runtime loader contract v1 requires loader version >= 1. Resolve canonical Project Leader `main` once to an exact `RUNTIME_CANONICAL_REVISION` and read the runtime contract bundle from that one immutable SHA. `control/runtime_bootstrap.py::pin_runtime_bundle` is the executable invariant used by tests; an incompatible loader refuses an override rather than mixing generations.
+
+Plugin ZIPs are built from an exact allowlist. Symlinks, unexpected files, missing assets, identity mismatch, invalid SemVer and invalid GitHub connector metadata fail packaging. `plugin-manifest.json` schema v2 records repository, source revision, packaging workflow, run ID, plugin ZIP hash/size and hashes/sizes for every packaged file. This provenance is an audit binding; it is not a cryptographic signature or a claim that every external ChatGPT host has been exercised.
