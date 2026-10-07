@@ -4,12 +4,15 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from control.runtime_bootstrap import MIN_LOADER_VERSION, pin_runtime_bundle
+from control.managed_project_contract import (
+    MIN_LOADER_VERSION,
+    pin_runtime_bundle,
+    verify_pr_evidence_context,
+)
 from control.standing_authority import (
     RECOVERY_REPLAN_REQUIRED,
     resolve_recovery_action,
 )
-from control.trusted_gate import verify_pr_evidence_context
 from control.validate_records import (
     canonical_sha256,
     validate_current_transition_result,
