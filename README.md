@@ -51,8 +51,8 @@ Behavioral acceptance now also uses `control/runtime_execution.py`, an injected 
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.9**.
-- Recovery Guardian: **0.5.7**.
+- Project Leader: **0.6.8**.
+- Recovery Guardian: **0.5.6**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
