@@ -11,6 +11,12 @@ FIXED_ZIP_TIME = (1980, 1, 1, 0, 0, 0)
 PLUGINS = ("project-leader", "recovery-guardian")
 SOURCE_REPOSITORY = "martaxi-boss/Project-leader"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SEMVER_RE = re.compile(
+    r"^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
+    r"(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?"
+    r"(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+)
+PACKAGE_WORKFLOW_PATH = ".github/workflows/package-plugins.yml"
 
 
 def sha256_bytes(payload):
@@ -68,8 +74,10 @@ def validate_plugin_tree(plugin_dir, expected_name):
             f"{expected_name}: plugin.json name does not match package directory"
         )
     version = metadata.get("version")
-    if not isinstance(version, str) or not version.strip():
-        raise ValueError(f"{expected_name}: plugin.json version is missing")
+    if not isinstance(version, str) or SEMVER_RE.fullmatch(version) is None:
+        raise ValueError(
+            f"{expected_name}: plugin.json version must be valid SemVer"
+        )
     if metadata.get("skills") != "./skills/":
         raise ValueError(f"{expected_name}: plugin.json skills path must be ./skills/")
     openai = ((metadata.get("extensions") or {}).get("com.openai") or {})
@@ -165,6 +173,7 @@ def build(root, output_dir, source_revision=None, build_run_id=None):
         "provenance": {
             "repository": SOURCE_REPOSITORY,
             "source_revision": source_revision or "UNBOUND_LOCAL_BUILD",
+            "workflow_path": PACKAGE_WORKFLOW_PATH,
             "build_run_id": str(build_run_id) if build_run_id is not None else "LOCAL",
         },
         "plugins": entries,
