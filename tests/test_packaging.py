@@ -24,6 +24,7 @@ class ReproduciblePackagingTests(unittest.TestCase):
             self.assertEqual(manifest["schema_version"], "2.0")
             self.assertEqual(manifest["provenance"]["repository"], "martaxi-boss/Project-leader")
             self.assertEqual(manifest["provenance"]["source_revision"], "UNBOUND_LOCAL_BUILD")
+            self.assertEqual(manifest["provenance"]["build_revision"], "UNBOUND_LOCAL_BUILD")
             self.assertEqual(manifest["provenance"]["build_run_id"], "LOCAL")
             self.assertEqual({item["name"] for item in manifest["plugins"]}, {"project-leader", "recovery-guardian"})
             for item in manifest["plugins"]:
