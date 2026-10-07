@@ -193,7 +193,7 @@ class AuditP1RegressionTests(unittest.TestCase):
             attempt=2,
             previous=canonical_sha256(second),
         )
-        with self.assertRaisesRegex(ValueError, "consume exactly one attempt"):
+        with self.assertRaisesRegex(ValueError, "preceding FAILURE_OBSERVED"):
             validate_recovery_journal([first, second, third])
 
 
@@ -294,7 +294,7 @@ class AuditP1RegressionTests(unittest.TestCase):
             "evidence": ["merged"],
             "residual_blockers": ["contradiction"],
         }
-        with self.assertRaisesRegex(ValueError, "cannot retain residual blockers"):
+        with self.assertRaisesRegex(ValueError, "cannot retain residual_blockers"):
             validate_transition_result(record)
 
     def test_package_rejects_unexpected_dotenv(self):
