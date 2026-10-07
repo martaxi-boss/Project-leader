@@ -1,0 +1,106 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T10:03:10Z",
+  "authority": {
+    "kind": "DERIVED_COMPLETION_AUTHORITY",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Recovery from Task 075 trusted-gate rejection. The supplied audit requires CHANGELOG.md, SECURITY.md and SOURCES.md maintenance, but the canonical Project Leader base policy does not currently admit those exact documentation paths. This task changes only that policy ceiling and regression tests so P2 can be reissued without rewriting immutable authorization."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "task_branch": "builder/audit-policy-doc-scope-076",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    "projects/policies/project-leader.json",
+    "tests/test_policy_doc_scope_regression.py",
+    ".project-leader/tasks/PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076.json",
+    ".project-leader/results/PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076.json",
+    ".project-leader/transitions/PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076-*"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "merge_development_branch",
+    "harden_trust_root"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "architecture_redesign",
+    "modify_role_hierarchy",
+    "scope_expansion",
+    "force_push",
+    "unrelated_refactor",
+    "weaken_ci_or_security_controls",
+    "cross_project_mutation"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Exact documentation policy ceiling regression"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "The canonical Project Leader policy admits exactly CHANGELOG.md and SOURCES.md as normal documentation paths and SECURITY.md only under E3/protected governance, without broad wildcards or unrelated scope widening. Required CI passes and no documentation content or external project is changed by this task.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
