@@ -3,8 +3,8 @@ import hashlib
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
 
-from control.validate_records import validate_checkpoint, validate_project_policy, validate_result, validate_scope, validate_task
-from control.scope_policy import scope_pattern_is_within
+from control.validate_records import validate_checkpoint, validate_pair, validate_project_policy, validate_result, validate_scope, validate_task
+from control.scope_policy import scope_pattern_is_bounded, scope_pattern_is_within
 
 NEW_TASK_SCHEMA_VERSION = "2.0"
 WORKER_RESULT_SCHEMA_VERSION = "2.0"
@@ -103,7 +103,7 @@ def validate_managed_task(task, repository, control_repository=None):
 
 def validate_managed_result(task, result, repository, control_repository=None):
     validate_managed_task(task, repository, control_repository)
-    validate_result(result)
+    validate_pair(task, result)
     if result.get("schema_version") != WORKER_RESULT_SCHEMA_VERSION:
         raise ValueError("managed-project Worker Result must use schema v2")
     if result.get("task_id") != task.get("task_id"):
@@ -187,10 +187,17 @@ def verify_managed_task_against_control_policy(
         )
 
     allowed_patterns = effect_policy["allowed_scope_patterns"]
-    if policy.get("repository_mode") == "ACTIVE_TARGET" and any(
-        pattern == "**" for pattern in task["mutation_scope"]
-    ):
-        raise ValueError("generic active-target task must narrow mutation_scope below **")
+    if policy.get("repository_mode") == "ACTIVE_TARGET":
+        unbounded_patterns = sorted(
+            pattern
+            for pattern in task["mutation_scope"]
+            if not scope_pattern_is_bounded(pattern)
+        )
+        if unbounded_patterns:
+            raise ValueError(
+                "generic active-target task must use literal-bounded mutation_scope patterns: "
+                + ", ".join(unbounded_patterns)
+            )
 
     widened_patterns = sorted(
         pattern
@@ -666,23 +673,19 @@ def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
     }
 
 
-def _is_task_local_post_ci_evidence_path(path, task_id):
+def _is_task_local_post_ci_evidence_path(path, task_id, task_local_transition_paths=None):
     if path == f".project-leader/results/{task_id}.json":
         return True
     if path.startswith(f".project-leader/recovery-events/{task_id}/") and path.endswith(".json"):
         return True
-    if (
-        path.startswith(f".project-leader/transitions/{task_id}-")
-        and path.endswith(".result.json")
-    ):
-        return True
-    return False
+    return path in set(task_local_transition_paths or ())
 
 
 def classify_post_implementation_descendant(
     changed_files,
     task_id,
     final_head_checks_required=False,
+    task_local_transition_paths=None,
 ):
     """Classify changes after a CI-certified implementation head.
 
@@ -706,7 +709,9 @@ def classify_post_implementation_descendant(
     material = sorted(
         path
         for path in changed_files
-        if not _is_task_local_post_ci_evidence_path(path, task_id)
+        if not _is_task_local_post_ci_evidence_path(
+            path, task_id, task_local_transition_paths
+        )
     )
     if material:
         return {
