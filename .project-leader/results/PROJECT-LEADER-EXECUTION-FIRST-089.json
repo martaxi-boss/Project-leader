@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-EXECUTION-FIRST-089",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-EXECUTION-FIRST-089.json",
+  "authorization_commit_sha": "31d941b32ac387d92a2ea0657e94472d3b15257c",
+  "authorization_sha256": "962da827e53b108d12e203fec5738e9aafe3b9f082e858ae21039ab746d64e96",
+  "implementation_head_sha": "385fce2086f77302e43fc2439472f9ad9847917c",
+  "branch": "builder/execution-first-089",
+  "pr_number": 91,
+  "recorded_at": "2026-10-07T14:49:30Z",
+  "state_observed_at": "2026-10-07T14:49:30Z",
+  "superseded_by": null,
+  "post_transition_record": null,
+  "changes": [
+    "Made EXECUTION_FIRST_WITHIN_BOUNDS and FAST_E1 the default route for ordinary reversible technical work, with no authorization-only/task-result/handoff ceremony for normal E1.",
+    "Added executable FAST_E1 versus DURABLE_CONTROL selection while preserving stronger controls for material boundaries, ambiguous writes, continuity and immutable-audit needs.",
+    "Compacted the Project Leader and Recovery Guardian skills, retained Consultant/Supervisor/Builder/Recovery Guardian as internal capabilities, and added progressive loading to reduce context and tokens.",
+    "Added decision-buying diagnosis, regression-first recovery, selective safe rollback, direct recovery, anti-loop behavior and same-cycle continuous hygiene.",
+    "Closed the stale-base certification gap by invalidating prior trusted-authorization checks on open PR heads whenever main advances, forcing recertification against the live base even though the repository ruleset strict-update flag is false.",
+    "Finalized Project Leader 0.7.0 / Recovery Guardian 0.6.0 identity across manifests, canonical docs, changelog, tests and validate-control-plane expectations.",
+    "Added exact lease-safe purge authorizations for the two superseded branches created during Recovery of this task."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Exact base 2730cc8c695bb8e3cde25debd67b5b35d3a160d0 -> implementation 385fce2086f77302e43fc2439472f9ad9847917c changes 23 paths, all inside Task 089 mutation scope and all inside martaxi-boss/Project-leader; no second repository was mutated."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation SHA 385fce2086f77302e43fc2439472f9ad9847917c has successful Control contract tests run 37639777693, Validate control plane run 37639777827 and Package ChatGPT plugins run 37639777688."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable E3 Task 089 authorization commit 31d941b32ac387d92a2ea0657e94472d3b15257c is the authorization-only descendant of canonical base 2730cc8c695bb8e3cde25debd67b5b35d3a160d0 and precedes all trust-root implementation commits; policy remains bound to the exact base digest d8ca49eaaf130b8924ef56ac0912136fe9c2000650db77a1124dada9fabb03cb."
+    },
+    {
+      "name": "Execution-first fast-path regression",
+      "status": "PASS",
+      "evidence": "Control contract tests run 37639777693 passed the new execution-first contract, including FAST_E1 without durable control-only records and rejection of protected/material paths from fast admission."
+    },
+    {
+      "name": "Recovery anti-loop and hygiene regression",
+      "status": "PASS",
+      "evidence": "Control contract tests run 37639777693 passed decision-buying diagnosis, REGRESSION_FIRST and SAFE_ROLLBACK behavior; canonical skills preserve direct Recovery, blind-retry rejection and CONTINUOUS_HYGIENE_ACTIVE."
+    },
+    {
+      "name": "Stale-base recertification regression",
+      "status": "PASS",
+      "evidence": "tests/test_execution_first_contract.py validates push-to-main invalidation semantics; trusted-pr-gate.yml checks the live base on PR admission and creates a failed trusted-authorization check on every open PR head when main advances."
+    },
+    {
+      "name": "Version identity regression",
+      "status": "PASS",
+      "evidence": "Project Leader manifest is 0.7.0, Recovery Guardian manifest is 0.6.0, CHANGELOG and README identify that generation, version assertions expect it, and Validate control plane run 37639777827 succeeded with the same version expectations."
+    },
+    {
+      "name": "Superseded branch hygiene authorization",
+      "status": "PASS",
+      "evidence": "Only PR #91 is open. Exact live refs remain builder/execution-first-087@996c097c3badf0624b73f0a319edbb85b21ff084 and builder/execution-first-088@ba565ec5d634007268e5d062aee63fca668acd6b; Task 089 carries exact EXACT_REVISION_BOUND purge grants so repository hygiene can delete them only if those SHAs remain unchanged and no PR opens."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37639777693
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37639777827
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37639777688
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/91"
+  ],
+  "material_non_effects": [
+    "No PINK IPTV, VCAM-PRO, FADEGO, VPS, Orquestra de Agentes, martaxi-boss/Project--leader or any other repository was mutated.",
+    "No release, deploy, production, secret, credential, permission, branch-protection/ruleset, paid-service or product-architecture transition was executed.",
+    "No valid assertion, test, security control or acceptance threshold was disabled or weakened to obtain PASS."
+  ],
+  "residual_blockers": []
+}
