@@ -41,6 +41,27 @@ SUPPORTED_SCHEMA_KEYS = {
     "minimum", "minItems", "uniqueItems", "items", "format"
 }
 
+RFC3339_RE = re.compile(
+    r"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+)
+
+
+def _json_equal(left, right):
+    """JSON-semantic equality that never equates booleans with numbers."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left == right
+    if left is None or right is None:
+        return left is None and right is None
+    return left == right
+
+
+def _matches_pattern(pattern, value):
+    """Use whole-string matching for anchored identifier/path patterns."""
+    if pattern.startswith("^") and pattern.endswith("$"):
+        return re.fullmatch(pattern, value) is not None
+    return re.search(pattern, value) is not None
+
+
 def _load_schema(path):
     schema = json.loads(path.read_text(encoding="utf-8"))
     _assert_supported_schema(schema)
@@ -74,28 +95,13 @@ def _validate_datetime(value, path):
     if not isinstance(value, str):
         raise ValueError(f"{path}: date-time must be a string")
     if RFC3339_RE.fullmatch(value) is None:
-        raise ValueError(f"{path}: date-time must use RFC3339 extended format")
+        raise ValueError(f"{path}: date-time must use RFC3339 extended form")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as exc:
         raise ValueError(f"{path}: invalid date-time") from exc
     if parsed.tzinfo is None:
         raise ValueError(f"{path}: date-time must include timezone")
-
-
-def _json_equal(left, right):
-    if isinstance(left, bool) or isinstance(right, bool):
-        return isinstance(left, bool) and isinstance(right, bool) and left is right
-    return left == right
-
-
-def _pattern_matches(pattern, value):
-    match = re.search(pattern, value)
-    if match is None:
-        return False
-    if pattern.startswith("^") and pattern.endswith("$"):
-        return match.span() == (0, len(value))
-    return True
 
 def _validate(value, schema, path="$"):
     if "type" in schema:
@@ -151,16 +157,30 @@ def _reject_duplicate_names(items, label):
 
 def validate_project_policy(record):
     _validate(record, _load_schema(PROJECT_POLICY_SCHEMA))
-    fixed_fields = {"repository", "default_branch"}
-    dynamic_fields = {"repository_mode", "default_branch_mode"}
-    has_fixed = bool(fixed_fields & set(record))
-    has_dynamic = bool(dynamic_fields & set(record))
-    if has_fixed and not fixed_fields <= set(record):
-        raise ValueError("fixed project policy requires both repository and default_branch")
-    if has_dynamic and not dynamic_fields <= set(record):
-        raise ValueError("ACTIVE_TARGET policy requires both repository_mode and default_branch_mode")
-    if has_fixed == has_dynamic:
-        raise ValueError("project policy must declare exactly one target mode: fixed repository/default_branch or ACTIVE_TARGET")
+    has_repository = "repository" in record
+    has_default_branch = "default_branch" in record
+    has_repository_mode = "repository_mode" in record
+    has_default_branch_mode = "default_branch_mode" in record
+
+    fixed_target = (
+        has_repository
+        and has_default_branch
+        and not has_repository_mode
+        and not has_default_branch_mode
+    )
+    dynamic_target = (
+        not has_repository
+        and not has_default_branch
+        and has_repository_mode
+        and has_default_branch_mode
+        and record["repository_mode"] == "ACTIVE_TARGET"
+        and record["default_branch_mode"] == "ACTIVE_TARGET"
+    )
+    if not (fixed_target or dynamic_target):
+        raise ValueError(
+            "project policy target mode must be either fixed repository+default_branch "
+            "or both ACTIVE_TARGET mode fields, never partial or mixed"
+        )
     for effect_name, effect_policy in (record.get("effect_policies") or {}).items():
         legacy = effect_policy.get("required_human_gates")
         current = effect_policy.get("required_transition_controls")
