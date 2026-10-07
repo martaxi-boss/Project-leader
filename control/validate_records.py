@@ -362,22 +362,29 @@ def validate_recovery_journal(records):
                     )
 
             if event["event"] == "RETRY_AUTHORIZED":
-                if prior is None or prior["event"] != "FAILURE_OBSERVED":
-                    raise ValueError(
-                        "RETRY_AUTHORIZED requires a preceding FAILURE_OBSERVED for the same fingerprint and strategy"
-                    )
-                expected_attempt = prior["attempt_count"] + 1
-                if event["attempt_count"] != expected_attempt:
-                    raise ValueError(
-                        "RETRY_AUTHORIZED must consume exactly one attempt from the same fingerprint budget"
-                    )
-                if (
-                    prior["identical_failure_count"] >= 2
-                    or prior["no_progress_iterations"] >= 3
-                ):
-                    raise ValueError(
-                        "retry budget is exhausted; REPLAN is required before another retry"
-                    )
+                if prior is None:
+                    if event["attempt_count"] != 1:
+                        raise ValueError(
+                            "first authorization for a new action fingerprint must use attempt_count=1"
+                        )
+                else:
+                    if prior["event"] != "FAILURE_OBSERVED":
+                        raise ValueError(
+                            "RETRY_AUTHORIZED requires a preceding FAILURE_OBSERVED for an existing fingerprint"
+                        )
+                    expected_attempt = prior["attempt_count"] + 1
+                    if event["attempt_count"] != expected_attempt:
+                        raise ValueError(
+                            "RETRY_AUTHORIZED must consume exactly one attempt from the same fingerprint budget"
+                        )
+                    if (
+                        prior["attempt_count"] >= 3
+                        or prior["identical_failure_count"] >= 2
+                        or prior["no_progress_iterations"] >= 3
+                    ):
+                        raise ValueError(
+                            "retry budget is exhausted; REPLAN is required before another retry"
+                        )
 
             fingerprint_state[key] = {
                 "event": event["event"],
