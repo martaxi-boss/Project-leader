@@ -25,7 +25,9 @@
         "roles/**",
         "plugins/**",
         "README.md",
-        "PLUGIN_SETUP.md"
+        "PLUGIN_SETUP.md",
+        "CHANGELOG.md",
+        "SOURCES.md"
       ],
       "allowed_actions": [
         "create_branch",
@@ -82,7 +84,10 @@
         "roles/**",
         "plugins/**",
         "README.md",
-        "PLUGIN_SETUP.md"
+        "PLUGIN_SETUP.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "SOURCES.md"
       ],
       "allowed_actions": [
         "create_branch",
@@ -141,7 +146,8 @@
     "roles/**",
     "plugins/**",
     ".project-leader/**",
-    "projects/standing-authority.json"
+    "projects/standing-authority.json",
+    "SECURITY.md"
   ],
   "protected_paths": [
     ".github/workflows/**",
@@ -155,6 +161,7 @@
     "AGENT_BUILDER_PROMPT.md",
     "roles/**",
     "plugins/**",
-    "projects/standing-authority.json"
+    "projects/standing-authority.json",
+    "SECURITY.md"
   ]
 }
