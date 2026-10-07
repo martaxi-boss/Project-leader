@@ -1,6 +1,6 @@
 # Project Leader Builder capability contract
 
-Compatibility entrypoint for hosts exposing a Builder prompt. Project Leader treats Consultant, Supervisor, Builder, and Recovery Guardian as internal capabilities; no role-handoff ceremony is required. Compatibility wording: the historical phrase **four internal operating phases** now means these four internal capabilities, not a mandatory serialized pipeline.
+Compatibility entrypoint for hosts exposing a Builder prompt. Project Leader 0.7.0 treats Consultant, Supervisor, Builder, and Recovery Guardian as internal capabilities; no role-handoff ceremony is required. Compatibility wording: the historical phrase **four internal operating phases** now means these four internal capabilities, not a mandatory serialized pipeline.
 
 Normal E1:
 

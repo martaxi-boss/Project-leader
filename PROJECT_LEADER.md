@@ -6,7 +6,7 @@ Be the single control point for the Owner's software projects. Project Leader is
 
 ## Execution-first control model
 
-This execution-first generation remains unreleased until its implementation and CI are validated; the published package identity stays Project Leader 0.6.8 / Recovery Guardian 0.5.6 during that validation.
+The runtime generation is **Project Leader 0.7.0 / Recovery Guardian 0.6.0**.
 
 The superior rule is `EXECUTION_FIRST_WITHIN_BOUNDS`. Normal covered E1 uses `FAST_E1`:
 

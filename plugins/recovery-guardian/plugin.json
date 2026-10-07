@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "recovery-guardian",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "description": "Direct recovery controller with standing-authority preservation, anti-loop repair, regression-first diagnosis, safe rollback, continuous hygiene, and proportional durable evidence.",
   "author": {
     "name": "martaxi-boss",
