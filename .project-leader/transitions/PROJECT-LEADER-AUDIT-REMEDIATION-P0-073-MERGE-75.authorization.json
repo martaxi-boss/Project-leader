@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P0-073-MERGE-75",
+  "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P0-073",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T08:54:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Canonical Project Leader standing authority covers integration of the bounded P0 audit remediation after exact-head Supervisor audit. PR 75 is open, non-draft and mergeable at head 547fe25e39e2223c0e83e84a1efad9cc80b15b8a on main 1a6f38a089becbd2dedb2f760eb13f30f9435b25. Its material implementation d587688543b23bf0236f5da5ec7f630c9faf2fe6 passed required CI, the final evidence-only head passed all four ruleset checks, and scope is limited to Task 073. Authorize only this exact PR head/base merge.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/75",
+    "revision": "547fe25e39e2223c0e83e84a1efad9cc80b15b8a",
+    "base_revision": "1a6f38a089becbd2dedb2f760eb13f30f9435b25",
+    "environment": null
+  }
+}
