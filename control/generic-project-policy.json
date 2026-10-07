@@ -100,11 +100,15 @@
     ".github/workflows/**",
     ".env*",
     "**/secrets*",
-    ".project-leader/**"
+    ".project-leader/**",
+    "**/.env*",
+    "secrets*"
   ],
   "protected_paths": [
     ".github/workflows/**",
     ".env*",
-    "**/secrets*"
+    "**/secrets*",
+    "**/.env*",
+    "secrets*"
   ]
 }
