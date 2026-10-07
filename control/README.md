@@ -173,6 +173,6 @@ GitHub Actions execute positive and negative contract tests on pull requests and
 
 ## Runtime generation and package provenance
 
-Runtime loader contract v1 requires loader version >= 1. Resolve canonical Project Leader `main` once to an exact `RUNTIME_CANONICAL_REVISION` and read the runtime contract bundle from that one immutable SHA. `control/runtime_bootstrap.py::pin_runtime_bundle` is the executable invariant used by tests; an incompatible loader refuses an override rather than mixing generations.
+Runtime loader contract v1 requires loader version >= 1. Resolve canonical Project Leader `main` once to an exact `RUNTIME_CANONICAL_REVISION` and read the runtime contract bundle from that one immutable SHA. `control/managed_project_contract.py::pin_runtime_bundle` is the executable invariant used by tests; an incompatible loader refuses an override rather than mixing generations.
 
 Plugin ZIPs are built from an exact allowlist. Symlinks, unexpected files, missing assets, identity mismatch, invalid SemVer and invalid GitHub connector metadata fail packaging. `plugin-manifest.json` schema v2 records repository, source revision, packaging workflow, run ID, plugin ZIP hash/size and hashes/sizes for every packaged file. This provenance is an audit binding; it is not a cryptographic signature or a claim that every external ChatGPT host has been exercised.
