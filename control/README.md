@@ -1,8 +1,8 @@
-# Durable Project Leader control records
+# Proportional Project Leader control records
 
-Project Leader uses machine-readable records to bind task authority, execution evidence, consequential transitions, and recovery state.
+Project Leader uses machine-readable durable records when a material boundary, ambiguous replay risk, context-loss duplication risk, consequential transition, or explicit audit requirement justifies persistence. Ordinary covered FAST_E1 does not require control-only records.
 
-These records preserve continuity and auditability. They do not invent product scope, architecture, or new authority.
+These records preserve continuity and auditability when needed. They never invent product scope, architecture, or new authority.
 
 ## Task Authorization
 
@@ -10,7 +10,7 @@ Canonical current schema:
 
 `task-authorization.schema.json`
 
-Supervisor compiles the bounded record from verified target state plus current/canonical authority. Builder persists it as the first task artifact in the target repository:
+When DURABLE_CONTROL is selected, Supervisor may compile the bounded record from verified target state plus current/canonical authority. The canonical durable path is:
 
 `.project-leader/tasks/<task-id>.json`
 
@@ -32,7 +32,7 @@ Canonical schema:
 
 `worker-result.schema.json`
 
-Builder emits one result for a mutation-capable task and, when target policy permits, persists it at:
+For DURABLE_CONTROL, Builder emits a result when the material contract requires one and, when target policy permits, persists it at:
 
 `.project-leader/results/<task-id>.json`
 
@@ -100,7 +100,7 @@ Missing evidence remains Supervisor remediation/authority resolution. A technica
 
 Project Leader does not require a central registry of projects.
 
-For external target repositories, use `CENTRAL_CONTROL_V1` bound to the exact canonical Project Leader revision.
+For external target repositories in DURABLE_CONTROL, use `CENTRAL_CONTROL_V1` bound to the exact canonical Project Leader revision. Normal FAST_E1 remains bounded by the Owner objective, target architecture, live state, and safety ceiling without requiring a durable Task Authorization.
 
 If an intentionally maintained target-specific central policy is explicitly selected, bind it. Otherwise use:
 
@@ -136,7 +136,7 @@ The journal remains hash chained and monotonic. Validation derives attempt, iden
 
 The `pull_request_target` trusted workflow never executes PR-head control code. Before promotion it rejects incomplete PR-file evidence (including the GitHub 3000-file API ceiling), re-reads the live base ref, and requires the event base to remain current.
 
-For Project Leader-local certification, required CI is bound to the trusted workflow identity as well as its display name: workflow ID/path, event context, repository, implementation SHA and expected PR/base context must agree. A homonymous workflow cannot substitute for the required workflow. Immutable authorization proof also verifies that the base-to-authorization history contains only the canonical Task Authorization file; implementation must start after that authorization-only commit.
+For Project Leader-local certification, required CI is bound to the trusted workflow identity as well as its display name: workflow ID/path, event context, repository, implementation SHA and expected PR/base context must agree. A homonymous workflow cannot substitute for the required workflow. In DURABLE_CONTROL, immutable authorization proof also verifies that the base-to-authorization history contains only the canonical Task Authorization file; material implementation starts after that authorization-only commit.
 
 For external targets, target base SHA and canonical control-policy revision are independent states.
 
