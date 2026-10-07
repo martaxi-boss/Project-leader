@@ -29,13 +29,14 @@ class ProprietaryLicenseSelectionTests(unittest.TestCase):
 
     def test_license_does_not_relicense_third_party_materials(self):
         text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+        normalized = " ".join(text.split())
         self.assertIn(
             "remain subject to their own licenses, terms, and rights",
-            text,
+            normalized,
         )
         self.assertIn(
             "Nothing in this license attempts to relicense or override third-party rights",
-            text,
+            normalized,
         )
 
 
