@@ -21,7 +21,10 @@ class ReproduciblePackagingTests(unittest.TestCase):
                 self.assertEqual((first / name).read_bytes(), (second / name).read_bytes(), name)
 
             manifest = json.loads((first / "plugin-manifest.json").read_text())
-            self.assertEqual(manifest["schema_version"], "1.0")
+            self.assertEqual(manifest["schema_version"], "2.0")
+            self.assertEqual(manifest["provenance"]["repository"], "martaxi-boss/Project-leader")
+            self.assertEqual(manifest["provenance"]["source_revision"], "UNBOUND_LOCAL_BUILD")
+            self.assertEqual(manifest["provenance"]["build_run_id"], "LOCAL")
             self.assertEqual({item["name"] for item in manifest["plugins"]}, {"project-leader", "recovery-guardian"})
             for item in manifest["plugins"]:
                 self.assertEqual(item["sha256"], sha256_file(first / item["file"]))
