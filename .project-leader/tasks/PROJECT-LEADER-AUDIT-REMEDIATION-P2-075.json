@@ -1,0 +1,136 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P2-075",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T09:42:00Z",
+  "authority": {
+    "kind": "STANDING_DELEGATION",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner instructed Project Leader to continue the 2026-10-06 audit remediation autonomously. This bounded P2 task closes owner-independent R10-R12 work: semantic/type hardening, observable Recovery/effect acceptance, maintenance/provenance/documentation cleanup, hygiene efficiency and GitHub pull_request_target readiness. License selection remains prohibited because it requires a separate Owner decision."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "task_branch": "builder/audit-remediation-p2-075",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    "control/validate_records.py",
+    "control/managed_project_contract.py",
+    "control/runtime_execution.py",
+    "control/generic-project-policy.json",
+    "control/standing-authority.schema.json",
+    "control/task-authorization.v1.schema.json",
+    "control/task-authorization.v2.schema.json",
+    "control/worker-result.v1.schema.json",
+    "tests/**",
+    ".github/workflows/repository-hygiene.yml",
+    ".project-leader/tasks/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075.json",
+    ".project-leader/results/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075.json",
+    ".project-leader/recovery-events/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075/**",
+    ".project-leader/transitions/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075-*",
+    "PROJECT_LEADER.md",
+    "RUNBOOK.md",
+    "RECOVERY_PROTOCOL.md",
+    "SMOKE_TESTS.md",
+    "SOURCES.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "README.md",
+    "PLUGIN_SETUP.md",
+    ".agents/plugins/marketplace.json",
+    "plugins/project-leader/plugin.json",
+    "plugins/recovery-guardian/plugin.json",
+    "plugins/project-leader/skills/project-leader/SKILL.md",
+    "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md",
+    "plugins/project-leader/skills/project-leader/references/recovery-protocol.md",
+    "plugins/recovery-guardian/skills/recovery-guardian/references/recovery-protocol.md"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request",
+    "merge_development_branch",
+    "harden_trust_root",
+    "reconcile_control_contract_docs",
+    "reconcile_transition_records"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "architecture_redesign",
+    "modify_role_hierarchy",
+    "scope_expansion",
+    "force_push",
+    "unrelated_refactor",
+    "weaken_ci_or_security_controls",
+    "cross_project_mutation"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Audit P2 R10 semantic and typing regression matrix",
+    "Observable Recovery and effect acceptance harness",
+    "Maintenance provenance and event-policy readiness",
+    "Continuous hygiene consistency"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "sha256": "8496c175e9295450ac0d1228c9d08dcee3149d4f7384838fd2f2573250634e22",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Owner-independent P2 audit remediation is complete: mixed policy modes, protected root/nested secret names, malformed booleans/identifiers/datetimes and incomplete CI/helper payloads fail closed; legacy schema IDs are version-distinct; behavioral tests exercise observable preflight/liveness/restart/ambiguous-write/deduplication paths without duplicate effects; obsolete phrase-only assertions are removed or reduced to contract lint; sources/security/setup/changelog and hygiene efficiency are improved; GitHub pull_request_target enforcement readiness is documented without changing repository event policy. Required CI passes. License selection is not performed.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
