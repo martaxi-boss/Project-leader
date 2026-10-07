@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P1-074-MERGE-76",
+  "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P1-074",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T09:38:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Canonical Project Leader standing authority covers integration of the bounded P1 audit remediation after exact-head Supervisor audit. PR 76 is open, non-draft and mergeable at exact head fff63d1e0043d2133588d9ed0644c61cc5ea0f7c on main aaf9b2c4b6c7a3a698264d6cb78d2edc274cb2df. Trusted authorization gate, Control contract tests, Validate control plane and Package ChatGPT plugins are all terminal-success on that final PR head. Authorize only this exact PR head/base merge.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/76",
+    "revision": "fff63d1e0043d2133588d9ed0644c61cc5ea0f7c",
+    "base_revision": "aaf9b2c4b6c7a3a698264d6cb78d2edc274cb2df",
+    "environment": null
+  }
+}
