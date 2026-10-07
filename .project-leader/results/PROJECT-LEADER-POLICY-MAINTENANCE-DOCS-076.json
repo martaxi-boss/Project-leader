@@ -1,0 +1,67 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076.json",
+  "authorization_commit_sha": "7f2988ca5ccb069dd9a81a8792a5c082eb1e3c45",
+  "authorization_sha256": "afd2b65785575e10f3618aa701ac8e1d35ee0327785851204aba166095bcc3ce",
+  "implementation_head_sha": "4b6689062a2d9d00b93110acc956f52da8cf50fd",
+  "branch": "builder/policy-maintenance-docs-076",
+  "pr_number": 79,
+  "recorded_at": "2026-10-07T10:07:00Z",
+  "state_observed_at": "2026-10-07T10:06:45Z",
+  "changes": [
+    "Added CHANGELOG.md, SECURITY.md and SOURCES.md to the existing Project Leader E1 and E3 allowed_scope_patterns as standard repository-local maintenance documentation.",
+    "Added regression coverage proving those maintenance documents remain inside the project policy ceiling."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Control contract tests run 37605037458 completed successfully and mutation-scope enforcement passed for the exact implementation head 4b6689062a2d9d00b93110acc956f52da8cf50fd."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Required PR-context workflows on exact implementation head 4b6689062a2d9d00b93110acc956f52da8cf50fd are terminal-success: Control contract tests 37605037458, Validate control plane 37605037434, Package ChatGPT plugins 37605037420."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable task authorization 7f2988ca5ccb069dd9a81a8792a5c082eb1e3c45 and exact trust-root authorization PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076-TRUST-ROOT were persisted before the project-policy mutation."
+    },
+    {
+      "name": "Maintenance-document policy ceiling regression",
+      "status": "PASS",
+      "evidence": "tests/test_control_contract.py now requires CHANGELOG.md, SECURITY.md and SOURCES.md in both E1 and E3 Project Leader allowed scope; run 37605037458 passed."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37605037458
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37605037434
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37605037420
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/79"
+  ],
+  "material_non_effects": [
+    "No external project was mutated.",
+    "No architecture, roles, license, release/deploy behavior, branch/ruleset, GitHub Actions event policy, secrets or paid services were changed.",
+    "The policy expansion is limited to three repository-local maintenance-document paths."
+  ],
+  "residual_blockers": []
+}
