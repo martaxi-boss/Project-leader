@@ -12,6 +12,7 @@ from control.standing_authority import (
 from control.trusted_gate import verify_pr_evidence_context
 from control.validate_records import (
     canonical_sha256,
+    validate_current_transition_result,
     validate_recovery_journal,
     validate_transition_result,
 )
@@ -295,7 +296,7 @@ class AuditP1RegressionTests(unittest.TestCase):
             "residual_blockers": ["contradiction"],
         }
         with self.assertRaisesRegex(ValueError, "cannot retain residual_blockers"):
-            validate_transition_result(record)
+            validate_current_transition_result(record)
 
     def test_package_rejects_unexpected_dotenv(self):
         with tempfile.TemporaryDirectory() as tmp:
