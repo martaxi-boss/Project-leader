@@ -25,6 +25,16 @@ CI_ROUTE_INVESTIGATE = "INVESTIGATE"
 POLICY_BINDING_MODE = "CENTRAL_CONTROL_V1"
 GENERIC_POLICY_PATH = "control/generic-project-policy.json"
 INTEGRITY_MODE = "IMMUTABLE_AUTHORIZATION_V1"
+CONTROL_MODE_FAST_E1 = "FAST_E1"
+CONTROL_MODE_DURABLE = "DURABLE_CONTROL"
+E1_EFFECT_CLASS = "E1_RECOVERABLE_PROJECT_LOCAL"
+FAST_E1_ROUTE = "EXECUTE_TEST_CORRECT_HYGIENIZE_VALIDATE_CONTINUE"
+MATERIAL_CONTROL_ROUTE = "MATERIAL_CONTROL"
+DIAGNOSIS_BUYS_DECISION = "DIAGNOSIS_BUYS_DECISION"
+PROBE_NO_DECISION_VALUE = "PROBE_NO_DECISION_VALUE"
+REGRESSION_FIRST = "REGRESSION_FIRST"
+DIRECT_ROOT_CAUSE = "DIRECT_ROOT_CAUSE"
+SAFE_ROLLBACK = "SAFE_ROLLBACK"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
 DEFAULT_LIVENESS_NO_PROGRESS_POLLS = 2
@@ -123,6 +133,121 @@ def _validate_ci_run_payload(run, *, require_timestamp=False):
         if parsed is None or parsed.tzinfo is None:
             raise ValueError("CI run timestamps must be offset-aware ISO timestamps")
     return True
+
+
+def resolve_control_mode(
+    effect_class,
+    *,
+    destructive=False,
+    privileged=False,
+    architecture_change=False,
+    product_decision=False,
+    permission_change=False,
+    external_effect=False,
+    irreversible=False,
+    ambiguous_write_replay_risk=False,
+    context_loss_duplication_risk=False,
+    durable_audit_required=False,
+):
+    """Choose the lightest control mode that still protects a material boundary."""
+    if not isinstance(effect_class, str) or not effect_class:
+        raise ValueError("effect_class must be a non-empty string")
+    flags = {
+        "destructive": destructive,
+        "privileged": privileged,
+        "architecture_change": architecture_change,
+        "product_decision": product_decision,
+        "permission_change": permission_change,
+        "external_effect": external_effect,
+        "irreversible": irreversible,
+        "ambiguous_write_replay_risk": ambiguous_write_replay_risk,
+        "context_loss_duplication_risk": context_loss_duplication_risk,
+        "durable_audit_required": durable_audit_required,
+    }
+    for label, value in flags.items():
+        _require_strict_bool(value, label)
+
+    material_boundary = any(flags.values())
+    if effect_class == E1_EFFECT_CLASS and not material_boundary:
+        return {
+            "mode": CONTROL_MODE_FAST_E1,
+            "durable_records_required": False,
+            "route": FAST_E1_ROUTE,
+        }
+    return {
+        "mode": CONTROL_MODE_DURABLE,
+        "durable_records_required": True,
+        "route": MATERIAL_CONTROL_ROUTE,
+    }
+
+
+def evaluate_diagnostic_probe(question, hypotheses, outcome_actions):
+    """Only spend diagnostic effort when an observation can change the next action."""
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("diagnostic question must be a non-empty string")
+    if (
+        not isinstance(hypotheses, list)
+        or len(hypotheses) < 2
+        or not all(isinstance(item, str) and item for item in hypotheses)
+        or len(set(hypotheses)) != len(hypotheses)
+    ):
+        raise ValueError("hypotheses must contain at least two unique non-empty strings")
+    if not isinstance(outcome_actions, dict) or set(outcome_actions) != set(hypotheses):
+        raise ValueError("outcome_actions must map every hypothesis exactly once")
+    actions = list(outcome_actions.values())
+    if not all(isinstance(item, str) and item for item in actions):
+        raise ValueError("diagnostic outcome actions must be non-empty strings")
+
+    buys_decision = len(set(actions)) > 1
+    return {
+        "execute_probe": buys_decision,
+        "reason": DIAGNOSIS_BUYS_DECISION if buys_decision else PROBE_NO_DECISION_VALUE,
+        "question": question.strip(),
+    }
+
+
+def resolve_regression_strategy(
+    *,
+    last_known_good=None,
+    first_known_bad=None,
+    recent_change=False,
+    regression_confirmed=False,
+    recoverable_change=True,
+    produced_unique_value=False,
+    boundary_crossed=False,
+):
+    """Prioritize causal regression analysis and safe rollback before new theory growth."""
+    for label, value in {
+        "recent_change": recent_change,
+        "regression_confirmed": regression_confirmed,
+        "recoverable_change": recoverable_change,
+        "produced_unique_value": produced_unique_value,
+        "boundary_crossed": boundary_crossed,
+    }.items():
+        _require_strict_bool(value, label)
+    for label, value in {
+        "last_known_good": last_known_good,
+        "first_known_bad": first_known_bad,
+    }.items():
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f"{label} must be a non-empty string when provided")
+
+    if (
+        regression_confirmed
+        and recoverable_change
+        and not produced_unique_value
+        and not boundary_crossed
+    ):
+        return {
+            "decision": SAFE_ROLLBACK,
+            "compare": [last_known_good, first_known_bad],
+        }
+    if recent_change and last_known_good and first_known_bad:
+        return {
+            "decision": REGRESSION_FIRST,
+            "compare": [last_known_good, first_known_bad],
+        }
+    return {"decision": DIRECT_ROOT_CAUSE, "compare": []}
 
 
 def validate_loader_version(loader_version):

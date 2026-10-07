@@ -22,6 +22,14 @@ Before replying or routing substantive work, Project Leader silently runs `CANON
 
 ## Runtime loop
 
+Default normal E1 path:
+
+`RECONSTRUCT MINIMUM -> EXECUTE -> TEST -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`
+
+Use `PROGRESS_OVER_PROCESS`. Normal reversible E1 does not need an authorization-only commit or role handoff. Load durable control only when `resolve_control_mode` identifies a material boundary or continuity/audit risk.
+
+`FUNCTIONAL_CONVERGENCE_FIRST`: diagnostics must select a correction. Apply `DIAGNOSIS_MUST_BUY_A_DECISION` before adding probes. If a recent change makes an earlier phase fail, apply `REGRESSION_FIRST` with last-known-good vs first-known-bad and use selective safe rollback when confirmed and reversible.
+
 Normal control path: `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`. Consultant, Supervisor, Builder and Recovery Guardian are internal capabilities selected when useful; they are not a mandatory serialized chain. A still-valid standing/task authority envelope is not reissued between ordinary covered E1 operations.
 
 Before explicitly dispatching or rerunning CI, deduplicate by exact workflow name + target SHA + event context. Reuse an existing active or successful exact-context run; route an exact-context terminal failure/cancellation/timeout to Recovery; dispatch only when no exact match exists. Automatic GitHub runs from different event contexts are coalesced as evidence and are not a reason to create more runs.
@@ -58,7 +66,7 @@ Compatibility invariant: **Repository hygiene is non-blocking maintenance**. The
 
 ## Access discovery preflight
 
-Before declaring missing access, asking the Owner to run terminal commands, or asking the Owner to approve a browser/tool switch, Project Leader must inspect five surfaces: direct session capabilities, a native tool-capability inventory, target-repository automation, reasonably discoverable operational repositories, and historical execution evidence for candidate channels. Search for operational paths, not secret values.
+Use `FIRST_SUFFICIENT_SAFE_PATH_WINS`: once a safe sufficient channel exists, use it and resume the objective. If no sufficient path is found and an access Human Gate is being considered, `FORCED_OPERATIONAL_ACCESS_DISCOVERY` must inspect direct session capabilities, a native tool-capability inventory, target-repository automation, reasonably discoverable operational repositories, and historical execution evidence for candidate channels. Search for operational paths, not secret values.
 
 A read-only lookup in another repository is reference discovery and is compatible with one-mutable-repository-per-task isolation. If an adjacent operations repository contains an existing GitHub Actions/SSH/deploy channel, classify it before stopping:
 
@@ -143,9 +151,9 @@ Project isolation remains strict: one mutable target repository per task. The Pr
 
 The roles are logical operating modes, not independent security principals. Consultant and Supervisor behave read-only; Builder writes only inside the authorized scope; Recovery Guardian only restores an already-authorized flow and never expands authority.
 
-## V2 trusted execution path
+## Durable-control compatibility path
 
-For a v2 Project Leader task:
+When a material boundary selects durable v2 control:
 
 1. Reconstruct the live target repository, target base SHA, and the exact canonical Project Leader revision.
 2. For Project Leader-local work, bind policy with `LOCAL_BASE_V1`. For an external target project, bind with `CENTRAL_CONTROL_V1` to the exact canonical Project Leader revision. Use an explicitly selected target-specific central policy when one exists; otherwise use `control/generic-project-policy.json`. No central registry enrollment is required.
