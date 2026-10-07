@@ -1,0 +1,87 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P2-075",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075.json",
+  "authorization_commit_sha": "2a52288676b1d2de357fe7a379be1bf80d31c2f1",
+  "authorization_sha256": "e3fd291752c9a95243f0679054d0ddb5adaad2dc960efc524d7f4ebdcdd9bd14",
+  "implementation_head_sha": "56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795",
+  "branch": "builder/audit-remediation-p2-075",
+  "pr_number": 77,
+  "recorded_at": "2026-10-07T10:00:15Z",
+  "state_observed_at": "2026-10-07T10:00:02Z",
+  "changes": [
+    "Closed P2 semantic/type gaps: strict JSON boolean equality, anchored identifier matching, RFC3339 extended timestamps, exclusive fixed-vs-ACTIVE_TARGET policy modes, canonical standing-authority controls and version-distinct legacy schema IDs.",
+    "Expanded the generic protected-path policy so root secrets* and nested .env* variants are governed consistently.",
+    "Hardened CI/access helper inputs so textual false, boolean run IDs, missing active-run progress timestamps and other incomplete observations cannot become positive evidence.",
+    "Added control/runtime_execution.py as an observable injected adapter and behavioral tests for bounded preflight, internal stall detection, lost-response reconciliation, restart deduplication, timeout handling and external-CI routing.",
+    "Removed obsolete Recovery duplication/compatibility text and replaced a tautological phrase assertion with executable adapter coverage while keeping packaged Recovery references byte-synchronized.",
+    "Added traceable sources, explicit security-reporting guidance, plugin artifact provenance instructions, a changelog, GitHub pull_request_target policy-readiness documentation and task-record caching in branch hygiene."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Control contract run 37604363277 completed successfully at implementation head 56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795; PR diff is confined to the immutable Task 075 mutation_scope."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Required pull_request workflows on exact implementation head 56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795 are terminal-success: Control contract tests 37604363277, Validate control plane 37604363302 and Package ChatGPT plugins 37604363279."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable task authorization 2a52288676b1d2de357fe7a379be1bf80d31c2f1 precedes implementation and the exact trust-root authorization PROJECT-LEADER-AUDIT-REMEDIATION-P2-075-TRUST-ROOT was persisted before protected control/workflow mutations."
+    },
+    {
+      "name": "Audit P2 R10 semantic and typing regression matrix",
+      "status": "PASS",
+      "evidence": "Control contract run 37604363277 reports 255 tests OK, including negative cases for mixed policy modes, protected root/nested secret paths, numeric booleans, trailing-newline IDs, non-RFC3339 timestamps, canonical standing controls, schema IDs and malformed CI/helper observations."
+    },
+    {
+      "name": "Observable Recovery and effect acceptance harness",
+      "status": "PASS",
+      "evidence": "Executable tests exercise observable bounded preflight order, two-observation internal-stall routing, ambiguous write after durable effect, restart without duplicate write, timeout without blind retry, active CI wait and terminal CI failure routing."
+    },
+    {
+      "name": "Maintenance provenance and event-policy readiness",
+      "status": "PASS",
+      "evidence": "SOURCES.md now records primary URLs/check date; SECURITY.md names the GitHub private-reporting route without inventing a personal contact; PLUGIN_SETUP.md documents manifest/checksum provenance; CHANGELOG.md records current/unreleased changes; RUNBOOK.md records the 2026-11-02 pull_request_target policy dependency without changing repository policy."
+    },
+    {
+      "name": "Continuous hygiene consistency",
+      "status": "PASS",
+      "evidence": "Recovery duplicates/obsolete compatibility markers were removed, packaged recovery references were resynchronized, and repository-hygiene task records are cached during a sweep while existing concurrency and exact-SHA safety remain intact."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37604363277
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37604363302
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37604363279
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/77"
+  ],
+  "material_non_effects": [
+    "No external project repository was mutated.",
+    "No merge to main, release, deploy, branch/ruleset change, Actions event-policy change, production secret change, paid-service activation or architecture/role-hierarchy redesign was performed by this task.",
+    "No project license was selected or inferred; license selection remains a separate Owner decision.",
+    "No personal/private security contact address was invented or published."
+  ],
+  "residual_blockers": []
+}

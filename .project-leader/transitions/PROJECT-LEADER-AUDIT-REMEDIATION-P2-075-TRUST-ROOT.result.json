@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P2-075-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P2-075",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/audit-remediation-p2-075",
+    "revision": "2a52288676b1d2de357fe7a379be1bf80d31c2f1",
+    "base_revision": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T10:00:15Z",
+  "final_state": {
+    "status": "AUDITED",
+    "revision": "56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795"
+  },
+  "evidence": [
+    "Immutable Task Authorization commit 2a52288676b1d2de357fe7a379be1bf80d31c2f1 is the first task commit after base and contains the task authorization before protected implementation.",
+    "Exact trust-root authorization cc84429a4a0960789d170db21f182c4923accdb6 was persisted before control/workflow/Skill mutations.",
+    "Implementation head 56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795 passed Control contract tests 37604363277, Validate control plane 37604363302 and Package ChatGPT plugins 37604363279.",
+    "Control contract run 37604363277 completed 255 tests successfully and mutation-scope validation returned VALID."
+  ],
+  "residual_blockers": []
+}
