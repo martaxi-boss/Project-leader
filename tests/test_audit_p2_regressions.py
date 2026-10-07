@@ -214,6 +214,27 @@ class AuditP2SemanticTests(unittest.TestCase):
                 legacy_checkpoint(), has_live_branch="false"
             )
 
+    def test_hygiene_sweep_caches_task_record_reads(self):
+        workflow = (ROOT / ".github/workflows/repository-hygiene.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("const taskCache = new Map();", workflow)
+        self.assertIn("async function readTaskOnce(taskPath)", workflow)
+        self.assertIn("const task = await readTaskOnce(taskPath);", workflow)
+
+    def test_maintenance_docs_record_event_policy_and_license_boundary(self):
+        sources = (ROOT / "SOURCES.md").read_text(encoding="utf-8")
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        security = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+        runbook = (ROOT / "RUNBOOK.md").read_text(encoding="utf-8")
+        setup = (ROOT / "PLUGIN_SETUP.md").read_text(encoding="utf-8")
+
+        self.assertIn("2026-11-02", sources)
+        self.assertIn("pull_request_target", runbook)
+        self.assertIn("Report a vulnerability", security)
+        self.assertIn("plugin-manifest.json", setup)
+        self.assertIn("Owner has not chosen a project license", changelog)
+
     def test_ci_payload_requires_real_positive_run_id_and_progress_time(self):
         base = {
             "name": "Project CI",
