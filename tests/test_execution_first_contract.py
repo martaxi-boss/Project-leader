@@ -3,15 +3,24 @@ import unittest
 from pathlib import Path
 
 from control.managed_project_contract import (
+    CANCEL_AND_HYGIENIZE,
+    CONTINUE_REQUIRED,
     CONTROL_MODE_DURABLE,
     CONTROL_MODE_FAST_E1,
     DIAGNOSIS_BUYS_DECISION,
+    FIRST_SUFFICIENT_SAFE_PASS_STOP,
+    KEEP_RUNNING,
+    MATERIAL_VALIDATION_UNCHANGED,
     PROBE_NO_DECISION_VALUE,
     REGRESSION_FIRST,
     SAFE_ROLLBACK,
+    SUPERSEDED,
+    classify_superseded_work,
     evaluate_diagnostic_probe,
     resolve_control_mode,
     resolve_regression_strategy,
+    resolve_terminal_action,
+    resolve_validation_sequence,
 )
 from control.trusted_gate import verify_fast_path_against_base_policy
 
@@ -71,6 +80,123 @@ class ExecutionFirstContractTests(unittest.TestCase):
             regression_confirmed=True,
         )
         self.assertEqual(SAFE_ROLLBACK, rollback["decision"])
+
+
+    def test_e1_focuses_validation_before_full_final_certification(self):
+        plan = resolve_validation_sequence(
+            "E1_RECOVERABLE_PROJECT_LOCAL",
+            focused_validation_relevant=True,
+            full_validation_required=True,
+        )
+        self.assertEqual(
+            [
+                "FOCUSED_VALIDATION",
+                "FULL_VALIDATION",
+                "FINAL_EXACT_STATE_CERTIFICATION",
+            ],
+            plan["steps"],
+        )
+        self.assertEqual("FAST_VALIDATION_BEFORE_FULL_VALIDATION", plan["route"])
+        self.assertTrue(plan["full_validation_required"])
+        self.assertTrue(plan["final_exact_state_required"])
+
+        security = resolve_validation_sequence(
+            "E1_RECOVERABLE_PROJECT_LOCAL",
+            focused_validation_relevant=True,
+            full_validation_required=False,
+            security_or_certification_required=True,
+        )
+        self.assertIn("FULL_VALIDATION", security["steps"])
+        self.assertTrue(security["full_validation_required"])
+
+    def test_superseded_heavy_work_auto_cancels_only_when_safe_and_irrelevant(self):
+        decision = classify_superseded_work(
+            "E1_RECOVERABLE_PROJECT_LOCAL",
+            work_revision="a" * 40,
+            current_revision="b" * 40,
+            heavy_work=True,
+            can_certify_current_state=False,
+            exclusive_diagnostic_evidence_needed=False,
+            cancellation_safe=True,
+        )
+        self.assertEqual(SUPERSEDED, decision["state"])
+        self.assertEqual(CANCEL_AND_HYGIENIZE, decision["action"])
+
+    def test_superseded_work_keeps_running_for_exclusive_diagnostic_evidence(self):
+        decision = classify_superseded_work(
+            "E1_RECOVERABLE_PROJECT_LOCAL",
+            work_revision="a" * 40,
+            current_revision="b" * 40,
+            heavy_work=True,
+            can_certify_current_state=False,
+            exclusive_diagnostic_evidence_needed=True,
+            cancellation_safe=True,
+        )
+        self.assertEqual(KEEP_RUNNING, decision["action"])
+        self.assertEqual(
+            "EXCLUSIVE_DIAGNOSTIC_EVIDENCE_REQUIRED",
+            decision["reason"],
+        )
+
+    def test_first_sufficient_safe_pass_stops_optional_adjacent_work(self):
+        decision = resolve_terminal_action(
+            objective_met=True,
+            acceptance_criteria_met=True,
+            mandatory_regressions_green=True,
+            mandatory_full_validation_passed=True,
+            exact_state_certified=True,
+            hygiene_complete=True,
+            no_known_regression=True,
+            no_remaining_required_work=True,
+        )
+        self.assertEqual(FIRST_SUFFICIENT_SAFE_PASS_STOP, decision["decision"])
+        self.assertFalse(decision["execute_optional_work"])
+
+    def test_failed_acceptance_criterion_forces_correction_and_revalidation(self):
+        decision = resolve_terminal_action(
+            objective_met=True,
+            acceptance_criteria_met=False,
+            mandatory_regressions_green=True,
+            mandatory_full_validation_passed=True,
+            exact_state_certified=True,
+            hygiene_complete=True,
+            no_known_regression=True,
+            no_remaining_required_work=True,
+        )
+        self.assertEqual(CONTINUE_REQUIRED, decision["decision"])
+        self.assertIn("acceptance_criteria_met", decision["missing"])
+
+    def test_efficiency_rules_leave_material_e2_e3_controls_unchanged(self):
+        for effect_class in (
+            "E2_CONSEQUENTIAL_TRANSITION",
+            "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+        ):
+            with self.subTest(effect_class=effect_class):
+                control = resolve_control_mode(effect_class)
+                self.assertEqual(CONTROL_MODE_DURABLE, control["mode"])
+
+                validation = resolve_validation_sequence(
+                    effect_class,
+                    focused_validation_relevant=True,
+                    full_validation_required=True,
+                )
+                self.assertEqual(
+                    MATERIAL_VALIDATION_UNCHANGED,
+                    validation["route"],
+                )
+                self.assertNotIn("FOCUSED_VALIDATION", validation["steps"])
+                self.assertIn("FULL_VALIDATION", validation["steps"])
+
+                work = classify_superseded_work(
+                    effect_class,
+                    work_revision="a" * 40,
+                    current_revision="b" * 40,
+                    heavy_work=True,
+                    can_certify_current_state=False,
+                    exclusive_diagnostic_evidence_needed=False,
+                    cancellation_safe=True,
+                )
+                self.assertEqual(KEEP_RUNNING, work["action"])
 
     def test_fast_gate_accepts_e1_and_rejects_material_or_control_only_paths(self):
         policy = json.loads(

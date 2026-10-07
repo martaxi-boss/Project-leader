@@ -4,6 +4,13 @@ This file records consumer-visible Project Leader control/runtime changes. Exact
 
 ## 0.7.0 / Recovery Guardian 0.6.0 — 2026-10-07
 
+### Incremental operational-efficiency refinement
+
+- Add `FAST_VALIDATION_BEFORE_FULL_VALIDATION`: normal E1 rejects incoherent candidates with the smallest relevant validation before any already-required heavy/full validation, while final security/regression/certification and exact-state proof remain mandatory.
+- Add `SUPERSEDED_WORK_AUTO_CANCEL`: old heavy E1 work may be classified `SUPERSEDED` and cancelled/hygienized only when it cannot certify the current state, has no exclusive diagnostic evidence still needed, and cancellation is safe.
+- Add `FIRST_SUFFICIENT_SAFE_PASS_STOP`: once objective, acceptance criteria, mandatory regressions/full validation, exact-state certification, hygiene and no-required-work conditions are all satisfied, optional adjacent improvement stops.
+- Preserve the existing 0.7.0 architecture and protections unchanged: FAST_E1/DURABLE_CONTROL, direct Recovery, anti-loop, REGRESSION_FIRST/SAFE_ROLLBACK, stale-base protection, secrets/scope discipline, progressive loading and material E2/E3 governance remain intact.
+
 - Make `EXECUTION_FIRST_WITHIN_BOUNDS` and FAST_E1 the normal path for reversible covered work; remove authorization-only/task-result/handoff ceremony from ordinary E1.
 - Add `PROGRESS_OVER_PROCESS`, `FUNCTIONAL_CONVERGENCE_FIRST`, `DIAGNOSIS_MUST_BUY_A_DECISION`, `REGRESSION_FIRST`, selective safe rollback, evidence reuse and progressive loading.
 - Keep Consultant, Supervisor, Builder and Recovery Guardian as internal capabilities rather than a mandatory serialized chain; Recovery Guardian directly repairs covered faults.

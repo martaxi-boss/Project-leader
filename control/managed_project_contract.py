@@ -35,6 +35,17 @@ PROBE_NO_DECISION_VALUE = "PROBE_NO_DECISION_VALUE"
 REGRESSION_FIRST = "REGRESSION_FIRST"
 DIRECT_ROOT_CAUSE = "DIRECT_ROOT_CAUSE"
 SAFE_ROLLBACK = "SAFE_ROLLBACK"
+FAST_VALIDATION_BEFORE_FULL_VALIDATION = "FAST_VALIDATION_BEFORE_FULL_VALIDATION"
+FOCUSED_VALIDATION = "FOCUSED_VALIDATION"
+FULL_VALIDATION = "FULL_VALIDATION"
+FINAL_EXACT_STATE_CERTIFICATION = "FINAL_EXACT_STATE_CERTIFICATION"
+MATERIAL_VALIDATION_UNCHANGED = "MATERIAL_VALIDATION_UNCHANGED"
+SUPERSEDED_WORK_AUTO_CANCEL = "SUPERSEDED_WORK_AUTO_CANCEL"
+SUPERSEDED = "SUPERSEDED"
+KEEP_RUNNING = "KEEP_RUNNING"
+CANCEL_AND_HYGIENIZE = "CANCEL_AND_HYGIENIZE"
+FIRST_SUFFICIENT_SAFE_PASS_STOP = "FIRST_SUFFICIENT_SAFE_PASS_STOP"
+CONTINUE_REQUIRED = "CONTINUE_REQUIRED"
 DEFAULT_POLL_INTERVAL_MINUTES = 5
 DEFAULT_STALE_AFTER_MINUTES = 60
 DEFAULT_LIVENESS_NO_PROGRESS_POLLS = 2
@@ -178,6 +189,162 @@ def resolve_control_mode(
         "mode": CONTROL_MODE_DURABLE,
         "durable_records_required": True,
         "route": MATERIAL_CONTROL_ROUTE,
+    }
+
+
+def resolve_validation_sequence(
+    effect_class,
+    *,
+    focused_validation_relevant=True,
+    full_validation_required=True,
+    security_or_certification_required=False,
+):
+    """Run the smallest useful E1 validation first without weakening final certification."""
+    if not isinstance(effect_class, str) or not effect_class:
+        raise ValueError("effect_class must be a non-empty string")
+    for label, value in {
+        "focused_validation_relevant": focused_validation_relevant,
+        "full_validation_required": full_validation_required,
+        "security_or_certification_required": security_or_certification_required,
+    }.items():
+        _require_strict_bool(value, label)
+
+    effective_full_validation = (
+        full_validation_required or security_or_certification_required
+    )
+    steps = []
+    if effect_class == E1_EFFECT_CLASS and focused_validation_relevant:
+        steps.append(FOCUSED_VALIDATION)
+    if effective_full_validation:
+        steps.append(FULL_VALIDATION)
+    steps.append(FINAL_EXACT_STATE_CERTIFICATION)
+
+    return {
+        "rule": FAST_VALIDATION_BEFORE_FULL_VALIDATION,
+        "route": (
+            FAST_VALIDATION_BEFORE_FULL_VALIDATION
+            if effect_class == E1_EFFECT_CLASS
+            else MATERIAL_VALIDATION_UNCHANGED
+        ),
+        "steps": steps,
+        "full_validation_required": effective_full_validation,
+        "final_exact_state_required": True,
+    }
+
+
+def classify_superseded_work(
+    effect_class,
+    *,
+    work_revision,
+    current_revision,
+    heavy_work=True,
+    can_certify_current_state=False,
+    exclusive_diagnostic_evidence_needed=False,
+    cancellation_safe=False,
+):
+    """Cancel only obsolete E1 heavy work that no longer contributes certification or diagnosis."""
+    if not isinstance(effect_class, str) or not effect_class:
+        raise ValueError("effect_class must be a non-empty string")
+    for label, value in {
+        "work_revision": work_revision,
+        "current_revision": current_revision,
+    }.items():
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{label} must be a non-empty string")
+    for label, value in {
+        "heavy_work": heavy_work,
+        "can_certify_current_state": can_certify_current_state,
+        "exclusive_diagnostic_evidence_needed": exclusive_diagnostic_evidence_needed,
+        "cancellation_safe": cancellation_safe,
+    }.items():
+        _require_strict_bool(value, label)
+
+    if effect_class != E1_EFFECT_CLASS:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "MATERIAL_CONTROL_UNCHANGED",
+            "action": KEEP_RUNNING,
+            "reason": "MATERIAL_CONTROL_UNCHANGED",
+        }
+    if work_revision == current_revision:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "CURRENT",
+            "action": KEEP_RUNNING,
+            "reason": "CURRENT_REVISION",
+        }
+    if not heavy_work:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "OBSOLETE_BUT_LIGHTWEIGHT",
+            "action": KEEP_RUNNING,
+            "reason": "NOT_HEAVY_WORK",
+        }
+    if can_certify_current_state:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "STILL_RELEVANT",
+            "action": KEEP_RUNNING,
+            "reason": "CAN_STILL_CERTIFY_CURRENT_STATE",
+        }
+    if exclusive_diagnostic_evidence_needed:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "STILL_RELEVANT",
+            "action": KEEP_RUNNING,
+            "reason": "EXCLUSIVE_DIAGNOSTIC_EVIDENCE_REQUIRED",
+        }
+    if not cancellation_safe:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "STALE_BUT_NOT_SAFE_TO_CANCEL",
+            "action": KEEP_RUNNING,
+            "reason": "CANCELLATION_NOT_SAFE",
+        }
+    return {
+        "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+        "state": SUPERSEDED,
+        "action": CANCEL_AND_HYGIENIZE,
+        "reason": SUPERSEDED_WORK_AUTO_CANCEL,
+    }
+
+
+def resolve_terminal_action(
+    *,
+    objective_met,
+    acceptance_criteria_met,
+    mandatory_regressions_green,
+    mandatory_full_validation_passed,
+    exact_state_certified,
+    hygiene_complete,
+    no_known_regression,
+    no_remaining_required_work,
+):
+    """Stop at the first sufficient safe pass instead of expanding into optional work."""
+    checks = {
+        "objective_met": objective_met,
+        "acceptance_criteria_met": acceptance_criteria_met,
+        "mandatory_regressions_green": mandatory_regressions_green,
+        "mandatory_full_validation_passed": mandatory_full_validation_passed,
+        "exact_state_certified": exact_state_certified,
+        "hygiene_complete": hygiene_complete,
+        "no_known_regression": no_known_regression,
+        "no_remaining_required_work": no_remaining_required_work,
+    }
+    for label, value in checks.items():
+        _require_strict_bool(value, label)
+
+    missing = [label for label, value in checks.items() if not value]
+    if missing:
+        return {
+            "decision": CONTINUE_REQUIRED,
+            "missing": missing,
+            "execute_optional_work": False,
+        }
+    return {
+        "decision": FIRST_SUFFICIENT_SAFE_PASS_STOP,
+        "missing": [],
+        "execute_optional_work": False,
     }
 
 

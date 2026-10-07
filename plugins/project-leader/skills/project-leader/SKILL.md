@@ -21,6 +21,9 @@ Canonical principles:
 - `DIAGNOSIS_MUST_BUY_A_DECISION`: do not add a probe unless its possible results select different next actions.
 - `REGRESSION_FIRST`: for a recent regression use `LAST_KNOWN_GOOD -> FIRST_KNOWN_BAD -> CAUSAL_DIFF -> MINIMAL_FIX`.
 - `FIRST_SUFFICIENT_SAFE_PATH_WINS`: once a safe sufficient path exists, use it and resume execution.
+- `FAST_VALIDATION_BEFORE_FULL_VALIDATION`: for normal E1, run the smallest relevant validation first, correct directly until the candidate is coherent, then run every mandatory full/security/regression/certification validation and bind the final proof to the exact final state.
+- `SUPERSEDED_WORK_AUTO_CANCEL`: when a newer revision materially supersedes an older one, cancel old heavy work only if it can no longer certify the final state, carries no exclusive diagnostic evidence still needed, and cancellation is safe; otherwise let it finish.
+- `FIRST_SUFFICIENT_SAFE_PASS_STOP`: once objective, acceptance criteria, mandatory regressions/full validation, exact-state certification, hygiene, and no-known-regression/no-required-work conditions all pass, stop rather than opening optional adjacent work.
 - `CONTINUOUS_HYGIENE_ACTIVE`: cleanup caused by the current change belongs in the same cycle.
 
 Safety is proportional to effect. Normal reversible E1 work is fast; material boundaries keep stronger controls.
@@ -42,6 +45,8 @@ Covered reversible `E1_RECOVERABLE_PROJECT_LOCAL` work uses FAST_E1 by default: 
 The Owner's current objective is the authority envelope. Keep objective, mutable project, bounds, initial state, and completion criteria internally; for ordinary E1 do not require an authorization-only commit, Task Authorization Record, Worker Result, handoff record, Supervisor signature, or Recovery Event merely to begin or continue.
 
 Use `control/managed_project_contract.py::resolve_control_mode`. If no material boundary is present, `FAST_E1` means execute. If a material boundary is present, use `DURABLE_CONTROL`.
+
+For normal E1 validation, use `resolve_validation_sequence`: focused validation may run first to reject a bad candidate cheaply, but any full/security/regression/certification validation already required for completion remains mandatory and the exact final HEAD/state must still be certified. Do not repeatedly spend heavy CI on obviously incoherent intermediate candidates when a smaller sufficient check can reject them first.
 
 When several safe technical choices fit the objective, choose autonomously: preserve architecture; reuse canonical decisions; prefer the smallest reversible change surface; prefer strong evidence; reduce future complexity.
 
@@ -79,6 +84,8 @@ Legacy `ACTIVE` checkpoints are historical unless live branch/open PR/CI corrobo
 Evidence-first remains mandatory but proportional. One current direct proof bound to the correct SHA/artifact/state/environment is better than many ritual proofs.
 
 For external CI, bind exact live run IDs. `WAITING_EXTERNAL_CI` is transient data, never passive waiting. If GitHub is terminal while stored state says waiting, classify `STALE_WAIT_STATE`. Loss of chat state never authorizes replacement CI.
+
+When a new HEAD supersedes an older HEAD with heavy work still running, use `classify_superseded_work`. Ask whether the old work can still change a technical decision or provide exclusive evidence. If it cannot certify the current state, has no still-needed exclusive diagnostic value, and cancellation is safe, classify it `SUPERSEDED`, cancel it when the active runtime exposes that capability, and hygienize its tracking state. Never cancel material E2/E3 work through this E1 rule.
 
 An `evidence-only descendant` is non-certifying task CI unless repository governance separately requires current-head checks; material drift after a certifying implementation SHA requires fresh certification.
 
@@ -142,4 +149,8 @@ Preserve correct target/live state before writes; one mutable repository per tas
 
 ## Output
 
-Do not stop just to report an intermediate technical finding when the next covered action is clear. Continue until completion or a genuine Human Gate. Keep the final report short and evidence-bound.
+Do not stop just to report an intermediate technical finding when the next covered action is clear. Continue until completion or a genuine Human Gate.
+
+Before starting optional adjacent work, use `resolve_terminal_action`. When it returns `FIRST_SUFFICIENT_SAFE_PASS_STOP`, stop: do not refactor adjacent code, add speculative observability/tests, pursue a more elegant architecture, or open a new workstream unless concrete evidence shows the authorized objective is not actually complete. A failed acceptance criterion, regression, mandatory validation, exact-state certification, or hygiene check returns `CONTINUE_REQUIRED` and must be corrected/revalidated.
+
+Keep the final report short and evidence-bound.
