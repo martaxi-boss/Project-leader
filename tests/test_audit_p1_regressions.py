@@ -4,6 +4,10 @@ import unittest
 from pathlib import Path
 
 from control.runtime_bootstrap import MIN_LOADER_VERSION, pin_runtime_bundle
+from control.standing_authority import (
+    RECOVERY_REPLAN_REQUIRED,
+    resolve_recovery_action,
+)
 from control.trusted_gate import verify_pr_evidence_context
 from control.validate_records import (
     canonical_sha256,
@@ -293,6 +297,34 @@ class AuditP1RegressionTests(unittest.TestCase):
             self.assertEqual("a" * 40, manifest["provenance"]["source_revision"])
             self.assertEqual("12345", manifest["provenance"]["build_run_id"])
             self.assertTrue(all(item["contents"] for item in manifest["plugins"]))
+
+
+    def test_recovery_resolver_enforces_attempt_budget(self):
+        decision = resolve_recovery_action(
+            objective_authorized=True,
+            standing_delegation_valid=True,
+            effect_class="E1_RECOVERABLE_PROJECT_LOCAL",
+            same_project_workstream=True,
+            same_action_retry=True,
+            retry_basis="NEW_EVIDENCE",
+            attempt_count=3,
+        )
+        self.assertEqual(RECOVERY_REPLAN_REQUIRED, decision["decision"])
+        self.assertEqual("ATTEMPT_LIMIT_REACHED", decision["reason"])
+
+    def test_recovery_resolver_enforces_identical_failure_budget(self):
+        decision = resolve_recovery_action(
+            objective_authorized=True,
+            standing_delegation_valid=True,
+            effect_class="E1_RECOVERABLE_PROJECT_LOCAL",
+            same_project_workstream=True,
+            same_action_retry=True,
+            retry_basis="NEW_EVIDENCE",
+            attempt_count=2,
+            identical_failure_count=2,
+        )
+        self.assertEqual(RECOVERY_REPLAN_REQUIRED, decision["decision"])
+        self.assertEqual("IDENTICAL_FAILURE_LIMIT_REACHED", decision["reason"])
 
     def test_runtime_bootstrap_pins_one_revision_for_every_read(self):
         calls = {"resolve": 0, "refs": []}
