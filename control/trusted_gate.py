@@ -19,6 +19,12 @@ from control.validate_records import (
 )
 
 TRANSITION_AUTHORIZATION_PATTERN = ".project-leader/transitions/*.authorization.json"
+FAST_PATH_DURABLE_PREFIXES = (
+    ".project-leader/tasks/",
+    ".project-leader/results/",
+    ".project-leader/recovery-events/",
+    ".project-leader/transitions/",
+)
 
 
 def _read_json(path):
@@ -53,6 +59,55 @@ def expand_changed_files(changes):
             if path not in expanded:
                 expanded.append(path)
     return expanded
+
+
+def verify_fast_path_against_base_policy(
+    policy,
+    changed_files,
+    effect_class="E1_RECOVERABLE_PROJECT_LOCAL",
+):
+    """Admit ordinary E1 without durable task/result ritual while failing closed on material paths."""
+    validate_project_policy(policy)
+    effect_policy = policy["effect_policies"].get(effect_class)
+    if effect_policy is None:
+        raise ValueError(f"base policy does not authorize fast-path effect class {effect_class}")
+
+    exact_changed_files = expand_changed_files(changed_files)
+    protected_patterns = list(policy["protected_paths"]) + [TRANSITION_AUTHORIZATION_PATTERN]
+    protected = [
+        path
+        for path in exact_changed_files
+        if any(fnmatchcase(path, pattern) for pattern in protected_patterns)
+    ]
+    if protected:
+        raise ValueError(
+            "fast E1 cannot mutate material/protected paths: "
+            + ", ".join(sorted(protected))
+        )
+
+    durable = [
+        path
+        for path in exact_changed_files
+        if path.startswith(FAST_PATH_DURABLE_PREFIXES)
+    ]
+    if durable:
+        raise ValueError(
+            "fast E1 must not create control-only durable records: "
+            + ", ".join(sorted(durable))
+        )
+
+    allowed_patterns = effect_policy["allowed_scope_patterns"]
+    out_of_scope = [
+        path
+        for path in exact_changed_files
+        if not any(fnmatchcase(path, pattern) for pattern in allowed_patterns)
+    ]
+    if out_of_scope:
+        raise ValueError(
+            "fast E1 changed file exceeds base policy ceiling: "
+            + ", ".join(sorted(out_of_scope))
+        )
+    return True
 
 
 def _task_transition_actions(task):
@@ -217,22 +272,31 @@ def _load_changed_file(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", required=True)
-    parser.add_argument("--task-path", required=True)
-    parser.add_argument("--result", required=True)
+    parser.add_argument("--mode", choices=("durable", "fast"), default="durable")
+    parser.add_argument("--task")
+    parser.add_argument("--task-path")
+    parser.add_argument("--result")
     parser.add_argument("--policy", required=True)
     parser.add_argument("--base-sha", required=True)
     parser.add_argument("--changed-files", required=True)
     parser.add_argument("--expected-policy-path", required=True)
     args = parser.parse_args()
 
-    task = _read_json(args.task)
-    result = _read_json(args.result)
     policy_path = Path(args.policy)
     policy_raw = policy_path.read_bytes()
     policy = json.loads(policy_raw.decode("utf-8"))
     changed_files = _load_changed_file(args.changed_files)
 
+    if args.mode == "fast":
+        verify_fast_path_against_base_policy(policy, changed_files)
+        print("TRUSTED_GATE_FAST_E1_VALID")
+        return
+
+    if not args.task or not args.task_path or not args.result:
+        parser.error("--task, --task-path and --result are required in durable mode")
+
+    task = _read_json(args.task)
+    result = _read_json(args.result)
     verify_task_against_base_policy(
         task,
         policy,

@@ -4,6 +4,16 @@
 
 Be the single control point for the Owner's software projects. Project Leader is an independent project that provides a reusable control skill for the active target project. Remove the need for the Owner to copy prompts between Consultant, Supervisor, Builder, and recovery conversations.
 
+## Execution-first control model
+
+This execution-first generation remains unreleased until its implementation and CI are validated; the published package identity stays Project Leader 0.6.8 / Recovery Guardian 0.5.6 during that validation.
+
+The superior rule is `EXECUTION_FIRST_WITHIN_BOUNDS`. Normal covered E1 uses `FAST_E1`:
+
+`RECONSTRUCT MINIMUM -> EXECUTE -> TEST -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`
+
+`PROGRESS_OVER_PROCESS`, `FUNCTIONAL_CONVERGENCE_FIRST`, `DIAGNOSIS_MUST_BUY_A_DECISION`, `REGRESSION_FIRST`, `FIRST_SUFFICIENT_SAFE_PATH_WINS`, and `CONTINUOUS_HYGIENE_ACTIVE` are canonical. Durable control is proportional and reserved for material effects, ambiguous replay risk, continuity/audit needs, and consequential transitions.
+
 ## Primary invocation contract
 
 Normal entry point:
@@ -124,33 +134,17 @@ Automatically handles recoverable execution failures, ambiguous write outcomes, 
 
 A standalone **Recovery Guardian** plugin is also packaged for explicit manual recovery after an interrupted session.
 
-## Durable task authorization
+## Proportional durable control
 
-For every mutation-capable task (E1 or higher), Supervisor must define a normalized Task Authorization Record before substantive implementation. Builder persists that record on the task branch as the first task artifact at:
+Ordinary covered E1 does **not** require a repository authorization-only commit, Worker Result, handoff record, Supervisor signature, or Recovery Event. The Owner's current instruction plus verified live state forms the bounded in-memory execution envelope.
+
+When a material boundary or durable continuity requirement exists, a Task Authorization Record may be persisted at:
 
 `.project-leader/tasks/<task-id>.json`
 
-The record must bind the task to the repository, starting SHA/ref, authorized mutation surface, allowed effects, explicit prohibitions, consequential transition controls, and terminal condition. Use `control/task-authorization.schema.json` as the canonical shape. When acceptance depends on named validations or CI, populate `required_validation` and `required_ci` so `TERMINAL_SUCCESS` can be enforced mechanically.
+A material Worker Result may be persisted at `.project-leader/results/<task-id>.json`. Legacy continuity may still reference `.project-leader/checkpoints/<task-id>.json`; append-only events are used only where causal retry, ambiguous-write, context-loss, or audit evidence must survive context. These records never widen the Owner's instruction.
 
-The record is continuity evidence, not a self-authorizing permission token. It never widens a current Owner instruction, never overrides a later Owner instruction, and must not contain secrets, credentials, or private conversation text. If the record and current Owner instruction conflict, the current Owner instruction wins.
-
-If recovery happens after the original chat is unavailable, GitHub history alone proves what happened, not what was authorized. Recovery may resume mutations only when the current conversation or a compatible durable Task Authorization Record establishes the same bounded authority. Otherwise it reconstructs read-only and identifies the exact authorization gap.
-
-## Structured execution result
-
-For mutation-capable tasks, Builder returns a machine-readable Worker Result using `control/worker-result.schema.json`. When repository policy permits, persist it at:
-
-`.project-leader/results/<task-id>.json`
-
-The Worker Result is an audit index, not proof by itself. Supervisor must still verify the referenced branch, commits, PR, CI, artifacts, and material non-effects directly from the source of truth. `TERMINAL_SUCCESS` requires positive validation evidence; required validations must be `PASS`, required CI must be present and `SUCCESS`, and `SKIPPED` never satisfies a required gate.
-
-## Executable mutation scope
-
-For E1+ work, Supervisor/CI must compare the real Git diff against the Task Authorization Record `mutation_scope`. A changed file outside the authorized patterns is a closed failure, not a documentation warning.
-
-## Durable recovery checkpoints
-
-When recovery state matters, persist `.project-leader/checkpoints/<task-id>.json` using `control/recovery-checkpoint.schema.json`. Record only durable operational state: last completed step, action fingerprint, bounded attempt counters, no-progress count, current strategy, last error, and next step. The checkpoint never creates or expands authority.
+For DURABLE_CONTROL, executable mutation scope is still checked against the real diff and `TERMINAL_SUCCESS` still requires positive validation. `IMMUTABLE_AUTHORIZATION_V1` and `CENTRAL_CONTROL_V1` remain supported for material/historical contracts rather than mandatory for every E1 edit.
 
 ## Consequential transition records
 
@@ -166,7 +160,7 @@ Never mix mutable work across projects in one Builder task. One task -> one targ
 
 ## Trust hardening v2
 
-Every new mutation-capable task on an external target repository uses Task Authorization v2. V1 records are historical/legacy only and must not be created for new work.
+Normal covered E1 on an external target repository uses FAST_E1 and does not require Task Authorization/Worker Result ritual. When durable control is selected for a material boundary or continuity/audit risk, new durable records use current v2 schemas; v1 remains historical only.
 
 V2 binds each task to two independently identified states:
 - `starting_state.base_sha` identifies the exact target-repository base being changed;
@@ -196,12 +190,12 @@ Three no-progress iterations still force technical replan/strategy change; compa
 
 For every external target project:
 
-- new E1+ tasks use Task Authorization v2 and Worker Result v2;
+- normal covered E1 uses FAST_E1 without control-only durable records; when a material/continuity boundary selects DURABLE_CONTROL, use current Task Authorization v2 and Worker Result v2;
 - Recovery Compaction is evaluated before creating control-only persistence. Ordinary covered E1 remediation uses `DERIVED_COMPLETION_AUTHORITY` and fresh technical validation without recovery-only commits. When durable recovery state is required or a journal already exists, append-only events are authoritative; for a causally journaled retry, `FAILURE_OBSERVED`, `RETRY_AUTHORIZED`, and any required pre-retry `REPLAN` commit must precede the certified descendant implementation, while terminal `RECOVERED` follows it. A true GitHub `run_attempt > 1` remains a durability-required same-action retry;
 - terminal CI claims use concrete GitHub Actions run IDs and are re-read from GitHub against the implementation SHA. For each required workflow, Supervisor/verifier must also inspect same-SHA CI consistency: the latest observed `push`, `pull_request`, and selected evidence context for that workflow must be terminal-success. A green run cannot hide a newer/parallel active or failed run on the same SHA; a later success in the same context may supersede an older failure;
 - required CI is bound to `implementation_head_sha`. If the final PR head is a descendant, every file changed after that CI-certified implementation SHA must be task-local Project Leader evidence metadata only (`.project-leader/results/<task-id>.json`, that task's recovery events, or that task's transition result records). Any product, workflow, configuration, documentation, source, or other material change after the certified SHA invalidates terminal acceptance and requires fresh CI on a new implementation head;
 - an automatic CI run on a permitted evidence-only descendant is **non-certifying** for the task and does not by itself invalidate the already certified `implementation_head_sha` or route the task into Recovery. First classify the descendant with the same evidence-only path rule used by the verifier. Only material post-CI drift requires a new implementation head. If repository branch protection/rulesets explicitly require checks on the current PR head, treat those runs as a separate final-head merge-governance condition: they may block consequential-transition readiness, but they must not cause an evidence-commit/recovery-commit loop or silently replace the task's certifying implementation SHA;
-- every new managed task sets `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`; its Worker Result binds the exact Task Authorization commit and SHA-256, and the verifier proves that authorization existed before implementation and was not changed afterwards;
+- every durable managed task sets `integrity_mode=IMMUTABLE_AUTHORIZATION_V1`; its Worker Result binds the exact Task Authorization commit and SHA-256, and the verifier proves that authorization existed before implementation and was not changed afterwards;
 - when the managed repository does not yet have a project-local trusted gate on its base branch, Supervisor must perform the external v2 audit itself and record that absence honestly; it must not claim that a trusted PR gate ran;
 - before any explicit CI dispatch or rerun, query GitHub for the exact workflow name + target SHA + event context. Reuse an existing active run and wait; reuse an existing successful run as evidence; route an existing terminal non-success to Recovery; dispatch only when no exact-context run exists. Automatic `push`/`pull_request` runs on the same SHA are independent contexts and may coexist, but must not cause Project Leader to dispatch additional duplicates;
 - a GitHub Actions run that is still queued/in-progress is `WAITING_EXTERNAL_CI`, not a failure. Bind that wait to the exact live run IDs, do not redispatch/retry while any bound run is active, and re-read those exact IDs at a bounded cadence;
