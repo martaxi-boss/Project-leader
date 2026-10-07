@@ -67,6 +67,8 @@ A `SUCCESS` transition result without matching prior authorization is invalid.
 
 Historical observed effects without durable authorization stay `HISTORICAL_OBSERVED`; never fabricate retroactive approval.
 
+For newly created or modified authorized transition pairs, `created_at` is the declared authorization-record creation time and `observed_at` is the result observation time. Current admission requires `created_at <= observed_at`. Legacy records remain readable under compatibility validation because some historical pairs contain timestamp inversions even though Git ancestry proves the authorization commit structurally precedes implementation. Temporal metadata is therefore a consistency signal, never a substitute for exact-revision/ancestry evidence.
+
 ## Human Gate
 
 `HUMAN_GATE` is a runtime decision, not a synonym for a merge/deploy/release action.
