@@ -9,7 +9,7 @@ This file records consumer-visible Project Leader control/runtime changes. Exact
 - Keep Consultant, Supervisor, Builder and Recovery Guardian as internal capabilities rather than a mandatory serialized chain; Recovery Guardian directly repairs covered faults.
 - Preserve proportional durable controls for destructive/privileged/material architecture, release/deploy/production, permission/secrets/trust/governance, irreversible, ambiguous-write and continuity/audit-sensitive work.
 - Add executable FAST_E1 vs DURABLE_CONTROL selection and tests for decision-buying diagnosis/regression handling.
-- Close the stale-base gap even with GitHub ruleset strict-update disabled: a push to `main` invalidates prior `trusted-authorization` checks on every open PR head, forcing recertification against the new base.
+- Close the stale-base gap even with GitHub ruleset strict-update disabled: a push to `main` invalidates prior `trusted-authorization` certification on every open PR head through the GitHub Actions commit-status context, forcing recertification against the new base without requiring Checks API write permission.
 - Finalize coherent version identity as Project Leader 0.7.0 / Recovery Guardian 0.6.0 after the execution-first implementation reached required CI validation; retain continuous same-cycle hygiene.
 
 ### Included audit hardening carried forward from the prior unreleased state
