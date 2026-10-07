@@ -117,6 +117,19 @@ class ExecutionFirstContractTests(unittest.TestCase):
             "persist the authorization-only task commit before implementation", skill
         )
 
+    def test_e3_keeps_merge_and_ruleset_as_separate_consequential_transitions(self):
+        policy = json.loads(
+            (ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8")
+        )
+        e3 = policy["effect_policies"]["E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"]
+        self.assertIn("merge_to_main", e3["required_prohibited_actions"])
+        self.assertIn(
+            "branch_protection_or_ruleset_change",
+            e3["required_prohibited_actions"],
+        )
+        self.assertIn("merge_to_main", e3["required_transition_controls"])
+        self.assertIn("trust_root_mutation", e3["required_transition_controls"])
+
     def test_version_identity_is_coherent(self):
         leader = json.loads(
             (ROOT / "plugins/project-leader/plugin.json").read_text(encoding="utf-8")
