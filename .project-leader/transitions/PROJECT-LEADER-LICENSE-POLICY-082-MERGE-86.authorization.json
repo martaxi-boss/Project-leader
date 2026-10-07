@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-LICENSE-POLICY-082-MERGE-86",
+  "task_id": "PROJECT-LEADER-LICENSE-POLICY-082",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T11:02:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Merge the bounded license-policy precursor after exact-head Supervisor audit. PR 86 is open, non-draft and mergeable at exact head 86a9425055381ce328ee2a60a300e0775e9b3e6a on exact main 519f132f74955f7d7f148b1564ae0a95d158c795; trusted gate and all required final-head CI are terminal-success.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/86",
+    "revision": "86a9425055381ce328ee2a60a300e0775e9b3e6a",
+    "base_revision": "519f132f74955f7d7f148b1564ae0a95d158c795",
+    "environment": null
+  }
+}
