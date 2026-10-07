@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-POLICY-MAINTENANCE-DOCS-076-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/policy-maintenance-docs-076",
+    "revision": "7f2988ca5ccb069dd9a81a8792a5c082eb1e3c45",
+    "base_revision": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T10:07:10Z",
+  "final_state": {
+    "status": "AUDITED",
+    "revision": "4b6689062a2d9d00b93110acc956f52da8cf50fd"
+  },
+  "evidence": [
+    "Immutable Task Authorization 7f2988ca5ccb069dd9a81a8792a5c082eb1e3c45 precedes protected policy mutation.",
+    "Trust-root authorization ed34b6404a3d1ae6e85230e0b9512a4b87a17445 was persisted before policy implementation.",
+    "Implementation head 4b6689062a2d9d00b93110acc956f52da8cf50fd passed required runs 37605037458, 37605037434 and 37605037420.",
+    "Policy change adds only CHANGELOG.md, SECURITY.md and SOURCES.md to the existing E1/E3 documentation scope."
+  ],
+  "residual_blockers": []
+}
