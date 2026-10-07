@@ -19,7 +19,7 @@ Every invocation now performs a silent canonical runtime bootstrap against the l
 
 Before broad repository compare/reconstruction work, Project Leader checks a bounded durable state vector first, reuses still-valid preflight dimensions, and expands only to exact refs/files/run IDs when necessary. Background repository branch hygiene remains non-blocking, while `CONTINUOUS_HYGIENE_ACTIVE` makes recoverable cleanup caused by the current mutation part of the same work cycle. Explicit read-only remains strictly non-mutating.
 
-Covered work converges through `RECONSTRUCT -> ANALYZE -> EXECUTE -> TEST -> DIAGNOSE -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`. A failed check routes to direct bounded recovery when covered, rather than a routine permission request or role handoff.
+Covered work is execution-first: `RECONSTRUCT MINIMUM -> EXECUTE -> TEST -> CORRECT -> HYGIENIZE -> VALIDATE -> CONTINUE`. Normal reversible E1 uses FAST_E1 without authorization-only commits or role handoff ceremony. Material effects use proportional durable control. A failed check routes to direct bounded recovery when covered.
 
 ## Authority and transitions
 
@@ -43,7 +43,7 @@ External targets bootstrap from their own architecture and live repository state
 - `control/` — executable authorization, scope, integrity and evidence checks.
 - `SMOKE_TESTS.md` — acceptance scenarios.
 
-New tasks use v2 records, immutable authorization before implementation, exact policy binding and concrete CI evidence whenever required. Recovery Compaction keeps ordinary already-covered E1 diagnose/fix/test cycles free of control-only commit spam; when durable recovery history is required, events remain append-only and causally validated. Archived schemas remain available because durable historical audit records still require validation.
+Durable material tasks use current v2 records, exact policy binding and concrete CI evidence when required. Normal covered E1 does not create those records by default. Recovery Compaction keeps diagnose/fix/test cycles free of control-only commit spam; archived schemas remain available for historical/material audit validation.
 
 Behavioral acceptance now also uses `control/runtime_execution.py`, an injected observable adapter for bounded preflight, internal-liveness observations, external-CI reconciliation, and verify-before/after handling of ambiguous writes. It is deliberately small: it makes the existing protocol testable without turning Project Leader into a separate long-running service.
 
@@ -51,8 +51,8 @@ Behavioral acceptance now also uses `control/runtime_execution.py`, an injected 
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.8**.
-- Recovery Guardian: **0.5.6**.
+- Project Leader: **0.7.0**.
+- Recovery Guardian: **0.6.0**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 

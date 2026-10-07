@@ -2,7 +2,17 @@
 
 This file records consumer-visible Project Leader control/runtime changes. Exact implementation and CI evidence remain in Git history, pull requests, Task Authorization records, Worker Results and transition records.
 
-## Unreleased — audit hardening after 0.6.8 / 0.5.6
+## 0.7.0 / Recovery Guardian 0.6.0 — 2026-10-07
+
+- Make `EXECUTION_FIRST_WITHIN_BOUNDS` and FAST_E1 the normal path for reversible covered work; remove authorization-only/task-result/handoff ceremony from ordinary E1.
+- Add `PROGRESS_OVER_PROCESS`, `FUNCTIONAL_CONVERGENCE_FIRST`, `DIAGNOSIS_MUST_BUY_A_DECISION`, `REGRESSION_FIRST`, selective safe rollback, evidence reuse and progressive loading.
+- Keep Consultant, Supervisor, Builder and Recovery Guardian as internal capabilities rather than a mandatory serialized chain; Recovery Guardian directly repairs covered faults.
+- Preserve proportional durable controls for destructive/privileged/material architecture, release/deploy/production, permission/secrets/trust/governance, irreversible, ambiguous-write and continuity/audit-sensitive work.
+- Add executable FAST_E1 vs DURABLE_CONTROL selection and tests for decision-buying diagnosis/regression handling.
+- Close the stale-base gap even with GitHub ruleset strict-update disabled: a push to `main` invalidates prior `trusted-authorization` checks on every open PR head, forcing recertification against the new base.
+- Align version identity to Project Leader 0.7.0 / Recovery Guardian 0.6.0 and retain continuous same-cycle hygiene.
+
+### Included audit hardening carried forward from the prior unreleased state
 
 - Tighten JSON/schema semantics so booleans cannot masquerade as numbers, anchored identifiers reject trailing data, and date-time fields use RFC3339 extended form.
 - Reject partial/mixed fixed-vs-`ACTIVE_TARGET` project policy declarations.
