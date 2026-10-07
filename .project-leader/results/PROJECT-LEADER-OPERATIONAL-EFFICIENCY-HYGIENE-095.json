@@ -11,9 +11,9 @@
   "branch": "builder/operational-efficiency-hygiene-095",
   "pr_number": 98,
   "recorded_at": "2026-10-07T22:44:00Z",
-  "state_observed_at": "2026-10-07T22:44:00Z",
+  "state_observed_at": "2026-10-07T22:55:00Z",
   "superseded_by": null,
-  "post_transition_record": null,
+  "post_transition_record": ".project-leader/transitions/PROJECT-LEADER-OPERATIONAL-EFFICIENCY-HYGIENE-095-PURGE.result.json",
   "changes": [
     "Added one exact-revision purge authorization for the residual branch builder/operational-efficiency-094 at a7fce780f0bde8ba097016c0ce61ece454b7ad80.",
     "No runtime, Skill, workflow, policy, version, architecture, security control, or external project was changed."
@@ -47,7 +47,7 @@
     {
       "name": "Post-cleanup survivor audit",
       "status": "PASS",
-      "evidence": "The cleanup is bounded to one exact residual branch; the merge-triggered repository hygiene workflow performs the deletion and its live survivor audit immediately after the authorization becomes canonical. Final branch absence is independently rechecked after that run before closure."
+      "evidence": "Repository hygiene run 37698432292 completed SUCCESS on exact merged main 6fc73496e516c77e5fb744eca3642ea90e3f8d92; subsequent live GitHub branch inspection confirmed builder/operational-efficiency-094 and the temporary hygiene branch were absent. The durable transition result records final_state=DELETED."
     }
   ],
   "ci": [
