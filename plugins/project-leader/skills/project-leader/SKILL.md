@@ -9,9 +9,9 @@ Act as the single project-control entry point. Remove the need for the Owner to 
 
 ## Activation
 
-On every invocation, first run a silent read-only `CANONICAL_RUNTIME_BOOTSTRAP` when live GitHub read access is available. Read the canonical `main` versions of `plugins/project-leader/plugin.json` and `plugins/project-leader/skills/project-leader/SKILL.md` from `martaxi-boss/Project-leader` before substantive routing.
+On every invocation, first run a silent read-only `CANONICAL_RUNTIME_BOOTSTRAP` when live GitHub read access is available. Loader contract v1 has minimum supported loader version 1. Resolve `refs/heads/main` from `martaxi-boss/Project-leader` exactly once to a 40-hex `RUNTIME_CANONICAL_REVISION`, then read `plugins/project-leader/plugin.json` and `plugins/project-leader/skills/project-leader/SKILL.md` at that exact revision. Do not perform independent floating-`main` reads inside one bootstrap bundle. The executable reference invariant is `control/runtime_bootstrap.py::pin_runtime_bundle`.
 
-Compare the loaded runtime contract with that canonical contract. If the canonical plugin/Skill is newer or contains a control rule missing from the loaded copy, classify `RUNTIME_SYNC_STALE`, activate `RUNTIME_CANONICAL_OVERRIDE_ACTIVE`, and execute the current invocation under the live canonical Skill/control contract. Do not ask the Owner to resync, reinstall, or wait for marketplace cache propagation before continuing. The loaded Skill remains only the bootstrap/fallback envelope for that invocation.
+Compare the loaded runtime contract with that pinned canonical contract. If the canonical plugin/Skill is newer or contains a control rule missing from the loaded copy, classify `RUNTIME_SYNC_STALE`, activate `RUNTIME_CANONICAL_OVERRIDE_ACTIVE`, record the effective `RUNTIME_CANONICAL_REVISION`, and execute the current invocation under that pinned Skill/control contract. Do not ask the Owner to resync, reinstall, or wait for marketplace cache propagation before continuing. The loaded Skill remains only the bootstrap/fallback envelope for that invocation. An incompatible loader must refuse the incompatible override rather than mixing generations.
 
 If canonical GitHub cannot be read during bare activation, use the installed Skill safely and remain ready; do not turn a bare invocation into an access Human Gate. For a substantive request, apply the ordinary access-discovery rules only when the missing canonical evidence is material to the requested action.
 
@@ -26,7 +26,7 @@ Do not replace Project Leader with Project Supervisor. Supervisor and Recovery G
 
 ## Canonical control plane
 
-Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read the relevant live versions of `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, and `projects/standing-authority.json`. Identify the active target repository from current Project context, current Owner instruction, and live GitHub evidence. Project Leader remains its own project; using the skill in another project does not merge project repositories or authorize mutation of a third project. No central project registration is required.
+Use `martaxi-boss/Project-leader` as the canonical operating source of truth. Before consequential work, read `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, the role files, and `projects/standing-authority.json` from the same `RUNTIME_CANONICAL_REVISION` pinned by the current bootstrap. If durable state materially changes and a fresh generation is required, finish/reconcile the current bounded step, resolve a new revision once, and repin the whole bundle; never mix files from two canonical revisions inside one control decision. Identify the active target repository from current Project context, current Owner instruction, and live GitHub evidence. Project Leader remains its own project; using the skill in another project does not merge project repositories or authorize mutation of a third project. No central project registration is required.
 
 Prefer live GitHub state over stale chat summaries.
 
