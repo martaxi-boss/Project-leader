@@ -250,10 +250,17 @@ def validate_pair(task, result):
     return True
 
 def _normalize_changed_path(path):
-    normalized = path.replace("\\", "/").strip()
-    if not normalized or normalized.startswith("/") or ".." in Path(normalized).parts:
+    if not isinstance(path, str):
         raise ValueError(f"invalid changed path: {path!r}")
-    return normalized
+    if (
+        not path
+        or path != path.strip()
+        or "\\" in path
+        or path.startswith("/")
+        or ".." in Path(path).parts
+    ):
+        raise ValueError(f"invalid changed path: {path!r}")
+    return path
 
 def validate_scope(task, changed_files):
     validate_task(task)
@@ -332,6 +339,20 @@ def validate_recovery_journal(records):
 
 def validate_transition_authorization(record):
     _validate(record, _load_schema(TRANSITION_AUTH_SCHEMA))
+    if record["authority"]["binding_mode"] == "EXACT_REVISION_BOUND":
+        target = record["target"]
+        revision = target.get("revision")
+        if not isinstance(revision, str) or re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+            raise ValueError("EXACT_REVISION_BOUND requires an exact 40-hex target revision")
+        if target.get("kind") in {"pull_request", "repository_branch"}:
+            base_revision = target.get("base_revision")
+            if (
+                not isinstance(base_revision, str)
+                or re.fullmatch(r"[0-9a-f]{40}", base_revision) is None
+            ):
+                raise ValueError(
+                    "Git EXACT_REVISION_BOUND targets require an exact 40-hex base_revision"
+                )
     return True
 
 def validate_transition_result(record):
@@ -350,8 +371,8 @@ def validate_transition_result(record):
 def validate_transition_pair(authorization, result):
     validate_transition_authorization(authorization)
     validate_transition_result(result)
-    if result["terminal_status"] != "SUCCESS":
-        raise ValueError("transition pair certification is only valid for SUCCESS results")
+    if result["terminal_status"] == "HISTORICAL_OBSERVED":
+        raise ValueError("historical observed transitions are not authorization/result pairs")
     checks = {
         "transition_id": (authorization["transition_id"], result["transition_id"]),
         "task_id": (authorization["task_id"], result["task_id"]),
@@ -366,6 +387,29 @@ def validate_transition_pair(authorization, result):
     for name, (expected, actual) in checks.items():
         if expected != actual:
             raise ValueError(f"transition authorization/result mismatch for {name}: expected {expected!r}, got {actual!r}")
+    return True
+
+def validate_persisted_transition_result(record, repository_root=None):
+    """Validate a transition result and require its durable authorization on SUCCESS."""
+    validate_transition_result(record)
+    if record["terminal_status"] != "SUCCESS":
+        return True
+
+    expected = (
+        f".project-leader/transitions/{record['transition_id']}.authorization.json"
+    )
+    if record.get("authorization_record") != expected:
+        raise ValueError(
+            "successful transition authorization_record must use the canonical transition path"
+        )
+    root = Path(repository_root) if repository_root is not None else ROOT.parent
+    auth_path = root / expected
+    if not auth_path.is_file():
+        raise ValueError(
+            "successful transition requires the matching durable authorization file"
+        )
+    authorization = json.loads(auth_path.read_text(encoding="utf-8"))
+    validate_transition_pair(authorization, record)
     return True
 
 def _read_json(path):
@@ -402,9 +446,11 @@ def main():
             "checkpoint": validate_checkpoint,
             "recovery-event": validate_recovery_event,
             "transition-auth": validate_transition_authorization,
-            "transition-result": validate_transition_result,
         }
-        validators[args.kind](data)
+        if args.kind == "transition-result":
+            validate_persisted_transition_result(data)
+        else:
+            validators[args.kind](data)
     print("VALID")
 
 if __name__ == "__main__":
