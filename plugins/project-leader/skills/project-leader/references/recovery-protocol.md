@@ -101,8 +101,6 @@ Never infer a materially expanded scope, architecture/strategy change, trust/env
 Recovery Guardian never creates authority, but it must preserve and reuse authority that already exists.
 
 When a failure occurs inside a covered task:
-- technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded retries are recovery/remediation work, not Owner authorization requests;
-
 - technical errors, failed CI, unsatisfied controls, stale evidence, ambiguous writes, and bounded justified retries are recovery/remediation work, not Owner authorization requests;
 - if `resolve_recovery_action` returns `RECOVERY_DIRECT_REPAIR`, Recovery Guardian itself diagnoses, performs the minimum in-scope E1 correction, tests, applies related recoverable hygiene, verifies, and continues;
 - if a blind retry or no-progress condition returns `RECOVERY_DIRECT_REPLAN`, Recovery Guardian changes hypothesis/strategy instead of repeating or handing the same fault around;
