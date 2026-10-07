@@ -428,8 +428,6 @@ def validate_transition_result(record):
         raise ValueError(
             f"{status} transition requires a durable authorization_record"
         )
-    if status == "SUCCESS" and record["residual_blockers"]:
-        raise ValueError("successful transition cannot retain residual_blockers")
     if status in {"FAILURE", "NOT_EXECUTED"} and not record["residual_blockers"]:
         raise ValueError(
             f"{status} transition must record at least one residual_blocker"
@@ -444,6 +442,18 @@ def validate_transition_result(record):
                 "historical observed transition must record the authorization-evidence gap"
             )
     return True
+
+def validate_current_transition_result(record):
+    """Apply current-state semantics to newly created or modified transition results.
+
+    Historical records remain readable under their original contract; admission of
+    new evidence uses this stricter state model.
+    """
+    validate_transition_result(record)
+    if record["terminal_status"] == "SUCCESS" and record["residual_blockers"]:
+        raise ValueError("successful transition cannot retain residual_blockers")
+    return True
+
 
 def validate_transition_pair(authorization, result):
     validate_transition_authorization(authorization)
@@ -494,7 +504,7 @@ def _read_json(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-pair"])
+    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-result-current","transition-pair"])
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args()
     if args.kind == "pair":
@@ -526,6 +536,8 @@ def main():
         }
         if args.kind == "transition-result":
             validate_persisted_transition_result(data)
+        elif args.kind == "transition-result-current":
+            validate_current_transition_result(data)
         else:
             validators[args.kind](data)
     print("VALID")
