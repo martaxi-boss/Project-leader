@@ -298,6 +298,18 @@ class AuditP1RegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cannot retain residual_blockers"):
             validate_current_transition_result(record)
 
+    def test_package_rejects_non_semver_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plugin = write_plugin(root, "project-leader")
+            metadata = json.loads((plugin / "plugin.json").read_text(encoding="utf-8"))
+            metadata["version"] = "version-eight"
+            (plugin / "plugin.json").write_text(
+                json.dumps(metadata), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "valid SemVer"):
+                validate_plugin_tree(plugin, "project-leader")
+
     def test_package_rejects_unexpected_dotenv(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -329,6 +341,10 @@ class AuditP1RegressionTests(unittest.TestCase):
             )
             self.assertEqual("2.0", manifest["schema_version"])
             self.assertEqual("a" * 40, manifest["provenance"]["source_revision"])
+            self.assertEqual(
+                ".github/workflows/package-plugins.yml",
+                manifest["provenance"]["workflow_path"],
+            )
             self.assertEqual("12345", manifest["provenance"]["build_run_id"])
             self.assertTrue(all(item["contents"] for item in manifest["plugins"]))
 
