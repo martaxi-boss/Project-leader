@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "task_id": "PROJECT-LEADER-AUDIT-REMEDIATION-P2-075",
-  "terminal_status": "TERMINAL_SUCCESS",
+  "terminal_status": "BLOCKED",
   "repository": "martaxi-boss/Project-leader",
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-AUDIT-REMEDIATION-P2-075.json",
@@ -10,8 +10,8 @@
   "implementation_head_sha": "56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795",
   "branch": "builder/audit-remediation-p2-075",
   "pr_number": 77,
-  "recorded_at": "2026-10-07T10:00:15Z",
-  "state_observed_at": "2026-10-07T10:00:02Z",
+  "recorded_at": "2026-10-07T10:02:00Z",
+  "state_observed_at": "2026-10-07T10:01:43Z",
   "changes": [
     "Closed P2 semantic/type gaps: strict JSON boolean equality, anchored identifier matching, RFC3339 extended timestamps, exclusive fixed-vs-ACTIVE_TARGET policy modes, canonical standing-authority controls and version-distinct legacy schema IDs.",
     "Expanded the generic protected-path policy so root secrets* and nested .env* variants are governed consistently.",
@@ -23,8 +23,8 @@
   "validation": [
     {
       "name": "Mutation scope audit",
-      "status": "PASS",
-      "evidence": "Control contract run 37604363277 completed successfully at implementation head 56c5c248ed2d8f6bb8af10e0c68ea480f9ef9795; PR diff is confined to the immutable Task 075 mutation_scope."
+      "status": "FAIL",
+      "evidence": "Trusted authorization gate run 37604611434 rejected Task 075 before promotion because immutable task mutation_scope contains CHANGELOG.md, SECURITY.md and SOURCES.md, which are outside the current base policy ceiling."
     },
     {
       "name": "GitHub evidence verification",
@@ -79,9 +79,11 @@
   ],
   "material_non_effects": [
     "No external project repository was mutated.",
-    "No merge to main, release, deploy, branch/ruleset change, Actions event-policy change, production secret change, paid-service activation or architecture/role-hierarchy redesign was performed by this task.",
-    "No project license was selected or inferred; license selection remains a separate Owner decision.",
-    "No personal/private security contact address was invented or published."
+    "PR 77 was not merged and canonical main was not changed by Task 075.",
+    "No release, deploy, branch/ruleset change, Actions event-policy change, production secret change, paid-service activation, license selection or architecture/role-hierarchy redesign was performed."
   ],
-  "residual_blockers": []
+  "residual_blockers": [
+    "Immutable Task 075 exceeds the canonical base policy ceiling for CHANGELOG.md, SECURITY.md and SOURCES.md; the task cannot be promoted or repaired by rewriting its authorization. A separate bounded policy-governance task must decide those exact documentation paths before reissuing P2 implementation."
+  ],
+  "superseded_by": "PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076"
 }
