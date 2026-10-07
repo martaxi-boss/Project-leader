@@ -122,6 +122,23 @@ class ExecutionFirstContractTests(unittest.TestCase):
         self.assertEqual(SUPERSEDED, decision["state"])
         self.assertEqual(CANCEL_AND_HYGIENIZE, decision["action"])
 
+    def test_superseded_work_keeps_running_when_it_can_change_technical_decision(self):
+        decision = classify_superseded_work(
+            "E1_RECOVERABLE_PROJECT_LOCAL",
+            work_revision="a" * 40,
+            current_revision="b" * 40,
+            heavy_work=True,
+            can_certify_current_state=False,
+            can_change_technical_decision=True,
+            exclusive_diagnostic_evidence_needed=False,
+            cancellation_safe=True,
+        )
+        self.assertEqual(KEEP_RUNNING, decision["action"])
+        self.assertEqual(
+            "TECHNICAL_DECISION_STILL_RELEVANT",
+            decision["reason"],
+        )
+
     def test_superseded_work_keeps_running_for_exclusive_diagnostic_evidence(self):
         decision = classify_superseded_work(
             "E1_RECOVERABLE_PROJECT_LOCAL",
