@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from control.runtime_bootstrap import MIN_LOADER_VERSION, pin_runtime_bundle
 from control.standing_authority import (
@@ -17,6 +18,7 @@ from control.validate_records import (
 from control.verify_github_evidence import (
     PROJECT_LEADER_TRUSTED_WORKFLOWS,
     verify_authorization_only_history,
+    load_recovery_journal,
     verify_recovery_journal_records,
     verify_run_payload,
 )
@@ -191,8 +193,39 @@ class AuditP1RegressionTests(unittest.TestCase):
             attempt=2,
             previous=canonical_sha256(second),
         )
-        with self.assertRaisesRegex(ValueError, "strictly increase"):
+        with self.assertRaisesRegex(ValueError, "consume exactly one attempt"):
             validate_recovery_journal([first, second, third])
+
+
+    @patch("control.verify_github_evidence.api_get")
+    def test_deleted_recovery_event_is_rejected_from_history(self, mocked_get):
+        directory = ".project-leader/recovery-events/TASK-P1-001"
+        mocked_get.side_effect = [
+            [{"sha": "c" * 40}],
+            {
+                "files": [
+                    {
+                        "filename": f"{directory}/0001.json",
+                        "status": "removed",
+                    }
+                ]
+            },
+        ]
+        result = {
+            "task_id": "TASK-P1-001",
+            "repository": "owner/repo",
+            "terminal_status": "TERMINAL_SUCCESS",
+        }
+        with self.assertRaisesRegex(ValueError, "disappeared from history"):
+            load_recovery_journal(
+                result,
+                "owner/repo",
+                "token",
+                "d" * 40,
+                "https://api.example.test",
+                [],
+                required=False,
+            )
 
     def test_replan_journal_is_valid_without_fictitious_retry(self):
         first = recovery_event(1, "FAILURE_OBSERVED", attempt=1)
@@ -310,7 +343,7 @@ class AuditP1RegressionTests(unittest.TestCase):
             attempt_count=3,
         )
         self.assertEqual(RECOVERY_REPLAN_REQUIRED, decision["decision"])
-        self.assertEqual("ATTEMPT_LIMIT_REACHED", decision["reason"])
+        self.assertEqual("RECOVERY_BUDGET_EXHAUSTED", decision["reason"])
 
     def test_recovery_resolver_enforces_identical_failure_budget(self):
         decision = resolve_recovery_action(
@@ -324,7 +357,7 @@ class AuditP1RegressionTests(unittest.TestCase):
             identical_failure_count=2,
         )
         self.assertEqual(RECOVERY_REPLAN_REQUIRED, decision["decision"])
-        self.assertEqual("IDENTICAL_FAILURE_LIMIT_REACHED", decision["reason"])
+        self.assertEqual("RECOVERY_BUDGET_EXHAUSTED", decision["reason"])
 
     def test_runtime_bootstrap_pins_one_revision_for_every_read(self):
         calls = {"resolve": 0, "refs": []}
