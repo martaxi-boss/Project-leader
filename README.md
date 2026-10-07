@@ -45,12 +45,14 @@ External targets bootstrap from their own architecture and live repository state
 
 New tasks use v2 records, immutable authorization before implementation, exact policy binding and concrete CI evidence whenever required. Recovery Compaction keeps ordinary already-covered E1 diagnose/fix/test cycles free of control-only commit spam; when durable recovery history is required, events remain append-only and causally validated. Archived schemas remain available because durable historical audit records still require validation.
 
+Behavioral acceptance now also uses `control/runtime_execution.py`, an injected observable adapter for bounded preflight, internal-liveness observations, external-CI reconciliation, and verify-before/after handling of ambiguous writes. It is deliberately small: it makes the existing protocol testable without turning Project Leader into a separate long-running service.
+
 ## Installation and packaging
 
 See `PLUGIN_SETUP.md` for installation. `.github/workflows/package-plugins.yml` builds deterministic installable ZIPs and a supply-chain manifest.
 
-- Project Leader: **0.6.8**.
-- Recovery Guardian: **0.5.6**.
+- Project Leader: **0.6.9**.
+- Recovery Guardian: **0.5.7**.
 - Marketplace: `.agents/plugins/marketplace.json`.
 - Plugin source: `plugins/project-leader/` and `plugins/recovery-guardian/`.
 
