@@ -91,7 +91,10 @@ def result(version="2.0"):
         "branch": "builder/task-001",
         "terminal_status": "TERMINAL_SUCCESS",
         "changes": ["src/app.py"],
-        "validation": [{"name": "Mutation scope audit", "status": "PASS", "evidence": "diff checked"}],
+        "validation": [
+            {"name": "Mutation scope audit", "status": "PASS", "evidence": "diff checked"},
+            {"name": "GitHub evidence verification", "status": "PASS", "evidence": "live evidence checked"},
+        ],
         "ci": [{"name": "Project CI", "status": "SUCCESS", "run_id": 123}],
         "material_non_effects": ["no merge"],
         "residual_blockers": [],
@@ -153,6 +156,39 @@ class ManagedProjectContractTests(unittest.TestCase):
         item["ci"][0]["run_id"] = None
         with self.assertRaises(ValueError):
             validate_managed_result(task(), item, REPOSITORY, CONTROL_REPOSITORY)
+
+    def test_managed_result_reuses_common_pair_invariants(self):
+        cases = []
+
+        branch_mismatch = result()
+        branch_mismatch["branch"] = "builder/other"
+        cases.append((task(), branch_mismatch))
+
+        effect_mismatch = result()
+        effect_mismatch["effect_class"] = "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"
+        cases.append((task(), effect_mismatch))
+
+        authorization_mismatch = result()
+        authorization_mismatch["authorization_record"] = ".project-leader/tasks/OTHER.json"
+        cases.append((task(), authorization_mismatch))
+
+        missing_validation = result()
+        missing_validation["validation"] = [
+            item for item in missing_validation["validation"]
+            if item["name"] != "GitHub evidence verification"
+        ]
+        cases.append((task(), missing_validation))
+
+        task_with_pr = task()
+        task_with_pr["starting_state"]["pr_number"] = 99
+        missing_pr = result()
+        cases.append((task_with_pr, missing_pr))
+
+        for task_item, result_item in cases:
+            with self.assertRaises(ValueError):
+                validate_managed_result(
+                    task_item, result_item, REPOSITORY, CONTROL_REPOSITORY
+                )
 
     def test_legacy_active_checkpoint_without_live_workstream_is_stale(self):
         state = reconcile_legacy_checkpoint_liveness(legacy_checkpoint())

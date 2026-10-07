@@ -4,13 +4,19 @@ _GLOB_MAGIC = "*?["
 
 
 def _normalize_scope_pattern(pattern):
-    normalized = pattern.replace("\\", "/").strip()
-    if not normalized or normalized.startswith("/"):
+    if not isinstance(pattern, str):
         raise ValueError(f"invalid mutation_scope pattern: {pattern!r}")
-    parts = normalized.split("/")
+    if (
+        not pattern
+        or pattern != pattern.strip()
+        or "\\" in pattern
+        or pattern.startswith("/")
+    ):
+        raise ValueError(f"invalid mutation_scope pattern: {pattern!r}")
+    parts = pattern.split("/")
     if any(part in {"", ".", ".."} for part in parts):
         raise ValueError(f"invalid mutation_scope pattern: {pattern!r}")
-    return normalized
+    return pattern
 
 
 def _has_glob(pattern):
@@ -20,6 +26,20 @@ def _has_glob(pattern):
 def _literal_prefix(pattern):
     positions = [pattern.find(char) for char in _GLOB_MAGIC if char in pattern]
     return pattern[: min(positions)] if positions else pattern
+
+
+def scope_pattern_is_bounded(pattern):
+    """Return True only when a requested mutation scope has a literal boundary.
+
+    Generic ACTIVE_TARGET policy must never accept semantic repository-wide
+    aliases such as '*', '**', '***', or other patterns that start with glob
+    syntax. Wildcard scopes must be rooted under an exact literal directory.
+    """
+    normalized = _normalize_scope_pattern(pattern)
+    if not _has_glob(normalized):
+        return True
+    prefix = _literal_prefix(normalized)
+    return bool(prefix) and prefix.endswith("/")
 
 
 def scope_pattern_is_within(requested_pattern, allowed_pattern):

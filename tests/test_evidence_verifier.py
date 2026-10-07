@@ -267,7 +267,15 @@ class EvidenceVerifierTests(unittest.TestCase):
             ],
         }
         self.assertTrue(
-            verify_compare_payload(payload, "a" * 40, "b" * 40, "TASK-001")
+            verify_compare_payload(
+                payload,
+                "a" * 40,
+                "b" * 40,
+                "TASK-001",
+                task_local_transition_paths={
+                    ".project-leader/transitions/TASK-001-TRUST-ROOT.result.json"
+                },
+            )
         )
 
     def test_post_ci_compare_without_file_evidence_is_rejected(self):

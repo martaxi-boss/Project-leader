@@ -13,6 +13,7 @@ def make_task(policy_raw):
     base = "a" * 40
     return {
         "schema_version": "2.0",
+        "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
         "task_id": "TEST-TRUSTED-001",
         "project": "PROJECT LEADER",
         "repository": "martaxi-boss/Project-leader",
