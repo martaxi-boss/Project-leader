@@ -2,14 +2,22 @@
 
 ## Supported versions
 
-Security fixes are developed against the current default branch and the latest published plugin package.
+Security fixes are developed against the current default branch and the latest verified plugin packages documented in `PLUGIN_SETUP.md` and `CHANGELOG.md`.
 
 ## Reporting a vulnerability
 
-Do not publish credentials, tokens, exploit details, or other sensitive information in a public issue.
+Do not publish credentials, tokens, exploit details, proof-of-concept payloads, or other sensitive information in a public issue.
 
-Prefer GitHub private vulnerability reporting when it is available for this repository. If that private channel is unavailable, contact the repository owner through an existing private channel and include only the minimum information needed to reproduce the issue.
+For this public GitHub repository, the preferred private route is GitHub's **Security -> Report a vulnerability** flow when Private Vulnerability Reporting is enabled. GitHub repository security advisories keep the report and remediation discussion private until the maintainer chooses publication.
+
+Repository security page:
+https://github.com/martaxi-boss/Project-leader/security
+
+GitHub reference:
+https://docs.github.com/en/code-security/concepts/vulnerability-reporting-and-management/repository-security-advisories
+
+If the repository does not expose **Report a vulnerability**, do not put vulnerability details in an issue. A separate private reporting address or enabling GitHub Private Vulnerability Reporting requires an explicit Owner governance/contact decision; Project Leader will not invent or publish a personal contact address.
 
 ## Scope
 
-Security reports are especially relevant when they involve authorization bypass, Human Gate bypass, unintended repository mutation, secret exposure, duplicate/ambiguous writes, recovery-loop behavior, or plugin packaging integrity.
+Security reports are especially relevant when they involve authorization bypass, Human Gate bypass, unintended repository mutation, secret exposure, duplicate/ambiguous writes, recovery-loop behavior, trusted-CI identity, or plugin packaging integrity.
