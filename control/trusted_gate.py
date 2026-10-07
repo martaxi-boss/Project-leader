@@ -68,6 +68,34 @@ def _policy_transition_actions(effect_policy):
     )
 
 
+def verify_pr_evidence_context(
+    *,
+    declared_changed_count,
+    observed_changes,
+    event_base_sha,
+    live_base_sha,
+    api_limit=3000,
+):
+    if not isinstance(declared_changed_count, int) or isinstance(declared_changed_count, bool):
+        raise ValueError("declared_changed_count must be an integer")
+    if declared_changed_count < 0:
+        raise ValueError("declared_changed_count must be non-negative")
+    if declared_changed_count >= api_limit:
+        raise ValueError(
+            f"PR changed-file evidence reached GitHub's {api_limit}-file limit and is not certifiable"
+        )
+    if declared_changed_count != len(observed_changes):
+        raise ValueError(
+            "PR changed-file evidence is incomplete: "
+            f"declared={declared_changed_count} observed={len(observed_changes)}"
+        )
+    if event_base_sha != live_base_sha:
+        raise ValueError(
+            f"trusted gate base is stale: event={event_base_sha} live={live_base_sha}"
+        )
+    return True
+
+
 def verify_promotable_result(task, result):
     validate_pair(task, result)
     if result.get("terminal_status") != "TERMINAL_SUCCESS":
@@ -222,6 +250,8 @@ def main():
     parser.add_argument("--result", required=True)
     parser.add_argument("--policy", required=True)
     parser.add_argument("--base-sha", required=True)
+    parser.add_argument("--live-base-sha", required=True)
+    parser.add_argument("--declared-changed-count", required=True, type=int)
     parser.add_argument("--changed-files", required=True)
     parser.add_argument("--expected-policy-path", required=True)
     args = parser.parse_args()
@@ -232,6 +262,12 @@ def main():
     policy_raw = policy_path.read_bytes()
     policy = json.loads(policy_raw.decode("utf-8"))
     changed_files = _load_changed_file(args.changed_files)
+    verify_pr_evidence_context(
+        declared_changed_count=args.declared_changed_count,
+        observed_changes=changed_files,
+        event_base_sha=args.base_sha,
+        live_base_sha=args.live_base_sha,
+    )
 
     verify_task_against_base_policy(
         task,
