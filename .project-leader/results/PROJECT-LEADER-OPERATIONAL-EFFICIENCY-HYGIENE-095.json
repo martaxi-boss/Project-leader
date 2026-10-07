@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-OPERATIONAL-EFFICIENCY-HYGIENE-095.json",
   "authorization_commit_sha": "94efefa21a0c52e5e4a5eb37e337fd10f3737e74",
-  "authorization_sha256": "71a37668a4911689430d8539db70a2e3196aae9e01accc75c363b7fe296b45eb",
+  "authorization_sha256": "83e7afac7b69a59cc49ab1e818001825d29e72700eb18608185bbbfeec981f83",
   "implementation_head_sha": "e34b8bb85e961c6fb2a1f0251dd5f591f94e5ff6",
   "branch": "builder/operational-efficiency-hygiene-095",
   "pr_number": 98,
@@ -32,7 +32,7 @@
     {
       "name": "Trust-root governance path",
       "status": "PASS",
-      "evidence": "Immutable Task 095 authorization commit 94efefa21a0c52e5e4a5eb37e337fd10f3737e74 is a descendant of exact canonical base a53a6bbd66ac0edb9c419c483ad3462818122c04 with canonical task SHA-256 71a37668a4911689430d8539db70a2e3196aae9e01accc75c363b7fe296b45eb and precedes the exact purge authorization."
+      "evidence": "Immutable Task 095 authorization commit 94efefa21a0c52e5e4a5eb37e337fd10f3737e74 is a descendant of exact canonical base a53a6bbd66ac0edb9c419c483ad3462818122c04 with exact raw task SHA-256 83e7afac7b69a59cc49ab1e818001825d29e72700eb18608185bbbfeec981f83 and precedes the exact purge authorization."
     },
     {
       "name": "Exact superseded branch authorization verification",
