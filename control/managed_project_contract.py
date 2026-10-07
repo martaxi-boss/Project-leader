@@ -412,7 +412,9 @@ def reconcile_external_ci_liveness(
         raise ValueError("no_progress_poll_limit must be at least 1")
 
     if last_progress_at is None:
-        state["liveness_action"] = "POLL_AGAIN"
+        state["state"] = CI_LIVENESS_RECONCILE_REQUIRED
+        state["route"] = CI_ROUTE_INVESTIGATE
+        state["liveness_action"] = "ESTABLISH_PROGRESS_BASELINE"
         return state
 
     last_progress = (
