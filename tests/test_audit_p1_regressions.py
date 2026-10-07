@@ -340,10 +340,12 @@ class AuditP1RegressionTests(unittest.TestCase):
                 root,
                 root / "dist",
                 source_revision="a" * 40,
+                build_revision="b" * 40,
                 build_run_id="12345",
             )
             self.assertEqual("2.0", manifest["schema_version"])
             self.assertEqual("a" * 40, manifest["provenance"]["source_revision"])
+            self.assertEqual("b" * 40, manifest["provenance"]["build_revision"])
             self.assertEqual(
                 ".github/workflows/package-plugins.yml",
                 manifest["provenance"]["workflow_path"],
