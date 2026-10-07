@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-STALE-BASE-STATUS-FIX-092.json",
   "authorization_commit_sha": "e1a37ba2b035249d4deca5e24617f24f255f2ca5",
-  "authorization_sha256": "190bfc30f1ece049f3e13e3f2e2a2f623835886ee27b4237071f239c7642db1f",
+  "authorization_sha256": "b8b9630b0738599fecdf0b331945680ef5f944931a8824190a59b5d0f40e00bb",
   "implementation_head_sha": "4514e1d57af5dfe34d11ea111c315e3976359f66",
   "branch": "builder/stale-base-status-fix-092",
   "pr_number": 95,
