@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-STALE-BASE-EVENT-ISOLATION-093-MERGE",
+  "task_id": "PROJECT-LEADER-STALE-BASE-EVENT-ISOLATION-093",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-STALE-BASE-EVENT-ISOLATION-093-MERGE.authorization.json",
+  "action": "merge_to_main",
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/96",
+    "revision": "06d915876e59ad8457ec8f28e3d25c8f479c4037",
+    "base_revision": "0f1fb5d9aaf9f171c843937e482fcdf75edd7482",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T15:56:10Z",
+  "final_state": {
+    "status": "MERGED",
+    "revision": "3de696a1286d79e080d3c72bcfdf6691d9255030"
+  },
+  "evidence": [
+    "Exact Task 093 merge authorization was durably committed on control/merge-authorization-093 at 5df6e9a79306bdd8d6a8f55a5a94ef511c044712 before PR 96 merged.",
+    "GitHub records PR 96 merged at 2026-10-07T15:55:11Z and canonical main advanced to 3de696a1286d79e080d3c72bcfdf6691d9255030.",
+    "The event-isolated push workflow Invalidate stale trusted authorization run 37647880096 completed SUCCESS, proving the former startup_failure is resolved.",
+    "Post-main Validate control plane 37647880290, Package ChatGPT plugins 37647880244, Control contract tests 37647880365, and Repository hygiene 37647879968 all completed SUCCESS.",
+    "Repository hygiene removed the superseded Task 092 builder/control refs and the merged Task 093 builder ref; this control branch is retained only as durable evidence of the consequential merge."
+  ],
+  "residual_blockers": []
+}
