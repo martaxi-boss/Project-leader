@@ -92,6 +92,9 @@ jobs:
           for transition_path in "${transition_results[@]}"; do
             gh api -H "Accept: application/vnd.github.raw+json"               "/repos/$HEAD_REPO/contents/$transition_path?ref=$HEAD_SHA"               > /tmp/current-transition-result.json
             python control/validate_records.py transition-result-current               /tmp/current-transition-result.json
+            auth_path="${transition_path%.result.json}.authorization.json"
+            gh api -H "Accept: application/vnd.github.raw+json"               "/repos/$HEAD_REPO/contents/$auth_path?ref=$HEAD_SHA"               > /tmp/current-transition-authorization.json
+            python control/validate_records.py transition-pair-current               /tmp/current-transition-authorization.json               /tmp/current-transition-result.json
           done
 
       - name: Verify GitHub CI evidence externally
