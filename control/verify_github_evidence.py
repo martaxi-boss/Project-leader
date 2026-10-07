@@ -498,13 +498,45 @@ def verify_run_payload(ci_item, result, payload, repository, trusted_workflow=No
         matches = [
             pr for pr in payload.get("pull_requests") or []
             if pr.get("number") == result["pr_number"]
-            and (pr.get("head") or {}).get("sha") == result["implementation_head_sha"]
-            and (pr.get("base") or {}).get("sha") == task["starting_state"]["base_sha"]
         ]
         if not matches:
             raise ValueError(
-                f"workflow run {ci_item['run_id']} is not bound to the expected PR/base context"
+                f"workflow run {ci_item['run_id']} is not associated with expected PR "
+                f"{result['pr_number']}"
             )
+    return True
+
+
+def verify_live_pr_context(result, task, payload, repository, current_head_sha):
+    """Bind promotion to the live PR while keeping old run SHA evidence immutable.
+
+    GitHub's workflow-run pull_requests projection follows the PR's *current*
+    head/base. An evidence-only descendant can therefore rewrite the embedded
+    head SHA of an older CI run even though run.head_sha remains immutable.
+    Validate run.head_sha in verify_run_payload, and validate the current PR
+    head/base here from the live Pull Request endpoint.
+    """
+    expected_pr = result.get("pr_number")
+    if expected_pr is None:
+        return True
+    if payload.get("number") != expected_pr:
+        raise ValueError("live PR number does not match Worker Result")
+    if payload.get("state") != "open":
+        raise ValueError("trusted promotion requires the bound pull request to be open")
+
+    head = payload.get("head") or {}
+    base = payload.get("base") or {}
+    if head.get("sha") != current_head_sha:
+        raise ValueError("live PR head does not match current trusted-gate head")
+    if base.get("sha") != task["starting_state"]["base_sha"]:
+        raise ValueError("live PR base SHA does not match Task Authorization base")
+    if base.get("ref") != task["starting_state"]["default_branch"]:
+        raise ValueError("live PR base branch does not match Task Authorization default branch")
+
+    head_repo = (head.get("repo") or {}).get("full_name")
+    base_repo = (base.get("repo") or {}).get("full_name")
+    if head_repo != repository or base_repo != repository:
+        raise ValueError("trusted promotion requires same-repository PR context")
     return True
 
 
@@ -724,6 +756,19 @@ def verify_github_evidence(result, repository, token, current_head_sha, api_base
                 token,
             )
             verify_authorization_only_history(task, result, authorization_only)
+
+    if task is not None and result.get("pr_number") is not None:
+        live_pr_payload = api_get(
+            f"{api_base}/repos/{repository}/pulls/{result['pr_number']}",
+            token,
+        )
+        verify_live_pr_context(
+            result,
+            task,
+            live_pr_payload,
+            repository,
+            current_head_sha,
+        )
 
     run_payloads = []
     for ci_item in result["ci"]:
