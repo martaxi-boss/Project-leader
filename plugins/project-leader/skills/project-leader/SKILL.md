@@ -64,7 +64,7 @@ Covered failure path:
 
 `FAIL -> DIAGNOSE -> DIRECT FIX -> TEST -> HYGIENIZE -> VALIDATE -> CONTINUE`
 
-Recovery Compaction remains compatible with `DERIVED_COMPLETION_AUTHORITY`. Historical shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains valid; REMEDIATE means direct covered repair, not a mandatory Builder handoff.
+Recovery Compaction remains compatible with `DERIVED_COMPLETION_AUTHORITY`. When `resolve_recovery_action` returns `RECOVERY_DIRECT_REPAIR`, Recovery Guardian performs the covered correction directly. Historical shorthand `FAIL -> DIAGNOSE -> REMEDIATE -> TEST -> VERIFY -> CONTINUE` remains valid; REMEDIATE means direct covered repair, not a mandatory Builder handoff.
 
 A same-action retry requires a material basis: material change, new evidence, new technical hypothesis, corrected observer/probe, justified strategy change, or genuinely transient condition. Without one, replan.
 
