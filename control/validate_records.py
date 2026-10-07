@@ -304,14 +304,14 @@ def validate_recovery_journal(records):
     task_id = ordered[0].get("task_id")
     repository = ordered[0].get("repository")
     terminal_seen = False
-    max_by_action = {}
-    max_no_progress_by_strategy = {}
-    retry_count_by_action = {}
+    fingerprint_state = {}
 
     for index, event in enumerate(ordered, start=1):
         validate_recovery_event(event)
         if event["sequence"] != index:
-            raise ValueError(f"recovery journal sequence must be contiguous from 1; got {event['sequence']} at position {index}")
+            raise ValueError(
+                f"recovery journal sequence must be contiguous from 1; got {event['sequence']} at position {index}"
+            )
         if event["task_id"] != task_id or event["repository"] != repository:
             raise ValueError("recovery journal cannot mix task_id or repository")
         if terminal_seen:
@@ -319,7 +319,9 @@ def validate_recovery_journal(records):
 
         if index == 1:
             if event["previous_event_sha256"] is not None:
-                raise ValueError("first recovery event must have previous_event_sha256=null")
+                raise ValueError(
+                    "first recovery event must have previous_event_sha256=null"
+                )
         else:
             previous = ordered[index - 2]
             expected = canonical_sha256(previous)
@@ -328,51 +330,60 @@ def validate_recovery_journal(records):
             if event["strategy_generation"] < previous["strategy_generation"]:
                 raise ValueError("recovery strategy_generation cannot decrease")
             if event["strategy_generation"] > previous["strategy_generation"]:
-                if event["strategy_generation"] != previous["strategy_generation"] + 1 or event["event"] != "REPLAN":
-                    raise ValueError("strategy_generation may increase only by one on a REPLAN event")
-
-        generation = event["strategy_generation"]
-        prior_no_progress = max_no_progress_by_strategy.get(generation, -1)
-        if event["no_progress_iterations"] < prior_no_progress:
-            raise ValueError("no_progress_iterations cannot decrease inside one strategy generation")
-        max_no_progress_by_strategy[generation] = max(
-            prior_no_progress, event["no_progress_iterations"]
-        )
+                if (
+                    event["strategy_generation"]
+                    != previous["strategy_generation"] + 1
+                    or event["event"] != "REPLAN"
+                ):
+                    raise ValueError(
+                        "strategy_generation may increase only by one on a REPLAN event"
+                    )
+            elif event["no_progress_iterations"] < previous["no_progress_iterations"]:
+                raise ValueError(
+                    "no_progress_iterations cannot decrease inside one strategy generation"
+                )
 
         fingerprint = event.get("action_fingerprint")
         if fingerprint is not None:
-            key = (generation, fingerprint)
-            prior = max_by_action.get(
-                key,
-                {"attempt_count": -1, "identical_failure_count": -1},
-            )
-            if event["attempt_count"] < prior["attempt_count"]:
-                raise ValueError(
-                    "attempt_count cannot decrease for an action fingerprint, even when interleaved"
-                )
-            if event["identical_failure_count"] < prior["identical_failure_count"]:
-                raise ValueError(
-                    "identical_failure_count cannot decrease for an action fingerprint, even when interleaved"
-                )
+            key = (event["strategy_generation"], fingerprint)
+            prior = fingerprint_state.get(key)
+            if prior is not None:
+                if event["attempt_count"] < prior["attempt_count"]:
+                    raise ValueError(
+                        "attempt_count cannot decrease for a fingerprint within one strategy generation"
+                    )
+                if event["identical_failure_count"] < prior["identical_failure_count"]:
+                    raise ValueError(
+                        "identical_failure_count cannot decrease for a fingerprint within one strategy generation"
+                    )
+                if event["no_progress_iterations"] < prior["no_progress_iterations"]:
+                    raise ValueError(
+                        "no_progress_iterations cannot decrease for a fingerprint within one strategy generation"
+                    )
 
             if event["event"] == "RETRY_AUTHORIZED":
-                retries = retry_count_by_action.get(key, 0) + 1
-                retry_count_by_action[key] = retries
-                if retries > 2:
+                if prior is None or prior["event"] != "FAILURE_OBSERVED":
                     raise ValueError(
-                        "recovery journal cannot authorize more than two retries for one action fingerprint"
+                        "RETRY_AUTHORIZED requires a preceding FAILURE_OBSERVED for the same fingerprint and strategy"
                     )
-                if event["attempt_count"] <= prior["attempt_count"]:
+                expected_attempt = prior["attempt_count"] + 1
+                if event["attempt_count"] != expected_attempt:
                     raise ValueError(
-                        "RETRY_AUTHORIZED must strictly increase attempt_count for the action fingerprint"
+                        "RETRY_AUTHORIZED must consume exactly one attempt from the same fingerprint budget"
+                    )
+                if (
+                    prior["identical_failure_count"] >= 2
+                    or prior["no_progress_iterations"] >= 3
+                ):
+                    raise ValueError(
+                        "retry budget is exhausted; REPLAN is required before another retry"
                     )
 
-            max_by_action[key] = {
-                "attempt_count": max(prior["attempt_count"], event["attempt_count"]),
-                "identical_failure_count": max(
-                    prior["identical_failure_count"],
-                    event["identical_failure_count"],
-                ),
+            fingerprint_state[key] = {
+                "event": event["event"],
+                "attempt_count": event["attempt_count"],
+                "identical_failure_count": event["identical_failure_count"],
+                "no_progress_iterations": event["no_progress_iterations"],
             }
 
         if event["event"] in {"BLOCKED", "HUMAN_GATE", "COMPLETE"}:
@@ -406,22 +417,25 @@ def validate_transition_result(record):
     _validate(record, _load_schema(TRANSITION_RESULT_SCHEMA))
     status = record["terminal_status"]
     authorization_record = record["authorization_record"]
-
     if status in {"SUCCESS", "FAILURE", "NOT_EXECUTED"} and not authorization_record:
         raise ValueError(
-            f"{status} transition evidence requires a durable authorization_record"
+            f"{status} transition requires a durable authorization_record"
         )
     if status == "SUCCESS" and record["residual_blockers"]:
-        raise ValueError("successful transition cannot retain residual blockers")
+        raise ValueError("successful transition cannot retain residual_blockers")
     if status in {"FAILURE", "NOT_EXECUTED"} and not record["residual_blockers"]:
         raise ValueError(
-            f"{status} transition evidence requires at least one residual blocker"
+            f"{status} transition must record at least one residual_blocker"
         )
     if status == "HISTORICAL_OBSERVED":
         if authorization_record is not None:
-            raise ValueError("historical observed transition must not invent an authorization_record")
+            raise ValueError(
+                "historical observed transition must not invent an authorization_record"
+            )
         if not record["residual_blockers"]:
-            raise ValueError("historical observed transition must record the authorization-evidence gap")
+            raise ValueError(
+                "historical observed transition must record the authorization-evidence gap"
+            )
     return True
 
 def validate_transition_pair(authorization, result):
@@ -446,7 +460,7 @@ def validate_transition_pair(authorization, result):
     return True
 
 def validate_persisted_transition_result(record, repository_root=None):
-    """Validate transition evidence and bind non-historical outcomes to prior authority."""
+    """Validate transition evidence and require durable authority for authorized outcomes."""
     validate_transition_result(record)
     if record["terminal_status"] == "HISTORICAL_OBSERVED":
         return True
@@ -456,13 +470,13 @@ def validate_persisted_transition_result(record, repository_root=None):
     )
     if record.get("authorization_record") != expected:
         raise ValueError(
-            "transition authorization_record must use the canonical transition path"
+            "authorized transition result must use the canonical authorization path"
         )
     root = Path(repository_root) if repository_root is not None else ROOT.parent
     auth_path = root / expected
     if not auth_path.is_file():
         raise ValueError(
-            "transition outcome requires the matching durable authorization file"
+            "authorized transition result requires the matching durable authorization file"
         )
     authorization = json.loads(auth_path.read_text(encoding="utf-8"))
     validate_transition_pair(authorization, record)
