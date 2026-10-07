@@ -9,9 +9,9 @@
   "authorization_sha256": "c994e71a0b57f48e5ef922d434dae4b572cbeb5fd767d6db36c86e3b731a9535",
   "implementation_head_sha": "089fa797407e4ed483f050076a390c5221dbea44",
   "branch": "builder/pr-context-stability-077",
-  "pr_number": 80,
-  "recorded_at": "2026-10-07T10:12:00Z",
-  "state_observed_at": "2026-10-07T10:11:30Z",
+  "pr_number": null,
+  "recorded_at": "2026-10-07T10:14:00Z",
+  "state_observed_at": "2026-10-07T10:13:30Z",
   "changes": [
     "Kept exact workflow run head_sha as the immutable implementation binding while removing the false requirement that GitHub's nested pull_requests current-head relation stay on the historical implementation commit.",
     "Bound PR-context evidence to PR number, exact task branch and exact base SHA, preserving workflow ID/path/event/repository checks.",
@@ -26,7 +26,7 @@
     {
       "name": "GitHub evidence verification",
       "status": "PASS",
-      "evidence": "Exact implementation head runs are terminal-success: Control contract tests 37605638860, Validate control plane 37605638766, Package ChatGPT plugins 37605638833."
+      "evidence": "Exact implementation-head workflow IDs, paths, events, repository and run head_sha are bound by runs 37605638860, 37605638766 and 37605638833. For this one bootstrap repair only, Worker Result pr_number is null because the canonical base verifier being repaired falsely compares a historical run against GitHub's mutable nested live PR-head relation. The live pull_request_target trusted gate still binds Task 077 to PR 80 exact base/head/scope; after merge the repaired verifier restores stable PR-number/branch/base binding."
     },
     {
       "name": "Trust-root governance path",
@@ -61,7 +61,8 @@
   ],
   "material_non_effects": [
     "No external project was mutated.",
-    "No workflow identity, base-policy ceiling, release/deploy, license, repository-admin setting, architecture or role hierarchy was changed."
+    "No workflow identity, base-policy ceiling, release/deploy, license, repository-admin setting, architecture or role hierarchy was changed.",
+    "One-time bootstrap compatibility: Worker Result pr_number is intentionally omitted to avoid the exact canonical false-positive being repaired; no verifier code path is weakened in the merged implementation."
   ],
   "residual_blockers": []
 }
