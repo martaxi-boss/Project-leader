@@ -78,6 +78,52 @@ POST_CI_ROUTE_CERTIFICATION_UNCHANGED = "CERTIFICATION_UNCHANGED"
 POST_CI_ROUTE_FINAL_HEAD_GOVERNANCE = "FINAL_HEAD_GOVERNANCE_CHECK"
 POST_CI_ROUTE_FRESH_IMPLEMENTATION = "FRESH_IMPLEMENTATION_CI"
 
+CI_ACTIVE_STATUSES = {"queued", "waiting", "pending", "requested", "in_progress"}
+CI_TERMINAL_CONCLUSIONS = {
+    "success", "failure", "cancelled", "timed_out", "action_required",
+    "neutral", "skipped", "stale", "startup_failure",
+}
+
+
+def _require_strict_bool(value, label):
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be boolean")
+    return value
+
+
+def _require_positive_int(value, label):
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise ValueError(f"{label} must be a positive integer")
+    return value
+
+
+def _validate_ci_run_payload(run, *, require_timestamp=False):
+    if not isinstance(run, dict):
+        raise ValueError("CI run payload must be an object")
+    _require_positive_int(run.get("id"), "CI run id")
+    status = run.get("status")
+    if status not in CI_ACTIVE_STATUSES | {"completed"}:
+        raise ValueError(f"CI run has unsupported status: {status!r}")
+    if status == "completed":
+        conclusion = run.get("conclusion")
+        if not isinstance(conclusion, str) or conclusion not in CI_TERMINAL_CONCLUSIONS:
+            raise ValueError("completed CI run requires a recognized conclusion")
+    timestamps = [
+        run.get("created_at"),
+        run.get("run_started_at"),
+        run.get("updated_at"),
+    ]
+    present = [value for value in timestamps if value is not None]
+    if require_timestamp and not present:
+        raise ValueError("CI run requires at least one progress timestamp")
+    for value in present:
+        if not isinstance(value, str) or not value:
+            raise ValueError("CI run timestamps must be non-empty strings")
+        parsed = _parse_time(value)
+        if parsed is None or parsed.tzinfo is None:
+            raise ValueError("CI run timestamps must be offset-aware ISO timestamps")
+    return True
+
 
 def validate_loader_version(loader_version):
     if not isinstance(loader_version, int) or isinstance(loader_version, bool):
@@ -193,7 +239,14 @@ def validate_managed_result(task, result, repository, control_repository=None):
         by_name = {item.get("name"): item for item in result.get("ci", [])}
         for name in task["required_ci"]:
             item = by_name.get(name)
-            if not item or item.get("status") != "SUCCESS" or not isinstance(item.get("run_id"), int):
+            run_id = None if not item else item.get("run_id")
+            if (
+                not item
+                or item.get("status") != "SUCCESS"
+                or not isinstance(run_id, int)
+                or isinstance(run_id, bool)
+                or run_id <= 0
+            ):
                 raise ValueError(f"managed terminal success requires live CI run_id evidence for {name}")
     return True
 
@@ -403,6 +456,7 @@ def reconcile_operational_access_discovery(
         raise ValueError("searched_surfaces entries must be non-empty strings")
     if not isinstance(candidate_channels, list):
         raise ValueError("candidate_channels must be a list")
+    _require_strict_bool(direct_access_available, "direct_access_available")
 
     if direct_access_available:
         return {
@@ -644,6 +698,13 @@ def reconcile_legacy_checkpoint_liveness(
     when current repository state independently corroborates a live workstream.
     """
     validate_checkpoint(checkpoint)
+    for label, value in (
+        ("has_live_branch", has_live_branch),
+        ("has_open_pr", has_open_pr),
+        ("has_active_ci", has_active_ci),
+        ("has_terminal_result", has_terminal_result),
+    ):
+        _require_strict_bool(value, label)
     status = checkpoint.get("status")
     task_id = checkpoint.get("task_id")
 
@@ -700,6 +761,8 @@ def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
             raise ValueError(f"{label} must be a non-empty string")
     if not isinstance(workflow_runs, list):
         raise ValueError("workflow_runs must be a list")
+    if RUNTIME_SHA_RE.fullmatch(target_sha) is None:
+        raise ValueError("target_sha must be an exact 40-hex commit SHA")
 
     matching = [
         run for run in workflow_runs
@@ -715,17 +778,23 @@ def decide_ci_dispatch(workflow_name, target_sha, event, workflow_runs):
             "reason": "no existing exact workflow/SHA/context run",
         }
 
+    for run in matching:
+        _validate_ci_run_payload(run, require_timestamp=True)
+
     def order_key(run):
-        timestamp = run.get("created_at") or run.get("run_started_at") or run.get("updated_at") or ""
-        run_id = run.get("id")
-        return (timestamp, run_id if isinstance(run_id, int) else -1)
+        timestamp = (
+            run.get("created_at")
+            or run.get("run_started_at")
+            or run.get("updated_at")
+        )
+        return (_parse_time(timestamp), run["id"])
 
     latest = max(matching, key=order_key)
     status = latest.get("status")
     conclusion = latest.get("conclusion")
     run_id = latest.get("id")
 
-    if status in {"queued", "waiting", "pending", "requested", "in_progress"}:
+    if status in CI_ACTIVE_STATUSES:
         return {
             "decision": CI_REUSE_ACTIVE,
             "run_id": run_id,
@@ -819,12 +888,14 @@ def _parse_time(value):
 
 
 def classify_external_ci(run, now=None, stale_after_minutes=DEFAULT_STALE_AFTER_MINUTES):
+    _validate_ci_run_payload(
+        run,
+        require_timestamp=run.get("status") in CI_ACTIVE_STATUSES if isinstance(run, dict) else False,
+    )
     status = run.get("status")
     conclusion = run.get("conclusion")
     if status == "completed":
         return "COMPLETED_SUCCESS" if conclusion == "success" else "COMPLETED_FAILURE"
-    if status not in {"queued", "in_progress", "waiting", "pending", "requested"}:
-        return "INVESTIGATE_CI_STATE"
 
     now = now or datetime.now(timezone.utc)
     updated = (
@@ -850,16 +921,20 @@ def reconcile_external_ci_wait(bound_run_ids, live_runs, previous_state=CI_WAIT_
         raise ValueError("external CI wait must bind at least one exact run_id")
     if len(set(bound_run_ids)) != len(bound_run_ids):
         raise ValueError("external CI wait run_ids must be unique")
-    if not all(isinstance(run_id, int) and run_id > 0 for run_id in bound_run_ids):
+    if not all(
+        isinstance(run_id, int) and not isinstance(run_id, bool) and run_id > 0
+        for run_id in bound_run_ids
+    ):
         raise ValueError("external CI wait run_ids must be positive integers")
     if not isinstance(live_runs, list):
         raise ValueError("live_runs must be a list")
 
-    by_id = {
-        run.get("id"): run
-        for run in live_runs
-        if isinstance(run, dict) and isinstance(run.get("id"), int)
-    }
+    for run in live_runs:
+        _validate_ci_run_payload(
+            run,
+            require_timestamp=run.get("status") in CI_ACTIVE_STATUSES if isinstance(run, dict) else False,
+        )
+    by_id = {run["id"]: run for run in live_runs}
     missing = [run_id for run_id in bound_run_ids if run_id not in by_id]
     if missing:
         return {
