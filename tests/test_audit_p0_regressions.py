@@ -14,7 +14,6 @@ from control.trusted_gate import (
 from control.validate_records import (
     validate_persisted_transition_result,
     validate_scope,
-    validate_task,
     validate_transition_authorization,
 )
 from control.verify_github_evidence import verify_compare_payload
@@ -91,16 +90,20 @@ class AuditP0RegressionTests(unittest.TestCase):
                 actual_task_path=canonical_task_path(task),
             )
 
-    def test_current_v2_task_cannot_disable_immutability(self):
-        task = json.loads(
-            (
-                ROOT
-                / ".project-leader/tasks/PROJECT-LEADER-RECOVERY-COMPACTION-065.json"
-            ).read_text()
-        )
+    def test_new_or_changed_v2_task_cannot_disable_immutability(self):
+        policy, raw = self.project_policy()
+        task = self.e1_task(scope=["tests/**"])
         del task["integrity_mode"]
-        with self.assertRaises(ValueError):
-            validate_task(task)
+        with self.assertRaisesRegex(ValueError, "immutable"):
+            verify_task_against_base_policy(
+                task,
+                policy,
+                raw,
+                task["starting_state"]["base_sha"],
+                ["tests/fixture.txt"],
+                "projects/policies/project-leader.json",
+                actual_task_path=canonical_task_path(task),
+            )
 
     def test_task_alias_path_is_rejected(self):
         policy, raw = self.project_policy()
