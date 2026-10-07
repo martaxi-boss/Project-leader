@@ -73,7 +73,7 @@ jobs:
 
       - name: Verify base-anchored authorization ceiling and promotable result
         run: |
-          python control/trusted_gate.py             --task /tmp/task.json             --task-path "$(cat /tmp/project-leader-task-path.txt)"             --result /tmp/result.json             --policy projects/policies/project-leader.json             --base-sha "${{ github.event.pull_request.base.sha }}"             --live-base-sha "$PROJECT_LEADER_LIVE_BASE_SHA"             --declared-changed-count "$PROJECT_LEADER_DECLARED_CHANGED"             --changed-files /tmp/project-leader-changed.json             --expected-policy-path projects/policies/project-leader.json
+          python control/trusted_gate.py             --task /tmp/task.json             --task-path "$(cat /tmp/project-leader-task-path.txt)"             --result /tmp/result.json             --policy projects/policies/project-leader.json             --base-sha "${{ github.event.pull_request.base.sha }}"             --changed-files /tmp/project-leader-changed.json             --expected-policy-path projects/policies/project-leader.json
 
       - name: Verify task/result contract
         run: python control/validate_records.py pair /tmp/task.json /tmp/result.json
