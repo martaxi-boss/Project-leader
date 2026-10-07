@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "task_id": "PROJECT-LEADER-EXECUTION-FIRST-089",
+  "repository": "martaxi-boss/Project-leader",
+  "action": "delete_owner_authorized_superseded_non_main_branch_refs",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "Owner requires continuous hygiene while simplifying Project Leader. This exact branch is a superseded recovery artifact created during the same task, has no open PR, and must be deleted only if its live SHA still matches. A live SHA mismatch or open PR preserves it.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "transition_id": "PROJECT-LEADER-EXECUTION-FIRST-087-PURGE",
+  "created_at": "2026-10-07T14:47:00Z",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/execution-first-087",
+    "revision": "996c097c3badf0624b73f0a319edbb85b21ff084",
+    "base_revision": "2730cc8c695bb8e3cde25debd67b5b35d3a160d0",
+    "environment": null
+  }
+}
