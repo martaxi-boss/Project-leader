@@ -535,6 +535,30 @@ def validate_transition_pair(authorization, result):
             raise ValueError(f"transition authorization/result mismatch for {name}: expected {expected!r}, got {actual!r}")
     return True
 
+def validate_current_transition_pair(authorization, result):
+    """Validate a newly created/modified pair, including temporal coherence.
+
+    Historical pairs remain readable through validate_transition_pair because the
+    repository contains known legacy timestamp inversions whose structural Git
+    ancestry is correct. Current admission additionally requires the declared
+    authorization creation time not to be later than the observed transition
+    result time.
+    """
+    validate_transition_pair(authorization, result)
+    created_at = datetime.fromisoformat(
+        authorization["created_at"].replace("Z", "+00:00")
+    )
+    observed_at = datetime.fromisoformat(
+        result["observed_at"].replace("Z", "+00:00")
+    )
+    if created_at > observed_at:
+        raise ValueError(
+            "current transition authorization created_at cannot be later than "
+            "transition result observed_at"
+        )
+    return True
+
+
 def validate_persisted_transition_result(record, repository_root=None):
     """Validate transition evidence and require durable authority for authorized outcomes."""
     validate_transition_result(record)
@@ -563,7 +587,7 @@ def _read_json(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-result-current","transition-pair"])
+    parser.add_argument("kind", choices=["policy","standing-authority","task","result","pair","scope","checkpoint","recovery-event","recovery-journal","transition-auth","transition-result","transition-result-current","transition-pair","transition-pair-current"])
     parser.add_argument("paths", nargs="+")
     args = parser.parse_args()
     if args.kind == "pair":
@@ -576,10 +600,15 @@ def main():
         validate_scope(_read_json(args.paths[0]), args.paths[1:])
     elif args.kind == "recovery-journal":
         validate_recovery_journal([_read_json(path) for path in args.paths])
-    elif args.kind == "transition-pair":
+    elif args.kind in {"transition-pair", "transition-pair-current"}:
         if len(args.paths) != 2:
-            parser.error("transition-pair requires AUTHORIZATION_PATH RESULT_PATH")
-        validate_transition_pair(_read_json(args.paths[0]), _read_json(args.paths[1]))
+            parser.error(f"{args.kind} requires AUTHORIZATION_PATH RESULT_PATH")
+        authorization = _read_json(args.paths[0])
+        result = _read_json(args.paths[1])
+        if args.kind == "transition-pair-current":
+            validate_current_transition_pair(authorization, result)
+        else:
+            validate_transition_pair(authorization, result)
     else:
         if len(args.paths) != 1:
             parser.error(f"{args.kind} requires exactly one path")
