@@ -13,7 +13,7 @@ This file records consumer-visible Project Leader control/runtime changes. Exact
 - Remove obsolete Recovery wording and tautological phrase-only assertions while retaining behavior-level tests.
 - Add explicit source/provenance links, distribution-verification instructions and GitHub Actions event-policy readiness documentation.
 - Record an observed ChatGPT host invocation of the Project Leader skill, including stale-loaded-copy reconciliation via canonical runtime override and the absence of a public global release identity in the available plugin-management surface.
-- License selection is intentionally not included: the repository Owner has not chosen a project license.
+- The repository Owner selected a proprietary / All Rights Reserved license; `LICENSE` now records that no general open-source reuse permission is granted and preserves third-party license obligations.
 
 ## 0.6.8 / Recovery Guardian 0.5.6 — 2026-10-06
 

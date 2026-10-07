@@ -233,7 +233,8 @@ class AuditP2SemanticTests(unittest.TestCase):
         self.assertIn("pull_request_target", runbook)
         self.assertIn("Report a vulnerability", security)
         self.assertIn("plugin-manifest.json", setup)
-        self.assertIn("Owner has not chosen a project license", changelog)
+        self.assertIn("proprietary / All Rights Reserved", changelog)
+        self.assertNotIn("Owner has not chosen a project license", changelog)
 
     def test_ci_payload_requires_real_positive_run_id_and_progress_time(self):
         base = {
