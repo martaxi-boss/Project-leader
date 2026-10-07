@@ -96,7 +96,11 @@ class ExecutionFirstContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("push:", workflow)
-        self.assertIn("checks: write", workflow)
+        self.assertNotIn("checks: write", workflow)
+        self.assertIn("statuses: write", workflow)
+        self.assertIn("/statuses/$head_sha", workflow)
+        self.assertIn("context='trusted-authorization'", workflow)
+        self.assertNotIn("/check-runs", workflow)
         self.assertIn("Base advanced; recertification required", workflow)
         self.assertIn("live_base_sha", workflow)
         self.assertIn("trusted-authorization", workflow)
