@@ -311,6 +311,22 @@ class AuditP2ObservableRuntimeTests(unittest.TestCase):
         self.assertEqual(1, durable["writes"])
         self.assertFalse(durable["applied"])
 
+    def test_active_ci_without_progress_baseline_requires_reconciliation(self):
+        now = datetime(2026, 10, 7, 9, 5, tzinfo=timezone.utc)
+        state = run_external_ci_cycle(
+            [101],
+            lambda ids: [{
+                "id": 101,
+                "status": "in_progress",
+                "conclusion": None,
+                "updated_at": "2026-10-07T09:04:00Z",
+            }],
+            now=now,
+        )
+        self.assertEqual("LIVENESS_RECONCILE_REQUIRED", state["state"])
+        self.assertEqual("INVESTIGATE", state["route"])
+        self.assertEqual("ESTABLISH_PROGRESS_BASELINE", state["liveness_action"])
+
     def test_ci_cycle_waits_for_active_run_and_routes_failed_run_to_recovery(self):
         now = datetime(2026, 10, 7, 9, 5, tzinfo=timezone.utc)
         active = run_external_ci_cycle(
@@ -321,6 +337,7 @@ class AuditP2ObservableRuntimeTests(unittest.TestCase):
                 "conclusion": None,
                 "updated_at": "2026-10-07T09:04:00Z",
             }],
+            last_progress_at="2026-10-07T09:04:00Z",
             now=now,
         )
         self.assertEqual("WAITING_EXTERNAL_CI", active["state"])
