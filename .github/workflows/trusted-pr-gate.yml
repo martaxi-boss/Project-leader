@@ -26,6 +26,8 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
           test -n "$HEAD_REPO" || {
@@ -34,6 +36,19 @@ jobs:
           }
 
           gh api --paginate "/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100"             --jq '.[] | {filename: .filename, previous_filename: .previous_filename, status: .status}'             | jq -s '.' > /tmp/project-leader-changed.json
+
+          declared_changed="$(gh api "/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.changed_files')"
+          observed_changed="$(jq 'length' /tmp/project-leader-changed.json)"
+          if [ "$declared_changed" -ge 3000 ] || [ "$observed_changed" -ne "$declared_changed" ]; then
+            echo "Trusted gate refuses incomplete PR file evidence: declared=$declared_changed observed=$observed_changed." >&2
+            exit 1
+          fi
+
+          live_base_sha="$(gh api "/repos/$GITHUB_REPOSITORY/git/ref/heads/$BASE_REF" --jq '.object.sha')"
+          if [ "$live_base_sha" != "$EVENT_BASE_SHA" ]; then
+            echo "Trusted gate base is stale: event=$EVENT_BASE_SHA live=$live_base_sha." >&2
+            exit 1
+          fi
 
           mapfile -t task_files < <(
             jq -r '.[].filename | select(test("^\\.project-leader/tasks/[^/]+\\.json$"))'               /tmp/project-leader-changed.json
@@ -65,4 +80,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          python control/verify_github_evidence.py             --result /tmp/result.json             --repository "$GITHUB_REPOSITORY"             --current-head-sha "${{ github.event.pull_request.head.sha }}"
+          python control/verify_github_evidence.py             --task /tmp/task.json             --result /tmp/result.json             --repository "$GITHUB_REPOSITORY"             --current-head-sha "${{ github.event.pull_request.head.sha }}"
