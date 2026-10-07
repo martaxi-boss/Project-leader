@@ -16,8 +16,8 @@ jobs:
       - name: Build deterministic installable ZIPs twice
         run: |
           set -eu
-          python scripts/package_plugins.py --output-dir dist-a
-          python scripts/package_plugins.py --output-dir dist-b
+          python scripts/package_plugins.py --output-dir dist-a --source-revision "$GITHUB_SHA" --build-run-id "$GITHUB_RUN_ID"
+          python scripts/package_plugins.py --output-dir dist-b --source-revision "$GITHUB_SHA" --build-run-id "$GITHUB_RUN_ID"
           cmp dist-a/project-leader.zip dist-b/project-leader.zip
           cmp dist-a/recovery-guardian.zip dist-b/recovery-guardian.zip
           cmp dist-a/plugin-manifest.json dist-b/plugin-manifest.json
@@ -27,6 +27,20 @@ jobs:
           test -s dist/recovery-guardian.zip
           unzip -l dist/project-leader.zip | grep -q 'plugin.json'
           unzip -l dist/recovery-guardian.zip | grep -q 'plugin.json'
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          manifest = json.loads(Path("dist/plugin-manifest.json").read_text())
+          assert manifest["schema_version"] == "2.0"
+          assert manifest["provenance"]["repository"] == "martaxi-boss/Project-leader"
+          assert manifest["provenance"]["source_revision"] == os.environ["GITHUB_SHA"]
+          assert manifest["provenance"]["build_run_id"] == os.environ["GITHUB_RUN_ID"]
+          assert {item["name"] for item in manifest["plugins"]} == {"project-leader", "recovery-guardian"}
+          for item in manifest["plugins"]:
+              assert item["contents"]
+              assert all(entry["path"] not in {".env", ".env.local"} for entry in item["contents"])
+          PY
           cat dist/SHA256SUMS
       - name: Upload Project Leader
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
