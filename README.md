@@ -65,3 +65,7 @@ GitHub stores task authority, commits, PRs, CI, results and transition evidence.
 Continuous hygiene removes or neutralizes stale operational code/configuration/references/probes created or exposed by the current authorized change when cleanup is recoverable and in scope. Background repository hygiene separately removes audited obsolete refs. Preserve useful audit evidence, ADRs and inert history; explicit read-only requests only report hygiene debt and never mutate.
 
 A ChatGPT-wide outage prevents execution while the service is unavailable. Resume by reconstructing GitHub state after service returns.
+
+## License
+
+Project Leader is proprietary software. Copyright (c) 2026 martaxi-boss. **All rights reserved.** No general permission is granted to copy, modify, redistribute, sublicense, sell, host, publish, commercialize, or create derivative works. See `LICENSE` for the full terms. Third-party components remain subject to their own licenses.
