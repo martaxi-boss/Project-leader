@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/audit-policy-doc-scope-076",
+    "revision": "a049170c8a3bb0cb6d87090b2ac6b4288fe51661",
+    "base_revision": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T10:05:30Z",
+  "final_state": {
+    "status": "AUDITED",
+    "revision": "515572f7afbb6e7c8d8659a251a21ee31dd62e80"
+  },
+  "evidence": [
+    "Task Authorization a049170c8a3bb0cb6d87090b2ac6b4288fe51661 was persisted before implementation and binds the exact policy/test mutation surface.",
+    "Trust-root authorization 6d4191c37714762bb0c3fbb537e362e24ce8ee94 was persisted before projects/policies/project-leader.json changed.",
+    "Implementation head 515572f7afbb6e7c8d8659a251a21ee31dd62e80 passed Control contract tests 37604923048, Validate control plane 37604923139 and Package ChatGPT plugins 37604923178.",
+    "Control contract run 37604923048 completed 238 tests successfully."
+  ],
+  "residual_blockers": []
+}

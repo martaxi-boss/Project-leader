@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-AUDIT-POLICY-DOC-SCOPE-076.json",
+  "authorization_commit_sha": "a049170c8a3bb0cb6d87090b2ac6b4288fe51661",
+  "authorization_sha256": "92eb76cc419561f7f5a0502824b8cfa4e5971eec1fe1b1e4688ac02bdff536aa",
+  "implementation_head_sha": "515572f7afbb6e7c8d8659a251a21ee31dd62e80",
+  "branch": "builder/audit-policy-doc-scope-076",
+  "pr_number": 78,
+  "recorded_at": "2026-10-07T10:05:30Z",
+  "state_observed_at": "2026-10-07T10:05:20Z",
+  "changes": [
+    "Added exact CHANGELOG.md and SOURCES.md scope entries to Project Leader E1/E3 policy ceilings.",
+    "Added SECURITY.md only to the E3 scope and marked it sensitive/protected so ordinary E1 tasks cannot mutate security-reporting policy.",
+    "Added regression coverage proving the three paths are exact and that broad Markdown wildcards were not introduced."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Control contract run 37604923048 completed successfully on implementation head 515572f7afbb6e7c8d8659a251a21ee31dd62e80 and mutation-scope enforcement returned VALID."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Required CI on exact implementation head is terminal-success: Control contract tests 37604923048, Validate control plane 37604923139 and Package ChatGPT plugins 37604923178."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable Task Authorization a049170c8a3bb0cb6d87090b2ac6b4288fe51661 and exact trust-root authorization 6d4191c37714762bb0c3fbb537e362e24ce8ee94 both precede the policy mutation."
+    },
+    {
+      "name": "Exact documentation policy ceiling regression",
+      "status": "PASS",
+      "evidence": "Control contract run 37604923048 reports 238 tests OK; test_policy_doc_scope_regression verifies CHANGELOG.md/SOURCES.md exact admission, SECURITY.md E3-only protection, and absence of broad *.md/**.md policy widening."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37604923048
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37604923139
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37604923178
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/78"
+  ],
+  "material_non_effects": [
+    "No documentation content was changed by this task.",
+    "No external project repository, license, release, deploy, branch/ruleset, Actions event policy, secret, paid service, product architecture or role hierarchy was changed.",
+    "The policy was widened only by three exact documentation paths; no broad Markdown wildcard was added."
+  ],
+  "residual_blockers": []
+}
