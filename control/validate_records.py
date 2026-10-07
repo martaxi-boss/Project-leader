@@ -20,10 +20,6 @@ STANDING_AUTHORITY_SCHEMA = ROOT / "standing-authority.schema.json"
 TRANSITION_AUTH_SCHEMA = ROOT / "transition-authorization.schema.json"
 TRANSITION_RESULT_SCHEMA = ROOT / "transition-result.schema.json"
 
-RFC3339_RE = re.compile(
-    r"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
-)
-
 CANONICAL_REQUIRED_CONTROLS = {
     "canonical_project_scope_must_cover_effect",
     "exact_target_and_revision_revalidated_before_consequential_transition",
@@ -118,7 +114,7 @@ def _validate(value, schema, path="$"):
             raise ValueError(f"{path}: shorter than minLength")
         if "maxLength" in schema and len(value) > schema["maxLength"]:
             raise ValueError(f"{path}: longer than maxLength")
-        if "pattern" in schema and not _pattern_matches(schema["pattern"], value):
+        if "pattern" in schema and not _matches_pattern(schema["pattern"], value):
             raise ValueError(f"{path}: does not match pattern")
         if schema.get("format") == "date-time":
             _validate_datetime(value, path)
