@@ -136,7 +136,7 @@ class AuditP2SemanticTests(unittest.TestCase):
             (ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8")
         )
         policy["repository_mode"] = "ACTIVE_TARGET"
-        with self.assertRaisesRegex(ValueError, "exactly one target mode"):
+        with self.assertRaisesRegex(ValueError, "partial or mixed"):
             validate_project_policy(policy)
 
     def test_valid_fixed_and_dynamic_policies_remain_valid(self):
