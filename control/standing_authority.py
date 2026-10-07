@@ -115,10 +115,6 @@ def resolve_recovery_action(
         raise ValueError("attempt_count must be a non-negative integer")
     if not isinstance(identical_failure_count, int) or isinstance(identical_failure_count, bool) or identical_failure_count < 0:
         raise ValueError("identical_failure_count must be a non-negative integer")
-    if not isinstance(attempt_count, int) or isinstance(attempt_count, bool) or attempt_count < 0:
-        raise ValueError("attempt_count must be a non-negative integer")
-    if not isinstance(identical_failure_count, int) or isinstance(identical_failure_count, bool) or identical_failure_count < 0:
-        raise ValueError("identical_failure_count must be a non-negative integer")
     if retry_basis is not None and retry_basis not in RETRY_BASES:
         raise ValueError("retry_basis must be a recognized material retry basis")
 
@@ -165,28 +161,6 @@ def resolve_recovery_action(
         return {
             "decision": RECOVERY_REPLAN_REQUIRED,
             "reason": "RECOVERY_BUDGET_EXHAUSTED",
-            "authority_kind": DERIVED_COMPLETION_AUTHORITY,
-            "authority_source": STANDING_OWNER_GRANT,
-            "durable_recovery_required": True,
-            "route": RECOVERY_DIRECT_REPLAN,
-            "executor": "RECOVERY_GUARDIAN",
-        }
-
-    if same_action_retry and attempt_count >= 3:
-        return {
-            "decision": RECOVERY_REPLAN_REQUIRED,
-            "reason": "ATTEMPT_LIMIT_REACHED",
-            "authority_kind": DERIVED_COMPLETION_AUTHORITY,
-            "authority_source": STANDING_OWNER_GRANT,
-            "durable_recovery_required": True,
-            "route": RECOVERY_DIRECT_REPLAN,
-            "executor": "RECOVERY_GUARDIAN",
-        }
-
-    if same_action_retry and identical_failure_count >= 2:
-        return {
-            "decision": RECOVERY_REPLAN_REQUIRED,
-            "reason": "IDENTICAL_FAILURE_LIMIT_REACHED",
             "authority_kind": DERIVED_COMPLETION_AUTHORITY,
             "authority_source": STANDING_OWNER_GRANT,
             "durable_recovery_required": True,
