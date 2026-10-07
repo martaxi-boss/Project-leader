@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-AUDIT-REMEDIATION-P1-074.json",
   "authorization_commit_sha": "61a962bd074c7d2fef4a54eeeda432947ed07454",
-  "authorization_sha256": "4c015319a1e644d0f19e19077588dc03f6fa2b8ae7ae1fa8cdd19aaddf63f764",
+  "authorization_sha256": "22ecb8893f2fe6b941f4be48301e3cb944dd94e9f3c4ad56d5ff3b3289bd25ee",
   "implementation_head_sha": "35532aeecf3c942d8dd354d897f19920448bd89b",
   "branch": "builder/audit-remediation-p1-074",
   "pr_number": 76,
