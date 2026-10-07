@@ -87,7 +87,8 @@
         "PLUGIN_SETUP.md",
         "CHANGELOG.md",
         "SECURITY.md",
-        "SOURCES.md"
+        "SOURCES.md",
+        "LICENSE"
       ],
       "allowed_actions": [
         "create_branch",
@@ -101,13 +102,13 @@
         "reconcile_transition_records",
         "delete_fully_merged_non_main_branch_refs",
         "install_automatic_merged_pr_branch_hygiene",
-        "delete_owner_authorized_superseded_non_main_branch_refs"
+        "delete_owner_authorized_superseded_non_main_branch_refs",
+        "license_selection"
       ],
       "required_prohibited_actions": [
         "merge_to_main",
         "branch_protection_or_ruleset_change",
         "release_or_publish",
-        "license_selection",
         "managed_project_mutation",
         "production_deploy",
         "production_secret_change",
@@ -147,7 +148,8 @@
     "plugins/**",
     ".project-leader/**",
     "projects/standing-authority.json",
-    "SECURITY.md"
+    "SECURITY.md",
+    "LICENSE"
   ],
   "protected_paths": [
     ".github/workflows/**",
@@ -162,6 +164,7 @@
     "roles/**",
     "plugins/**",
     "projects/standing-authority.json",
-    "SECURITY.md"
+    "SECURITY.md",
+    "LICENSE"
   ]
 }
