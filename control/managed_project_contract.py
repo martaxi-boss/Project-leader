@@ -239,10 +239,11 @@ def classify_superseded_work(
     current_revision,
     heavy_work=True,
     can_certify_current_state=False,
+    can_change_technical_decision=False,
     exclusive_diagnostic_evidence_needed=False,
     cancellation_safe=False,
 ):
-    """Cancel only obsolete E1 heavy work that no longer contributes certification or diagnosis."""
+    """Cancel only obsolete E1 heavy work that no longer contributes certification, decisions, or diagnosis."""
     if not isinstance(effect_class, str) or not effect_class:
         raise ValueError("effect_class must be a non-empty string")
     for label, value in {
@@ -254,6 +255,7 @@ def classify_superseded_work(
     for label, value in {
         "heavy_work": heavy_work,
         "can_certify_current_state": can_certify_current_state,
+        "can_change_technical_decision": can_change_technical_decision,
         "exclusive_diagnostic_evidence_needed": exclusive_diagnostic_evidence_needed,
         "cancellation_safe": cancellation_safe,
     }.items():
@@ -286,6 +288,13 @@ def classify_superseded_work(
             "state": "STILL_RELEVANT",
             "action": KEEP_RUNNING,
             "reason": "CAN_STILL_CERTIFY_CURRENT_STATE",
+        }
+    if can_change_technical_decision:
+        return {
+            "rule": SUPERSEDED_WORK_AUTO_CANCEL,
+            "state": "STILL_RELEVANT",
+            "action": KEEP_RUNNING,
+            "reason": "TECHNICAL_DECISION_STILL_RELEVANT",
         }
     if exclusive_diagnostic_evidence_needed:
         return {
