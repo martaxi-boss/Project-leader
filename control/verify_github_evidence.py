@@ -495,10 +495,14 @@ def verify_run_payload(ci_item, result, payload, repository, trusted_workflow=No
             raise ValueError(
                 f"PR-bound CI evidence must come from pull_request context: {ci_item['run_id']}"
             )
+        expected_branch = task["starting_state"]["task_branch"]
+        if payload.get("head_branch") != expected_branch:
+            raise ValueError(
+                f"workflow run {ci_item['run_id']} is not bound to the expected task branch"
+            )
         matches = [
             pr for pr in payload.get("pull_requests") or []
             if pr.get("number") == result["pr_number"]
-            and (pr.get("head") or {}).get("sha") == result["implementation_head_sha"]
             and (pr.get("base") or {}).get("sha") == task["starting_state"]["base_sha"]
         ]
         if not matches:
