@@ -6,7 +6,7 @@
   "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
   "authorization_record": ".project-leader/tasks/PROJECT-LEADER-OPERATIONAL-EFFICIENCY-094.json",
   "authorization_commit_sha": "83f20836044cdeb029a4e60c28dbb4356f0f42c0",
-  "authorization_sha256": "b5bcf6bfccb5133c6b3e5357c96018e9ed46261d2dc77a802e19e35b19eb73e9",
+  "authorization_sha256": "9fde238bd494495decb559c213c5526e8521b42eb65c21e22cad670a6a8ae267",
   "implementation_head_sha": "fe7255eb58081e5e594e518bf16c2735369115f2",
   "branch": "builder/operational-efficiency-094",
   "pr_number": 97,
@@ -34,7 +34,7 @@
     {
       "name": "Trust-root governance path",
       "status": "PASS",
-      "evidence": "Immutable Task 094 authorization commit 83f20836044cdeb029a4e60c28dbb4356f0f42c0 is the authorization-only descendant of canonical base 3de696a1286d79e080d3c72bcfdf6691d9255030 with exact task SHA-256 b5bcf6bfccb5133c6b3e5357c96018e9ed46261d2dc77a802e19e35b19eb73e9 and precedes all protected implementation changes."
+      "evidence": "Immutable Task 094 authorization commit 83f20836044cdeb029a4e60c28dbb4356f0f42c0 is the authorization-only descendant of canonical base 3de696a1286d79e080d3c72bcfdf6691d9255030 with exact task SHA-256 9fde238bd494495decb559c213c5526e8521b42eb65c21e22cad670a6a8ae267 and precedes all protected implementation changes."
     },
     {
       "name": "Focused-before-full validation regression",
