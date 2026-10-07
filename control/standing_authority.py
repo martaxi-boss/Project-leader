@@ -87,6 +87,8 @@ def resolve_recovery_action(
     durable_continuity_required=False,
     immutable_audit_required=False,
     no_progress_iterations=0,
+    attempt_count=0,
+    identical_failure_count=0,
     retry_basis=None,
 ):
     """Resolve compact completion authority for already-covered E1 Recovery."""
@@ -109,6 +111,10 @@ def resolve_recovery_action(
         raise ValueError("effect_class must be a non-empty string")
     if not isinstance(no_progress_iterations, int) or isinstance(no_progress_iterations, bool) or no_progress_iterations < 0:
         raise ValueError("no_progress_iterations must be a non-negative integer")
+    if not isinstance(attempt_count, int) or isinstance(attempt_count, bool) or attempt_count < 0:
+        raise ValueError("attempt_count must be a non-negative integer")
+    if not isinstance(identical_failure_count, int) or isinstance(identical_failure_count, bool) or identical_failure_count < 0:
+        raise ValueError("identical_failure_count must be a non-negative integer")
     if retry_basis is not None and retry_basis not in RETRY_BASES:
         raise ValueError("retry_basis must be a recognized material retry basis")
 
@@ -140,6 +146,21 @@ def resolve_recovery_action(
         return {
             "decision": RECOVERY_REPLAN_REQUIRED,
             "reason": "BLIND_RETRY_BLOCKED",
+            "authority_kind": DERIVED_COMPLETION_AUTHORITY,
+            "authority_source": STANDING_OWNER_GRANT,
+            "durable_recovery_required": True,
+            "route": RECOVERY_DIRECT_REPLAN,
+            "executor": "RECOVERY_GUARDIAN",
+        }
+
+    if same_action_retry and (
+        attempt_count >= 3
+        or identical_failure_count >= 2
+        or no_progress_iterations >= 3
+    ):
+        return {
+            "decision": RECOVERY_REPLAN_REQUIRED,
+            "reason": "RECOVERY_BUDGET_EXHAUSTED",
             "authority_kind": DERIVED_COMPLETION_AUTHORITY,
             "authority_source": STANDING_OWNER_GRANT,
             "durable_recovery_required": True,
