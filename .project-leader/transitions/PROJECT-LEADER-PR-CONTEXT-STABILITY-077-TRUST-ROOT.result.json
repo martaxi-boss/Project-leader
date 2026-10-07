@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-PR-CONTEXT-STABILITY-077-TRUST-ROOT",
+  "task_id": "PROJECT-LEADER-PR-CONTEXT-STABILITY-077",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-PR-CONTEXT-STABILITY-077-TRUST-ROOT.authorization.json",
+  "action": "trust_root_mutation",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/pr-context-stability-077",
+    "revision": "2a3c9ec3ecbe7de1c92816961df41ccd5d80a670",
+    "base_revision": "7a4684ca7a2ff83529a75f040ce3bc2be3040b8a",
+    "environment": null
+  },
+  "observed_at": "2026-10-07T10:12:10Z",
+  "final_state": {
+    "status": "AUDITED",
+    "revision": "089fa797407e4ed483f050076a390c5221dbea44"
+  },
+  "evidence": [
+    "Immutable Task Authorization 2a3c9ec3ecbe7de1c92816961df41ccd5d80a670 precedes protected verifier changes.",
+    "Trust-root authorization 65695b4173a011d09b5df0a7a3dc2ec6283aa1f5 was persisted before implementation.",
+    "Implementation head 089fa797407e4ed483f050076a390c5221dbea44 passed required runs 37605638860, 37605638766 and 37605638833.",
+    "Regression distinguishes immutable run head_sha from GitHub's mutable nested PR-head relation while retaining exact PR number, task branch and base."
+  ],
+  "residual_blockers": []
+}
