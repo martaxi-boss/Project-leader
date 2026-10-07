@@ -326,3 +326,16 @@ Pass only if:
 
 The test harness is intentionally injected and deterministic. It proves the decision/effect adapter behavior without claiming that a frozen ChatGPT host can execute code while the host itself is unavailable.
 
+## Test 21 — Host runtime invocation and stale-copy reconciliation
+
+Observed in the current ChatGPT workspace on 2026-10-07:
+
+1. Resolve `skills://plugins/project-leader/project-leader/skill.md` through the host skill surface.
+2. Confirm the entrypoint is readable/invocable.
+3. Read canonical `main` plugin metadata + Skill from `martaxi-boss/Project-leader`.
+4. If the loaded copy lacks a canonical rule present on the pinned revision, classify `RUNTIME_SYNC_STALE` and activate `RUNTIME_CANONICAL_OVERRIDE_ACTIVE`.
+5. Confirm substantive work continues under the exact pinned canonical revision instead of requesting manual reinstall/sync.
+6. Query available plugin-management dependency metadata. If no public global release identity exists, record that limitation and do not fabricate a portable marketplace/install attestation.
+
+Acceptance: host invocation is demonstrated; stale loaded bytes do not cause mixed-generation execution; canonical revision is the effective contract; the absence of a public release identity is reported as an evidence limit, not silently upgraded into proof.
+

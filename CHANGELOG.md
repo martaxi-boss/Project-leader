@@ -12,6 +12,7 @@ This file records consumer-visible Project Leader control/runtime changes. Exact
 - Add `control/runtime_execution.py` plus behavioral acceptance for bounded preflight, internal-stall detection, ambiguous-write reconciliation, restart deduplication, timeout handling and external-CI routing.
 - Remove obsolete Recovery wording and tautological phrase-only assertions while retaining behavior-level tests.
 - Add explicit source/provenance links, distribution-verification instructions and GitHub Actions event-policy readiness documentation.
+- Record an observed ChatGPT host invocation of the Project Leader skill, including stale-loaded-copy reconciliation via canonical runtime override and the absence of a public global release identity in the available plugin-management surface.
 - License selection is intentionally not included: the repository Owner has not chosen a project license.
 
 ## 0.6.8 / Recovery Guardian 0.5.6 — 2026-10-06

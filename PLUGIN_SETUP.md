@@ -92,3 +92,14 @@ Neither plugin can keep running inside ChatGPT while the ChatGPT service itself 
 ## GitHub dependency
 
 Both plugins reference the installed OpenAI GitHub connector. Access remains limited to the repositories and actions authorized for the signed-in account.
+
+## Host runtime observation — 2026-10-07
+
+The current ChatGPT host successfully resolves the installed Project Leader skill entrypoint at `skills://plugins/project-leader/project-leader/skill.md`, which proves that the skill is invocable in this workspace.
+
+The loaded host copy observed on 2026-10-07 still contains the earlier floating-`main` bootstrap wording, while canonical GitHub `main` at `e633144e11b10f1e6e28c778cd42360e1c147985` contains the current single-revision bootstrap contract. This is an observed `RUNTIME_SYNC_STALE` case, not a runtime stop: the canonical contract requires `RUNTIME_CANONICAL_OVERRIDE_ACTIVE` and pins the invocation to the exact live canonical revision.
+
+The available ChatGPT plugin-management dependency lookup does not resolve `project-leader` as a public globally listed plugin with a current release. Therefore this repository does **not** claim a portable public-marketplace release identity from that surface. The verified operational facts are narrower: the skill is invocable in the current host, canonical GitHub is readable, and stale loaded bytes are reconciled by the documented bootstrap/override path.
+
+This host observation is runtime evidence, not a cryptographic attestation of the installed ZIP bytes. For distributable artifacts, continue to use the GitHub Actions `plugin-manifest.json` + `SHA256SUMS` provenance path described above.
+
