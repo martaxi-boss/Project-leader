@@ -309,3 +309,20 @@ The incremental direct-execution correction must preserve all earlier smoke test
 10. Genuine physical/manual gate is requested only after independent automatable prerequisites and convergence are complete.
 
 The existing executable suites in `tests/test_managed_project_contract.py`, `tests/test_managed_cross_repo.py`, and `tests/test_standing_authority.py` provide the corresponding regression evidence.
+
+## Test 25 — Observable Recovery and effect adapter
+
+Run the executable tests around `control/runtime_execution.py` with injected fake durable state and CI observations.
+
+Pass only if:
+
+- bounded preflight exposes the exact minimum read sequence before broader discovery;
+- two repeated no-progress observations route `INTERNAL_OPERATION_STALLED -> LIVENESS_RECONCILE_REQUIRED`;
+- a write that becomes durable and then loses its response is re-observed as completed rather than repeated;
+- a new invocation against the same durable effect recognizes `EFFECT_ALREADY_APPLIED` and performs no duplicate write;
+- a timeout with no observed durable effect is surfaced without an automatic same-action write retry;
+- an active exact CI run remains `WAITING_EXTERNAL_CI`, while a terminal failed bound run routes Recovery;
+- malformed boolean/run-id/timestamp observations are rejected before they can become positive evidence.
+
+The test harness is intentionally injected and deterministic. It proves the decision/effect adapter behavior without claiming that a frozen ChatGPT host can execute code while the host itself is unavailable.
+
