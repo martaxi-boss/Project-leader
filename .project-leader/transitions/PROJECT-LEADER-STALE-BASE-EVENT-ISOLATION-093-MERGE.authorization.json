@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-STALE-BASE-EVENT-ISOLATION-093-MERGE",
+  "task_id": "PROJECT-LEADER-STALE-BASE-EVENT-ISOLATION-093",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-07T15:55:00Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "STANDING_OWNER_GRANT",
+    "summary": "Owner instructed Project Leader to continue autonomously to completion. PR 96 exact head 06d915876e59ad8457ec8f28e3d25c8f479c4037 is mergeable against exact canonical main 0f1fb5d9aaf9f171c843937e482fcdf75edd7482. Trusted authorization gate 37647658896, Control contract tests 37647663380, Validate control plane 37647663412, and Package ChatGPT plugins 37647663421 all completed SUCCESS on this exact head. Authorize only a regular merge of this exact head/base pair after immediate revalidation.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/96",
+    "revision": "06d915876e59ad8457ec8f28e3d25c8f479c4037",
+    "base_revision": "0f1fb5d9aaf9f171c843937e482fcdf75edd7482",
+    "environment": null
+  }
+}
