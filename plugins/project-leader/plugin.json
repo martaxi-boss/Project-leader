@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-leader",
-  "version": "0.7.0",
+  "version": "0.6.8",
   "description": "Execution-first universal project controller with standing authority, direct FAST_E1 work, proportional durable controls, direct recovery, continuous hygiene, and genuine Human Gates.",
   "author": {
     "name": "martaxi-boss",
