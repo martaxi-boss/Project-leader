@@ -1,0 +1,67 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-PR-CONTEXT-STABILITY-077",
+  "terminal_status": "TERMINAL_SUCCESS",
+  "repository": "martaxi-boss/Project-leader",
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "authorization_record": ".project-leader/tasks/PROJECT-LEADER-PR-CONTEXT-STABILITY-077.json",
+  "authorization_commit_sha": "2a3c9ec3ecbe7de1c92816961df41ccd5d80a670",
+  "authorization_sha256": "c994e71a0b57f48e5ef922d434dae4b572cbeb5fd767d6db36c86e3b731a9535",
+  "implementation_head_sha": "089fa797407e4ed483f050076a390c5221dbea44",
+  "branch": "builder/pr-context-stability-077",
+  "pr_number": 80,
+  "recorded_at": "2026-10-07T10:12:00Z",
+  "state_observed_at": "2026-10-07T10:11:30Z",
+  "changes": [
+    "Kept exact workflow run head_sha as the immutable implementation binding while removing the false requirement that GitHub's nested pull_requests current-head relation stay on the historical implementation commit.",
+    "Bound PR-context evidence to PR number, exact task branch and exact base SHA, preserving workflow ID/path/event/repository checks.",
+    "Added positive regression for an evidence-descendant PR head and negative regression for a wrong task branch."
+  ],
+  "validation": [
+    {
+      "name": "Mutation scope audit",
+      "status": "PASS",
+      "evidence": "Control contract tests run 37605638860 completed successfully at exact implementation head 089fa797407e4ed483f050076a390c5221dbea44 and mutation-scope enforcement passed."
+    },
+    {
+      "name": "GitHub evidence verification",
+      "status": "PASS",
+      "evidence": "Exact implementation head runs are terminal-success: Control contract tests 37605638860, Validate control plane 37605638766, Package ChatGPT plugins 37605638833."
+    },
+    {
+      "name": "Trust-root governance path",
+      "status": "PASS",
+      "evidence": "Immutable task authorization 2a3c9ec3ecbe7de1c92816961df41ccd5d80a670 and trust-root authorization PROJECT-LEADER-PR-CONTEXT-STABILITY-077-TRUST-ROOT were persisted before control verifier changes."
+    },
+    {
+      "name": "Historical-run PR-context regression",
+      "status": "PASS",
+      "evidence": "The new regression accepts a historical run whose own head_sha is the implementation commit even when the nested live PR head has advanced, while rejecting a wrong task branch."
+    }
+  ],
+  "ci": [
+    {
+      "name": "Control contract tests",
+      "status": "SUCCESS",
+      "run_id": 37605638860
+    },
+    {
+      "name": "Validate control plane",
+      "status": "SUCCESS",
+      "run_id": 37605638766
+    },
+    {
+      "name": "Package ChatGPT plugins",
+      "status": "SUCCESS",
+      "run_id": 37605638833
+    }
+  ],
+  "artifacts": [
+    "https://github.com/martaxi-boss/Project-leader/pull/80"
+  ],
+  "material_non_effects": [
+    "No external project was mutated.",
+    "No workflow identity, base-policy ceiling, release/deploy, license, repository-admin setting, architecture or role hierarchy was changed."
+  ],
+  "residual_blockers": []
+}
