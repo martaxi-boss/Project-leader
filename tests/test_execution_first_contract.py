@@ -276,9 +276,9 @@ class ExecutionFirstContractTests(unittest.TestCase):
             (ROOT / "plugins/recovery-guardian/plugin.json").read_text(encoding="utf-8")
         )
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertEqual("0.7.1", leader["version"])
+        self.assertEqual("0.7.0", leader["version"])
         self.assertEqual("0.6.0", guardian["version"])
-        self.assertIn("0.7.1 / Recovery Guardian 0.6.0", changelog)
+        self.assertIn("0.7.0 / Recovery Guardian 0.6.0", changelog)
 
 
 if __name__ == "__main__":

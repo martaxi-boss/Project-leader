@@ -9,18 +9,18 @@ Project Leader also uses the Recovery Guardian protocol internally, so normal wo
 
 ## Current canonical runtime
 
-- Project Leader **0.7.1**.
+- Project Leader **0.7.0**.
 - Recovery Guardian **0.6.0**.
 
 Before consequential work, read the live `PROJECT_LEADER.md`, `RUNBOOK.md`, `RECOVERY_PROTOCOL.md`, role contracts and `projects/standing-authority.json` from canonical GitHub state. The active target's architecture and live repository state define its bounded task; external projects do not require central enrollment.
 
 On each `@Project Leader` invocation, the Skill performs `CANONICAL_RUNTIME_BOOTSTRAP` when GitHub read access is available. Loader contract v1 (minimum loader version 1) resolves canonical `main` once to an exact `RUNTIME_CANONICAL_REVISION`; plugin, Skill, control documents and policies for that control decision are then read at that same immutable SHA. If the installed/runtime copy lags, `RUNTIME_SYNC_STALE -> RUNTIME_CANONICAL_OVERRIDE_ACTIVE` uses that pinned generation without requiring manual resync. A loader below the minimum must refuse an incompatible override rather than mixing revisions.
 
-The 0.7.1 runtime preserves `BOUNDED_STATE_PREFLIGHT`, non-blocking repository hygiene, direct covered Recovery, and the 0.7.0 execution-first contract. It adds only `FAST_VALIDATION_BEFORE_FULL_VALIDATION`, `SUPERSEDED_WORK_AUTO_CANCEL`, and `FIRST_SUFFICIENT_SAFE_PASS_STOP` to reduce unnecessary validation, obsolete CI tracking, and optional post-PASS work.
+The 0.7.0 runtime preserves `BOUNDED_STATE_PREFLIGHT`, non-blocking repository hygiene, direct covered Recovery, and the execution-first contract. This compatible incremental refinement adds only `FAST_VALIDATION_BEFORE_FULL_VALIDATION`, `SUPERSEDED_WORK_AUTO_CANCEL`, and `FIRST_SUFFICIENT_SAFE_PASS_STOP` to reduce unnecessary validation, obsolete CI tracking, and optional post-PASS work.
 
 It also adds strict JSON/policy input semantics plus observable behavioral acceptance for ambiguous writes, restart deduplication, bounded internal liveness and live CI reconciliation through the testable runtime adapter.
 
-Version 0.7.1 keeps the existing Human Gate closure, authority/effect boundaries, stale-base protection, security checks, anti-loop behavior, and material E2/E3 controls unchanged. Recovery Guardian 0.6.0 is unchanged by this patch.
+Version 0.7.0 keeps the existing Human Gate closure, authority/effect boundaries, stale-base protection, security checks, anti-loop behavior, and material E2/E3 controls unchanged. Recovery Guardian 0.6.0 is unchanged by this refinement.
 
 Covered executable transitions continue through exact Supervisor authorization and validation under standing Owner authority. Human interruption is reserved for exclusive human intervention or a new uncovered material decision.
 
