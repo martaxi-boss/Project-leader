@@ -6,6 +6,7 @@
   "plugins": [
     {
       "name": "project-leader",
+      "pluginId": "Plugin_4cbb6b68b0988191ad110a1a3874fa37",
       "source": {
         "source": "local",
         "path": "./plugins/project-leader"
