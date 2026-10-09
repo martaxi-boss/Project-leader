@@ -564,7 +564,15 @@ class ControlContractTests(unittest.TestCase):
         self.assertIn("Test 21 — Canonical runtime bootstrap after marketplace lag", smoke)
 
         project_leader_entry = next(item for item in marketplace["plugins"] if item["name"] == "project-leader")
-        self.assertNotIn("pluginId", project_leader_entry)
+        # This marketplace intentionally adopts an already-installed plugin, not a new one.
+        self.assertRegex(project_leader_entry["pluginId"], r"^Plugin_[0-9a-f]{32}$")
+        self.assertEqual(
+            {"source": "local", "path": "./plugins/project-leader"},
+            project_leader_entry["source"],
+        )
+        guardian_entry = next(item for item in marketplace["plugins"] if item["name"] == "recovery-guardian")
+        self.assertNotIn("pluginId", guardian_entry)
+        self.assertEqual("./plugins/recovery-guardian", guardian_entry["source"]["path"])
 
     def test_project_leader_compacts_ordinary_e1_recovery_and_keeps_durable_rerun_proof(self):
         project = (ROOT / "PROJECT_LEADER.md").read_text(encoding="utf-8")
