@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103-MERGE",
+  "task_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-09T18:22:14.997Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "The Owner requested independent audit and safe hygiene of old Project Leader versions/residues. Task 103 contains only 2026-10-09 setup/changelog reconciliation and exact no-open-PR/lease-checked grants for seven superseded builder refs, retaining unique evidence and all control refs. Current PR 103 exact head 962244ce768c134faa66f887e67453c114ca093b is mergeable against protected main ce0b0510897dce25787ccbe058977b60737f8ae2. Contract 37972657740, Validate 37972657648, Package 37972657652, Trusted authorization 37972653077 are all SUCCESS on this head. Authorize only the exact guarded merge after immediate SHA and CI revalidation; no branch-protection, plugin install, workspace, version or unrelated mutation authorized.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/103",
+    "revision": "962244ce768c134faa66f887e67453c114ca093b",
+    "base_revision": "ce0b0510897dce25787ccbe058977b60737f8ae2",
+    "environment": null
+  }
+}
