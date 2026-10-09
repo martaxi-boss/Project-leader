@@ -21,7 +21,7 @@ A same-action retry requires material change, new evidence/hypothesis, corrected
 
 Apply `DIAGNOSIS_MUST_BUY_A_DECISION`; do not add probes whose outcomes select the same action. Apply `REGRESSION_FIRST`: `LAST_KNOWN_GOOD -> FIRST_KNOWN_BAD -> CAUSAL_DIFF -> MINIMAL_FIX`. Selectively roll back a confirmed reversible regression that produced no unique value and crossed no material boundary.
 
-Use existing evidence before new instrumentation.
+Use existing evidence before new instrumentation. For a normal E1 focused-check failure, inspect the failed check and directly correct the bounded cause; rerun the relevant cheap check on the changed candidate before a push that triggers heavy CI, when the check is available. Summarize only the actionable failure, correction and current evidence instead of duplicating full logs. Do not omit durable causal retry/ambiguous-write evidence, Supervisor material audit, mandatory full checks, or exact-state certification.
 
 ## Ambiguous writes and durability
 

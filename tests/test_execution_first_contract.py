@@ -10,6 +10,8 @@ from control.managed_project_contract import (
     DIAGNOSIS_BUYS_DECISION,
     FIRST_SUFFICIENT_SAFE_PASS_STOP,
     KEEP_RUNNING,
+    FOCUSED_VALIDATION,
+    FULL_VALIDATION,
     MATERIAL_VALIDATION_UNCHANGED,
     PROBE_NO_DECISION_VALUE,
     REGRESSION_FIRST,
@@ -18,6 +20,7 @@ from control.managed_project_contract import (
     classify_superseded_work,
     evaluate_diagnostic_probe,
     resolve_control_mode,
+    resolve_e1_validation_preflight,
     resolve_regression_strategy,
     resolve_terminal_action,
     resolve_validation_sequence,
@@ -108,6 +111,89 @@ class ExecutionFirstContractTests(unittest.TestCase):
         )
         self.assertIn("FULL_VALIDATION", security["steps"])
         self.assertTrue(security["full_validation_required"])
+
+
+    def test_focused_preflight_blocks_heavy_ci_until_candidate_passes(self):
+        effect = "E1_RECOVERABLE_PROJECT_LOCAL"
+        pending = resolve_e1_validation_preflight(
+            effect, candidate_revision="working-tree-b"
+        )
+        self.assertEqual(FOCUSED_VALIDATION, pending["route"])
+
+        stale = resolve_e1_validation_preflight(
+            effect,
+            candidate_revision="working-tree-b",
+            focused_revision="working-tree-a",
+            focused_status="PASS",
+        )
+        self.assertEqual(FOCUSED_VALIDATION, stale["route"])
+
+        failed = resolve_e1_validation_preflight(
+            effect,
+            candidate_revision="working-tree-b",
+            focused_revision="working-tree-b",
+            focused_status="FAIL",
+        )
+        self.assertEqual("RECOVERY_DIRECT_REPAIR", failed["route"])
+
+        passed = resolve_e1_validation_preflight(
+            effect,
+            candidate_revision="working-tree-b",
+            focused_revision="working-tree-b",
+            focused_status="PASS",
+        )
+        self.assertEqual(FULL_VALIDATION, passed["route"])
+
+    def test_focused_preflight_falls_back_when_checks_are_unavailable(self):
+        effect = "E1_RECOVERABLE_PROJECT_LOCAL"
+        unavailable = resolve_e1_validation_preflight(
+            effect, candidate_revision="candidate", focused_validation_available=False
+        )
+        self.assertEqual(FULL_VALIDATION, unavailable["route"])
+        self.assertEqual("FOCUSED_UNAVAILABLE", unavailable["reason"])
+
+        irrelevant = resolve_e1_validation_preflight(
+            effect, candidate_revision="candidate", focused_validation_relevant=False
+        )
+        self.assertEqual(FULL_VALIDATION, irrelevant["route"])
+
+        required = resolve_validation_sequence(
+            effect, focused_validation_relevant=False,
+            full_validation_required=True, security_or_certification_required=True,
+        )
+        self.assertIn("FULL_VALIDATION", required["steps"])
+        self.assertIn("FINAL_EXACT_STATE_CERTIFICATION", required["steps"])
+
+    def test_focused_preflight_preserves_e2_e3_and_rejects_invalid_evidence(self):
+        for effect in ("E2_CONSEQUENTIAL_TRANSITION", "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED"):
+            decision = resolve_e1_validation_preflight(
+                effect, candidate_revision="candidate"
+            )
+            self.assertEqual(MATERIAL_VALIDATION_UNCHANGED, decision["route"])
+        with self.assertRaises(ValueError):
+            resolve_e1_validation_preflight(
+                "E1_RECOVERABLE_PROJECT_LOCAL",
+                candidate_revision="candidate",
+                focused_status="UNKNOWN",
+            )
+        with self.assertRaises(ValueError):
+            resolve_e1_validation_preflight(
+                "E1_RECOVERABLE_PROJECT_LOCAL",
+                candidate_revision="candidate",
+                focused_validation_available="false",
+            )
+
+    def test_focused_preflight_keeps_supervisor_and_compact_e1_invariants(self):
+        skill = (ROOT / "plugins/project-leader/skills/project-leader/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        recovery = (ROOT / "plugins/recovery-guardian/skills/recovery-guardian/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("resolve_e1_validation_preflight", skill)
+        self.assertIn("independent Supervisor audit", skill)
+        self.assertIn("no new administrative artifacts", skill)
+        self.assertIn("focused-check failure", recovery)
 
     def test_superseded_heavy_work_auto_cancels_only_when_safe_and_irrelevant(self):
         decision = classify_superseded_work(
