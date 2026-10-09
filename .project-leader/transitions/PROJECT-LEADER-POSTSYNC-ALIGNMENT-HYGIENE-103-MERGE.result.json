@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103-MERGE",
+  "task_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103-MERGE.authorization.json",
+  "action": "merge_to_main",
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/103",
+    "revision": "962244ce768c134faa66f887e67453c114ca093b",
+    "base_revision": "ce0b0510897dce25787ccbe058977b60737f8ae2",
+    "environment": null
+  },
+  "observed_at": "2026-10-09T18:24:00Z",
+  "final_state": {
+    "status": "MERGED",
+    "revision": "55b7a054df5408ed82f4d7771e5a8c843af26563"
+  },
+  "evidence": [
+    "Merge authorization was committed prior to effect on control/merge-authorization-103 at 6a8886bf9579ec69d2f11629d5be07baf6ec83c8.",
+    "GitHub PR 103 was merged into protected main at 55b7a054df5408ed82f4d7771e5a8c843af26563 with the expected exact head; four required PR checks including trusted authorization passed.",
+    "All post-main checks PASS: contract 37972842487, validate 37972842412, package 37972842488, stale-authorization invalidation 37972842453 and repository hygiene 37972842400.",
+    "Fresh branch inventory proves seven authorized superseded branches plus the PR head removed, leaving 18 refs: protected main, 16 retained control evidence refs and builder/audit-remediation-p2-075 preserving unique post-closure evidence.",
+    "Two different installed Project Leader Skills are visible in ChatGPT; repo-only cleanup made no workspace changes or uninstall actions."
+  ],
+  "residual_blockers": []
+}

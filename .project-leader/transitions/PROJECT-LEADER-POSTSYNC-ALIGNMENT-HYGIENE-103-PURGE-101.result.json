@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103-PURGE-101",
+  "task_id": "PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-POSTSYNC-ALIGNMENT-HYGIENE-103-PURGE-101.authorization.json",
+  "action": "delete_owner_authorized_superseded_non_main_branch_refs",
+  "target": {
+    "kind": "repository_branch",
+    "identifier": "builder/marketplace-existing-plugin-binding-101",
+    "revision": "46141ffc192156b0c072e354d5d5d10bd1cfdd98",
+    "base_revision": "ce0b0510897dce25787ccbe058977b60737f8ae2",
+    "environment": null
+  },
+  "observed_at": "2026-10-09T18:24:00Z",
+  "final_state": {
+    "status": "DELETED",
+    "revision": null
+  },
+  "evidence": [
+    "An exact-revision Owner authorization for builder/marketplace-existing-plugin-binding-101 at 46141ffc192156b0c072e354d5d5d10bd1cfdd98 was durably merged into protected main 55b7a054df5408ed82f4d7771e5a8c843af26563 before effect.",
+    "Repository hygiene push run 37972842400 completed SUCCESS; live full branch inventory and an exact branch GET after the sweep independently confirmed builder/marketplace-existing-plugin-binding-101 absent.",
+    "The validated replacement is merged into main, and original PR/audit records remain available; no protected branch, version or unrelated project was modified."
+  ],
+  "residual_blockers": []
+}
