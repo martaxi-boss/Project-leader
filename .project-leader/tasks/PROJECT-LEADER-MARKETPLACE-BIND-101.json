@@ -1,0 +1,106 @@
+{
+  "schema_version": "2.0",
+  "task_id": "PROJECT-LEADER-MARKETPLACE-BIND-101",
+  "project": "PROJECT LEADER",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-09T17:58:29.006Z",
+  "authority": {
+    "kind": "TRANSACTIONAL_GRANT",
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "binding_mode": "OBJECTIVE_SCOPE_BOUND",
+    "summary": "Owner supplied the URL of the already-installed Project Leader plugin in the active ChatGPT workspace and requested that GitHub marketplace synchronization take over this existing plugin, not upload a ZIP or create another plugin. Apply the documented pluginId field to only project-leader in .agents/plugins/marketplace.json, preserving recovery-guardian and all other plugin content, and validate through protected PR governance. Do not access, mutate or reveal unrelated workspace settings."
+  },
+  "starting_state": {
+    "default_branch": "main",
+    "base_sha": "987dc71a79cf4b3e823f29ac91ad627dd1d13d17",
+    "task_branch": "builder/marketplace-existing-plugin-binding-101",
+    "pr_number": null
+  },
+  "effect_class": "E3_DESTRUCTIVE_EXTERNAL_PRIVILEGED",
+  "mutation_scope": [
+    ".project-leader/tasks/PROJECT-LEADER-MARKETPLACE-BIND-101.json",
+    ".project-leader/results/PROJECT-LEADER-MARKETPLACE-BIND-101.json",
+    ".agents/plugins/marketplace.json"
+  ],
+  "allowed_actions": [
+    "create_branch",
+    "edit_project_files",
+    "create_commits",
+    "run_ci",
+    "open_or_update_pull_request"
+  ],
+  "prohibited_actions": [
+    "merge_to_main",
+    "branch_protection_or_ruleset_change",
+    "release_or_publish",
+    "license_selection",
+    "managed_project_mutation",
+    "production_deploy",
+    "production_secret_change",
+    "paid_service_activation",
+    "cross_project_mutation",
+    "force_push",
+    "rewrite_git_history",
+    "weaken_ci_or_security_controls",
+    "unrelated_refactor",
+    "new_agent_architecture",
+    "plugin_delete_or_uninstall",
+    "workspace_permission_change"
+  ],
+  "required_validation": [
+    "Mutation scope audit",
+    "GitHub evidence verification",
+    "Trust-root governance path",
+    "Documented same-workspace existing-plugin binding format",
+    "Recovery Guardian entry unchanged",
+    "No plugin manifest, version, or permission change",
+    "Same-cycle hygiene complete"
+  ],
+  "required_ci": [
+    "Control contract tests",
+    "Validate control plane",
+    "Package ChatGPT plugins"
+  ],
+  "policy": {
+    "profile": "project-leader-v1",
+    "path": "projects/policies/project-leader.json",
+    "base_sha": "987dc71a79cf4b3e823f29ac91ad627dd1d13d17",
+    "sha256": "d8ca49eaaf130b8924ef56ac0912136fe9c2000650db77a1124dada9fabb03cb",
+    "binding_mode": "LOCAL_BASE_V1"
+  },
+  "recovery": {
+    "mode": "APPEND_ONLY_V1"
+  },
+  "terminal_condition": "Project Leader marketplace manifest explicitly binds the existing same-workspace Project Leader plugin ID using supported pluginId at the unchanged project-leader entry; the recovery-guardian entry is bit-for-bit unchanged; exact-implementation tests, independent trusted gate, required full CI and hygiene pass. Only then may a separately authorized verified merge update canonical main. Admin marketplace sync is a separate user/host action and must not be claimed completed without UI evidence.",
+  "privacy": {
+    "contains_secrets": false,
+    "contains_private_conversation_text": false
+  },
+  "integrity_mode": "IMMUTABLE_AUTHORIZATION_V1",
+  "transition_controls": [
+    {
+      "action": "merge_to_main",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "branch_protection_or_ruleset_change",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "release_or_publish",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "license_selection",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "managed_project_mutation",
+      "requires_authority_resolution": true
+    },
+    {
+      "action": "trust_root_mutation",
+      "requires_authority_resolution": true
+    }
+  ]
+}
