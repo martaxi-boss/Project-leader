@@ -4,6 +4,14 @@ This file records consumer-visible Project Leader control/runtime changes. Exact
 
 ## 0.7.0 / Recovery Guardian 0.6.0 — 2026-10-07
 
+### Compatible operational/Marketplace maintenance — 2026-10-09
+
+- Enforce a per-candidate fast E1 validation preflight before avoidable heavy-CI-triggering pushes. Reject stale focused test evidence, route focused failures to direct Recovery Guardian repair, and retain all mandatory full/security/exact-commit checks and independent Supervisor material audits.
+- Compact ordinary E1 cross-role context and Recovery Guardian reporting. This update changed both Skill instruction files, without changing the plugin manifest compatibility versions (0.7.0 / 0.6.0).
+- Bind the existing Project Leader workspace plugin to GitHub Marketplace synchronization by its verified `pluginId` instead of creating a second plugin. Regression coverage preserves the Recovery Guardian marketplace entry and canonical-bootstrap rules.
+- Reconcile setup documentation with the actual synced Marketplace and retain historical schema/evidence files needed for recovery. Old superseded builder refs may be removed only by exact-revision authorization and lease-safe repository hygiene; canonical records and unique evidence remain.
+
+
 ### Incremental operational-efficiency refinement
 
 - Add `FAST_VALIDATION_BEFORE_FULL_VALIDATION`: normal E1 rejects incoherent candidates with the smallest relevant validation before any already-required heavy/full validation, while final security/regression/certification and exact-state proof remain mandatory.
