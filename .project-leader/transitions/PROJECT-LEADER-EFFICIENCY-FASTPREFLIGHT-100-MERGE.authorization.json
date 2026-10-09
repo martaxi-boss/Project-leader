@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-EFFICIENCY-FASTPREFLIGHT-100-MERGE",
+  "task_id": "PROJECT-LEADER-EFFICIENCY-FASTPREFLIGHT-100",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-09T17:16:05.980Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "Owner authorized closure after prior work stopped. Scope: merge PR 100 at exact head 893c1448fad5b4d59a3c3fec8293516f641000ad onto main 7f3706f96a43071d797f19774b9eca25ab464e56 only. Independent trusted checks passed: contract 37955266301, validate 37955266250, package 37955266354, trusted-authorization 37955262804. Supervisor reviewed the bounded diff and preserved material controls. Do not merge on SHA drift or failed checks.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/100",
+    "revision": "893c1448fad5b4d59a3c3fec8293516f641000ad",
+    "base_revision": "7f3706f96a43071d797f19774b9eca25ab464e56",
+    "environment": null
+  }
+}
