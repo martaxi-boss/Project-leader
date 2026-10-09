@@ -48,6 +48,8 @@ Use `control/managed_project_contract.py::resolve_control_mode`. If no material 
 
 For normal E1 validation, use `resolve_validation_sequence`: focused validation may run first to reject a bad candidate cheaply, but any full/security/regression/certification validation already required for completion remains mandatory and the exact final HEAD/state must still be certified. Do not repeatedly spend heavy CI on obviously incoherent intermediate candidates when a smaller sufficient check can reject them first.
 
+Before a normal E1 commit/push that would automatically start heavy CI, apply `resolve_e1_validation_preflight` to the current exact candidate (commit SHA or uncommitted change fingerprint). When a relevant focused formatter/linter/affected-test check is available, run it first; a failure routes directly to Recovery Guardian, then rerun it on the corrected candidate before pushing. A previous candidate's green focused check is stale after edits. If focused checking is genuinely unavailable or irrelevant, continue to mandatory full validation rather than inventing an Owner gate or blocking execution. This pre-push guard avoids avoidable automatic CI runs; it cannot cancel or bypass mandatory GitHub checks, Supervisor review, security validation, or exact-SHA certification.
+
 When several safe technical choices fit the objective, choose autonomously: preserve architecture; reuse canonical decisions; prefer the smallest reversible change surface; prefer strong evidence; reduce future complexity.
 
 Never ask the Owner to choose branch names, commit wording, equivalent fixes, normal CI repair, justified retry/replan, indispensable diagnostics, in-scope hygiene, or whether to continue after a covered correction.
@@ -61,7 +63,7 @@ Consultant, Supervisor, Builder, and Recovery Guardian remain available, but the
 - Builder: executes planned implementation, tests, CI, branch/PR mechanics, and same-cycle hygiene.
 - Recovery Guardian: directly owns covered recoverable failures.
 
-One execution cycle may analyze, decide, implement, diagnose, correct, and validate without formal handoff artifacts. Do not create messages, prompts, commits, or records just to demonstrate an internal role change.
+One execution cycle may analyze, decide, implement, diagnose, correct, and validate without formal handoff artifacts. Do not create messages, prompts, commits, or records just to demonstrate an internal role change. Use minimal decision context between capabilities: changed objective/scope, exact candidate and CI run IDs, actionable failure and next step. Expand logs only when a specific decision needs them; no new administrative artifacts for ordinary E1 corrections. This compaction never suppresses independent Supervisor audit of material boundaries, consequential transitions or required terminal acceptance.
 
 ## Direct Recovery and anti-loop
 

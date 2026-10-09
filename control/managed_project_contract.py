@@ -232,6 +232,51 @@ def resolve_validation_sequence(
     }
 
 
+
+def resolve_e1_validation_preflight(
+    effect_class,
+    *,
+    candidate_revision,
+    focused_revision=None,
+    focused_status="NOT_RUN",
+    focused_validation_relevant=True,
+    focused_validation_available=True,
+):
+    """Route normal E1 through cheap exact-candidate checks before heavy CI.
+
+    This is a scheduling decision, not authorization or a substitute for required
+    full/security/regression validation and final exact-state certification.
+    Candidate revisions may be commit SHAs or fingerprints of uncommitted changes.
+    """
+    if not isinstance(effect_class, str) or not effect_class:
+        raise ValueError("effect_class must be a non-empty string")
+    if not isinstance(candidate_revision, str) or not candidate_revision.strip():
+        raise ValueError("candidate_revision must be a non-empty string")
+    if focused_revision is not None and (
+        not isinstance(focused_revision, str) or not focused_revision.strip()
+    ):
+        raise ValueError("focused_revision must be non-empty when supplied")
+    if focused_status not in ("NOT_RUN", "PASS", "FAIL"):
+        raise ValueError("focused_status must be NOT_RUN, PASS, or FAIL")
+    _require_strict_bool(focused_validation_relevant, "focused_validation_relevant")
+    _require_strict_bool(focused_validation_available, "focused_validation_available")
+
+    if effect_class != E1_EFFECT_CLASS:
+        return {
+            "route": MATERIAL_VALIDATION_UNCHANGED,
+            "reason": "MATERIAL_CONTROLS_UNCHANGED",
+        }
+    if not focused_validation_relevant:
+        return {"route": FULL_VALIDATION, "reason": "FOCUSED_NOT_RELEVANT"}
+    if not focused_validation_available:
+        return {"route": FULL_VALIDATION, "reason": "FOCUSED_UNAVAILABLE"}
+    if focused_revision != candidate_revision or focused_status == "NOT_RUN":
+        return {"route": FOCUSED_VALIDATION, "reason": "FOCUSED_EVIDENCE_NOT_CURRENT"}
+    if focused_status == "FAIL":
+        return {"route": "RECOVERY_DIRECT_REPAIR", "reason": "FOCUSED_FAILURE"}
+    return {"route": FULL_VALIDATION, "reason": "FOCUSED_PASSED"}
+
+
 def classify_superseded_work(
     effect_class,
     *,
