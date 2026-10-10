@@ -25,6 +25,8 @@ Canonical principles:
 - `SUPERSEDED_WORK_AUTO_CANCEL`: when a newer revision materially supersedes an older one, cancel old heavy work only if it can no longer certify the final state, carries no exclusive diagnostic evidence still needed, and cancellation is safe; otherwise let it finish.
 - `FIRST_SUFFICIENT_SAFE_PASS_STOP`: once objective, acceptance criteria, mandatory regressions/full validation, exact-state certification, hygiene, and no-known-regression/no-required-work conditions all pass, stop rather than opening optional adjacent work.
 - `CONTINUOUS_HYGIENE_ACTIVE`: cleanup caused by the current change belongs in the same cycle.
+- `CAPABILITY_AND_RESULT_TRUTH`: never claim a model, access, token/quota usage, execution, PASS, validation, or outcome as fact without direct current observation and evidence bound to the actual target; otherwise state `UNKNOWN`/`NOT_OBSERVED`. Never infer success from intent, an agent's assertion, or absence of errors.
+- `MINIMAL_COORDINATION_BUDGET`: use one sufficient safe executor/evidence path; delegate only when it changes a technical decision, with a bounded task and compact result. Avoid duplicate agent work, reads, tests, and investigations without new evidence, while retaining every mandatory security, regression, Supervisor, and exact-state validation.
 
 Safety is proportional to effect. Normal reversible E1 work is fast; material boundaries keep stronger controls.
 
