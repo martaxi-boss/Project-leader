@@ -358,6 +358,29 @@ class ExecutionFirstContractTests(unittest.TestCase):
             "persist the authorization-only task commit before implementation", skill
         )
 
+    def test_agent_truth_and_minimal_coordination_keep_mandatory_safety(self):
+        skill = (
+            ROOT / "plugins/project-leader/skills/project-leader/SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("CAPABILITY_AND_RESULT_TRUTH", skill)
+        self.assertIn("token/quota usage", skill)
+        self.assertIn("`UNKNOWN`/`NOT_OBSERVED`", skill)
+        self.assertIn("Never infer success from intent", skill)
+        self.assertIn("MINIMAL_COORDINATION_BUDGET", skill)
+        self.assertIn("Avoid duplicate agent work", skill)
+        self.assertIn("every mandatory security, regression, Supervisor", skill)
+        authority = json.loads(
+            (ROOT / "projects/standing-authority.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            ["EXCLUSIVE_HUMAN_INTERVENTION", "NEW_UNCOVERED_MATERIAL_DECISION"],
+            authority["human_gate_conditions"],
+        )
+        self.assertIn(
+            "no_silent_scope_architecture_strategy_or_trust_boundary_expansion",
+            authority["required_controls"],
+        )
+
     def test_e3_keeps_merge_and_ruleset_as_separate_consequential_transitions(self):
         policy = json.loads(
             (ROOT / "projects/policies/project-leader.json").read_text(encoding="utf-8")
