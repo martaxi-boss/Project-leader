@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-RESTORE-PRE-CODEX-105-MERGE",
+  "task_id": "PROJECT-LEADER-RESTORE-PRE-CODEX-105",
+  "repository": "martaxi-boss/Project-leader",
+  "created_at": "2026-10-11T12:27:01.969Z",
+  "action": "merge_to_main",
+  "effect_class": "E2_CONSEQUENTIAL_TRANSITION",
+  "authority": {
+    "source": "CURRENT_OWNER_INSTRUCTION",
+    "summary": "Owner instructed that Project Leader return to the pre-Codex-audit rule set, without modifying Project Leader for Codex executors or agent counts. Merge only PR #105, an isolated exact-blob restoration to the 2026-10-09 rule/test state, after live CI, scope review, protected main ruleset and trusted gate pass. The initial E3 Builder task separately prohibited main merge. No permission, security, Recovery Guardian, Marketplace or external project change, and preserve all historical audit/transition evidence.",
+    "binding_mode": "EXACT_REVISION_BOUND"
+  },
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/105",
+    "revision": "068588676529c22840b6d8d5738a26e9e9d16da8",
+    "base_revision": "80408fd51050b79aaf9d0bd5d2a37d53a5f16adc",
+    "environment": null
+  }
+}
