@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "transition_id": "PROJECT-LEADER-RESTORE-PRE-CODEX-105-MERGE",
+  "task_id": "PROJECT-LEADER-RESTORE-PRE-CODEX-105",
+  "repository": "martaxi-boss/Project-leader",
+  "terminal_status": "SUCCESS",
+  "authorization_record": ".project-leader/transitions/PROJECT-LEADER-RESTORE-PRE-CODEX-105-MERGE.authorization.json",
+  "action": "merge_to_main",
+  "target": {
+    "kind": "pull_request",
+    "identifier": "https://github.com/martaxi-boss/Project-leader/pull/105",
+    "revision": "068588676529c22840b6d8d5738a26e9e9d16da8",
+    "base_revision": "80408fd51050b79aaf9d0bd5d2a37d53a5f16adc",
+    "environment": null
+  },
+  "observed_at": "2026-10-11T12:28:39.544Z",
+  "final_state": {
+    "status": "MERGED",
+    "revision": "b534629851dad20bcf6f9921f3c3a1dbc4ee7248"
+  },
+  "evidence": [
+    "Owner asked to restore Project Leader's pre-Codex-audit rules, not to adjust Project Leader to any Codex account, agent count or model; exact E2 merge authorization committed on the separate control/merge-authorization-105 branch at c3c7bd32a21a57b04fa3b670faeab657ba22f6b0 before merge.",
+    "At pre-merge Supervisor check, PR #105 head 068588676529c22840b6d8d5738a26e9e9d16da8 and base main 80408fd51050b79aaf9d0bd5d2a37d53a5f16adc matched, mergeable true, exactly four allowed changed files, existing active main ruleset and no bypass.",
+    "Mandatory exact-implementation PR CI SUCCESS: Control contract tests 38139154741, Validate control plane 38139154770, Package ChatGPT plugins 38139154792. Final evidence-head CI SUCCESS: Contract 38139257118, Validate 38139257104, Package 38139257170. Trusted-authorization gate after Worker Result 38139255854 SUCCESS.",
+    "GitHub accepted the exact-PR-head guarded merge; PR #105 merged to main b534629851dad20bcf6f9921f3c3a1dbc4ee7248 on 2026-10-11. Canonical Skill blob SHA a090658f558af9615b53990686d943e00e55a4d2 and execution-first test blob SHA 47ba2fd4ee33b3faa052e95a927c10d3539ad818 exactly equal 2026-10-09 canonical post-hygiene 55b7a054df5408ed82f4d7771e5a8c843af26563.",
+    "Post-main exact revision CI: Control contract tests 38139328728 SUCCESS, Validate control plane 38139328705 SUCCESS, Package ChatGPT plugins 38139328615 SUCCESS, Invalidate stale trusted authorization 38139328598 SUCCESS. The separate post-merge pull_request_target repository hygiene 38139328433 completed SUCCESS and removed the builder/restore-pre-codex-105 head branch. Push-triggered non-blocking hygiene 38139328622 was QUEUED at this observation; it is not claimed completed.",
+    "No updates to 0.7.0/0.6.0 version manifests, Recovery Guardian, Supervisor, standing authority, GitHub security ruleset, Marketplace association or other projects. PR #104 and its immutable historical records remain preserved in GitHub."
+  ],
+  "residual_blockers": []
+}
