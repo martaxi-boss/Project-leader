@@ -384,5 +384,18 @@ class ExecutionFirstContractTests(unittest.TestCase):
         self.assertIn("0.7.0 / Recovery Guardian 0.6.0", changelog)
 
 
+    def test_project_isolation_reuses_existing_infrastructure_without_scope_expansion(self):
+        skill = (
+            ROOT / "plugins/project-leader/skills/project-leader/SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Project isolation and existing connection reuse", skill)
+        self.assertIn("does **not** by itself require or authorize a new workflow", skill)
+        self.assertIn("Reuse the already-proven operational path first", skill)
+        self.assertIn("Repository Secrets stay repository-scoped", skill)
+        self.assertIn("Normal MCP/OAuth access remains the normal path for MCP tools", skill)
+        self.assertIn("GitHub Actions -> SSH -> VPS", skill)
+        self.assertIn("Create a new workflow or credential path only after existing safe paths are insufficient", skill)
+
+
 if __name__ == "__main__":
     unittest.main()
