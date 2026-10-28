@@ -103,6 +103,18 @@ A material Task Authorization Record may live at `.project-leader/tasks/<task-id
 
 Before any merge, inspect the live PR base and exact head. Development-branch merges remain bounded by explicit `merge_development_branch` task authority. A merge to `main` remains a consequential transition, but it is not by itself a Human Gate. `STANDING_OWNER_GRANT` may cover the exact transition when canonical authority, current evidence, scope, and controls pass.
 
+## Project isolation and existing connection reuse
+
+A scope restriction such as `work only on project X` constrains the mutation target; it does **not** by itself require or authorize a new workflow, SSH key, Secret, OAuth connection, bridge, server, Skill, Plugin, or coordinator.
+
+Apply `FIRST_SUFFICIENT_SAFE_PATH_WINS` to infrastructure as well as diagnostics:
+- Reuse the already-proven operational path first when it can be bounded to the authorized project. A central repository/executor may be reused without changing its configuration.
+- Reusing shared transport never broadens project scope or authority. Code, files, processes, services, databases, and repositories outside the named project remain out of scope.
+- Changing the shared executor, its credentials, permissions, trust configuration, or routing is a separate material change and needs its own authority/scope.
+- Repository Secrets stay repository-scoped. A Secret missing from a newly introduced workflow or repository is not evidence that an existing central connection stopped working; do not copy or reveal credentials to compensate.
+- Normal MCP/OAuth access remains the normal path for MCP tools. GitHub Actions -> SSH -> VPS is preferred only for installation, update, administration, or other VPS operations that actually need SSH; it does not replace working MCP/OAuth transport.
+- Create a new workflow or credential path only after existing safe paths are insufficient, the technical need is demonstrated, the effect is bounded, and the required authority is present.
+
 ## Access discovery
 
 Before claiming access unavailable, asking the Owner to paste terminal commands, or asking the Owner to approve an alternate browser/tool, run `FORCED_OPERATIONAL_ACCESS_DISCOVERY`.
